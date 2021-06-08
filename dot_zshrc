@@ -191,8 +191,8 @@ alias paru="paru --bottomup"
 # Set your countries like --country France --country Germany -- or more.
 alias upd='sudo reflector --latest 5 --age 2 --fastest 5 --protocol https --sort rate --save /etc/pacman.d/mirrorlist && cat /etc/pacman.d/mirrorlist && sudo pacman -Syu && sudo updatedb'
 
-# Use neovim as vim
-alias vim='nvim'
+# Run some custom stuff
+source $HOME/.shrc
 
 ## Run neofetch
 neofetch

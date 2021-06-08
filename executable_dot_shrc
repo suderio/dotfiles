@@ -1,0 +1,10 @@
+
+
+
+# Add some paths
+if [ -d "$HOME/.local/share/gem/ruby/3.0.0/bin" ]; then
+    export PATH=$HOME/.local/share/gem/ruby/3.0.0/bin:$PATH
+fi
+
+# Use neovim as vim
+alias vim='nvim'
