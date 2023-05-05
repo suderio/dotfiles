@@ -1,0 +1,11 @@
+#!/bin/sh
+
+function install_chezmoi {
+  sh -c "$(curl -fsLS get.chezmoi.io)"
+}
+
+function install_jbang {{
+  curl -Ls https://sh.jbang.dev | bash -s - app setup
+}
+
+
