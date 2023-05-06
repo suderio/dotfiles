@@ -4,8 +4,16 @@ function install_chezmoi {
   sh -c "$(curl -fsLS get.chezmoi.io)"
 }
 
-function install_jbang {{
+function install_jbang { 
   curl -Ls https://sh.jbang.dev | bash -s - app setup
+}
+
+function install_doom {
+  # TODO verificar dependências
+  # (git 2.23, emacs 28.1+, ripgrep 11.0+, find, fd)
+
+  git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.config/emacs
+  ~/.config/emacs/bin/doom install
 }
 
 
