@@ -1,0 +1,4 @@
+Host *
+  PermitLocalCommand yes
+  Include config.d/*
+
