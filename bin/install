@@ -16,4 +16,8 @@ function install_doom {
   ~/.config/emacs/bin/doom install
 }
 
+function install_fonts {
+  fc-cache -f -v
+  fc-list
+}
 
