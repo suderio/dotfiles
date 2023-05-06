@@ -11,3 +11,7 @@ PS1='[\u@\h \W]\$ '
 # Add JBang to environment
 alias j!=jbang
 export PATH="$HOME/.jbang/bin:$PATH"
+
+# Run some custom stuff
+source $HOME/.shrc
+
