@@ -11,7 +11,11 @@ function install_jbang(){
 function install_doom(){
   # TODO verificar dependências
   # (git 2.23, emacs 28.1+, ripgrep 11.0+, find, fd)
-  #
+  check_deps rg
+  check_deps git
+  check_deps fd
+  check_deps find
+  check_deps emacs
   git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.config/emacs
   ~/.config/emacs/bin/doom install
 }
@@ -25,34 +29,7 @@ function install_rust(){
   $ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 }
 
-function check_ripgrep(){
-  [ -x "$(command -v rg)" ] && echo "ripgrep OK" || return 1
+function check_deps(){
+  [ -x "$(command -v $1)" ] && echo "$1 OK" || { echo "I require $1 but it's not installed. Aborting." >&2; exit 1; }
 }
 
-function check_git(){
-  [ -x "$(command -v git)" ] && echo "git OK" || return 1
-}
-
-function check_fd(){
-  [ -x "$(command -v fd)" ] && echo "fd OK" || return 1
-}
-
-function check_find(){
-  [ -x "$(command -v find)" ] && echo "find OK" || return 1
-}
-
-function check_emacs(){
-  [ -x "$(command -v emacs)" ] && echo "emacs OK" || return 1
-}
-
-function check_doom_deps(){
-  check_ripgrep
-  check_git
-  check_fd
-  check_find
-  check_emacs
-}
-
-# TODO
-# command -v foo >/dev/null 2>&1 || { echo "I require foo but it's not installed.  Aborting." >&2; exit 1; }
-#
