@@ -34,6 +34,13 @@ export PATH="$HOME/.jbang/bin:$PATH"
 if [ -d "$HOME/bin/custom" ] ; then
     source $HOME/bin/custom
 fi
+
+if [ -d "$HOME/.shrc.d" ] ; then
+    for f in "$HOME/.shrc.d/*"
+    do
+        source $f
+    done
+fi
 # TODO add run everything in bashrc.d
 # ex. function, aliases, custom, prompt
 
