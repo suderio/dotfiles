@@ -2,6 +2,9 @@
 	email = paulo.suderio@gmail.com
 	name = Paulo Suderio
 
+[github]
+	user = suderio
+
 [core]
 	editor = vim
 	whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
@@ -9,6 +12,14 @@
 	autocrlf = false
 	safecrlf = warn
 	filemode = false
+#	sshCommand = "ssh -i ~/.ssh/id_rsa_gitlab"
+
+#[includeIf "gitdir:$HOME/repos/github"]#
+#	[user]
+#		email = paulo.suderio@gmail.com
+#		name = Paulo Alipio Suderio Rodrigues
+#	[core]
+#		sshCommand = "ssh -i ~/.ssh/id_ed25519"
 
 [filter "lfs"]
 	clean = git-lfs clean -- %f
@@ -75,9 +86,6 @@
         cmd = meld $LOCAL $REMOTE
         trustExitCode = false
 
-[github]
-	user = suderio
-
 [gitflow "prefix"]
 	feature = feature-
 	release = release-
@@ -109,23 +117,8 @@
      find = "!git ls-files | grep -i"                                                                               
 
 [safe]
-	directory = /mnt/c/Users/paulo/repos/suderio/gosh
-	directory = /mnt/c/Users/paulo/repos
-	directory = /mnt/c/Users/paulo/repos/suderio/blns
-	directory = /mnt/c/Users/paulo/repos/suderio/blns/target/checkout
-	directory = /mnt/c/Users/paulo/repos/suderio/external-resources-maven-plugin
-	directory = /mnt/c/Users/paulo/repos/suderio/external-resources-maven-plugin/target/checkout
-	directory = /mnt/c/Users/paulo/repos/suderio/remote-enforcer-maven-plugin
-	directory = /mnt/c/Users/paulo/repos/suderio/remote-enforcer-maven-plugin/target/checkout
-	directory = /mnt/c/Users/paulo/repos/suderio/rip
-	directory = /mnt/c/Users/paulo/repos/suderio/marxls
-	directory = /mnt/c/Users/paulo/repos/suderio/rip/target/checkout
-	directory = /mnt/c/Users/paulo/repos/suderio/jdbc-client
-	directory = /mnt/c/Users/paulo/repos/github/fkeytoolhelper
-	directory = /mnt/c/Users/paulo/repos/github/xp
-	directory = /mnt/c/Users/paulo/repos/suderio/simple-proxy
-	directory = /mnt/c/Users/paulo/repos/github/proksi
-	directory = /mnt/c/Users/paulo/repos
-	directory = /mnt/c/Users/paulo/repos/github/dotfiles
+	directory = $HOME/repos/*
 [init]
 	defaultBranch = main
+[http]
+	sslBackend = schannel

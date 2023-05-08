@@ -38,3 +38,4 @@ function check_deps(){
   [ -x "$(command -v $1)" ] && echo "$1 OK" || { echo "I require $1 but it's not installed. Aborting." >&2; exit 1; }
 }
 
+# TODO install jq, jwt, yq, helm, etc.
