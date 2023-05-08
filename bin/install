@@ -31,7 +31,7 @@ function install_neovim(){
   mv $HOME/bin/nvim.appimage $HOME/bin/nvim
 }
 function install_rust(){
-  $ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+  curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 }
 
 function check_deps(){
