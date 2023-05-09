@@ -120,5 +120,5 @@
   directory = *
 [init]
 	defaultBranch = main
-[http]
-	sslBackend = schannel
+#[http]
+#	sslBackend = schannel

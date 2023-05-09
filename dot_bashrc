@@ -97,6 +97,13 @@ export LC_ALL=pt_BR.UTF-8
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
+# Run some bash custom stuff
+
+for f in "$HOME/.bashrc.d/*"
+do
+  source $f
+done
+
 # Run some custom stuff
 source $HOME/.shrc
 
