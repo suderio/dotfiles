@@ -327,7 +327,7 @@ theme: Catppuccin
 #   - (Linux/BSD) user login shell
 #   - (Windows) powershell
 shell:
-  program: /usr/bin/sh
+  program: /usr/bin/bash
   args:
     - --login
 

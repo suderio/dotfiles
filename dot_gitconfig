@@ -117,7 +117,7 @@
      find = "!git ls-files | grep -i"                                                                               
 
 [safe]
-	directory = $HOME/repos/*
+  directory = *
 [init]
 	defaultBranch = main
 [http]
