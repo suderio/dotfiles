@@ -1,6 +1,6 @@
 #!/bin/bash
 
-thread-analyze () {
+thread_analyze () {
     if [ "$#" -ne 3 ]; then
             echo "usage: sh thread-analyze.sh <pid> <number-of-dumps> <interval>"
             exit

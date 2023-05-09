@@ -36,7 +36,7 @@ if [ -d "$HOME/bin/custom" ] ; then
 fi
 
 if [ -d "$HOME/.shrc.d" ] ; then
-    for f in "$HOME/.shrc.d/*"
+    for f in $HOME/.shrc.d/*
     do
         source $f
     done
