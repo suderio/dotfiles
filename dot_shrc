@@ -46,7 +46,7 @@ fi
 
 # Use neovim as vim
 
-if [ -f "/usr/bin/nvim" ] ; then
+if [ -x "$(command -v nvim)" ] ; then
     alias vim='nvim'
 fi
 
