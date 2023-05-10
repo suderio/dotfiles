@@ -12,7 +12,7 @@ Host *
   ServerAliveInterval 60
   ServerAliveCountMax 30
   GatewayPorts no
-#  RemoteForward 3128 localhost:3128
+  RemoteForward 3128 localhost:3128
 
 Host github.com
   HostName github.com

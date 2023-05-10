@@ -91,7 +91,7 @@ export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 
 # Isso e para resolver o bug de acentos no alacritty em wayland
 export TERMINAL=/usr/bin/alacritty
-export LC_ALL=pt_BR.UTF-8
+#export LC_ALL=pt_BR.UTF-8
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
@@ -99,11 +99,19 @@ shopt -s checkwinsize
 
 # Run some bash custom stuff
 
-for f in "$HOME/.bashrc.d/*"
+for f in "$HOME"/.bashrc.d/*
 do
   source $f
 done
 
 # Run some custom stuff
-source $HOME/.shrc
+source "$HOME"/.shrc
 
+# Add JBang to environment
+alias j!=jbang
+export PATH="$HOME/.jbang/bin:$HOME/.jbang/currentjdk/bin:$PATH"
+export JAVA_HOME=$HOME/.jbang/currentjdk
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
