@@ -1,6 +1,7 @@
+Include config.d/*
+
 Host *
   PermitLocalCommand yes
-  Include config.d/*
   PreferredAuthentications publickey,hostbased,keyboard-interactive,password
   IdentityFile ~/.ssh/id_rsa
   CertificateFile ~/.ssh/id_rsa.pub
