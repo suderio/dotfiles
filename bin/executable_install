@@ -4,6 +4,10 @@ install_chezmoi(){
   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME"/.local/bin
 }
 
+install_starship() {
+  sh -c "cargo install starship --locked"
+}
+
 install_jbang(){ 
   curl -Ls https://sh.jbang.dev | bash -s - app setup
 }

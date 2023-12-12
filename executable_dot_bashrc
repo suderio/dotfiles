@@ -106,6 +106,8 @@ export NVM_DIR="$HOME/.nvm"
 
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
+eval "$(starship init bash)"
+
 # >>> juliaup initialize >>>
 
 # !! Contents within this block are managed by juliaup !!
