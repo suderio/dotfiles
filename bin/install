@@ -1,0 +1,49 @@
+#!/bin/sh
+
+install_chezmoi(){
+  sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME"/.local/bin
+}
+
+install_starship() {
+  sh -c "cargo install starship --locked"
+}
+
+install_jbang(){ 
+  curl -Ls https://sh.jbang.dev | bash -s - app setup
+}
+
+install_nvm(){
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+}
+
+install_doom(){
+  # TODO verificar versões
+  # (git 2.23, emacs 28.1+, ripgrep 11.0+, find, fd)
+  check_deps rg
+  check_deps git
+  check_deps fd
+  check_deps find
+  check_deps emacs
+  git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.config/emacs
+  ~/.config/emacs/bin/doom install
+}
+
+install_fonts(){
+  fc-cache -f -v
+  fc-list
+}
+
+install_neovim(){
+  curl --output-dir "$HOME/bin/" -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+  chmod u+x "$HOME"/bin/nvim.appimage
+  mv "$HOME"/bin/nvim.appimage "$HOME"/bin/nvim
+}
+install_rust(){
+  curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+}
+
+check_deps(){
+  [ -x "$(command -v $1)" ] && echo "$1 OK" || { echo "I require $1 but it's not installed. Aborting." >&2; exit 1; }
+}
+
+# TODO install jq, jwt, yq, helm, etc.

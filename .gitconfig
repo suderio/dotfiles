@@ -1,0 +1,124 @@
+[user]
+	email = paulo.suderio@gmail.com
+	name = Paulo Suderio
+
+[github]
+	user = suderio
+
+[core]
+	editor = vim
+	whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
+	excludesfile = ~/.gitignore
+	autocrlf = false
+	safecrlf = warn
+	filemode = false
+#	sshCommand = "ssh -i ~/.ssh/id_rsa_gitlab"
+
+#[includeIf "gitdir:$HOME/repos/github"]#
+#	[user]
+#		email = paulo.suderio@gmail.com
+#		name = Paulo Alipio Suderio Rodrigues
+#	[core]
+#		sshCommand = "ssh -i ~/.ssh/id_ed25519"
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+[gc]
+	auto = 7000
+
+[grep]
+	lineNumber = true
+
+[status]
+	showUntrackedFiles = all
+
+[web]
+	browser = google-chrome
+
+[pull]
+	rebase = true
+
+[rebase]
+	autoStash = true
+
+[push]
+	default = matching
+
+[color]
+	ui = auto
+
+[color "branch"]
+	current = yellow bold
+	local = green bold
+	remote = cyan bold
+
+[color "diff"]
+	meta = yellow bold
+	frag = magenta bold
+	old = red bold
+	new = green bold
+	whitespace = red reverse
+
+[color "status"]
+	added = green bold
+	changed = yellow bold
+	untracked = red bold
+
+[merge]
+        tool = vimdiff
+        guitool = meld
+        ff = false
+
+[mergetool "meld"]
+        cmd = meld $LOCAL $BASE $REMOTE --output=$MERGED
+        trustExitCode = false
+
+[diff]
+        tool = vimdiff
+        guitool = meld
+        algorithm = histogram
+
+[difftool "meld"]
+        cmd = meld $LOCAL $REMOTE
+        trustExitCode = false
+
+[gitflow "prefix"]
+	feature = feature-
+	release = release-
+	hotfix = hotfix-
+	support = support-
+	versiontag = v
+
+[alias]
+     tree = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset%n' --abbrev-commit --date=relative --branches
+     # List commits in short form, with colors and branch/tag annotations                                           
+     ls = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate                            
+     # List commits showing changed files                                                                           
+     ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat                  
+     # List with no colors                                                                                          
+     lnc = log --pretty=format:"%h\\ %s\\ [%cn]"                                                                    
+     # List oneline commits showing dates                                                                           
+     lds = log --pretty=format:"%C(yellow)%h\\ %ad%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=short        
+     # List oneline commits showing relative dates                                                                  
+     ld = log --pretty=format:"%C(yellow)%h\\ %ad%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=relative      
+     # default look for short git log                                                                               
+     le = log --oneline --decorate                                                                                  
+     # all commits related to a file                                                                                
+     filelog = log -u                                                                                               
+     # Show modified files in last commit                                                                           
+     dl = "!git ll -1"                                                                                              
+     # Show a diff last commit                                                                                      
+     dlc = diff --cached HEAD^                                                                                      
+     # Find a file path in codebase                                                                                 
+     find = "!git ls-files | grep -i"                                                                               
+
+[safe]
+  directory = *
+[init]
+	defaultBranch = main
+#[http]
+#	sslBackend = schannel
