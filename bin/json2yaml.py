@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import json
 import os
 import sys
@@ -33,4 +34,3 @@ else:
     target_file = open(sys.argv[2], "w")
     target_file.write(output)
     target_file.close()
-

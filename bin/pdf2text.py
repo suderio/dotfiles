@@ -1,8 +1,10 @@
+#!/usr/bin/env python3
 # import module PyPDF2
 import PyPDF2
+
 # put 'example.pdf' in working directory
 # and open it in read binary mode
-pdfFileObj = open('example.pdf', 'rb')
+pdfFileObj = open("example.pdf", "rb")
 # call and store PdfFileReader
 # object in pdfReader
 pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
@@ -17,4 +19,3 @@ pageObj = pdfReader.getPage(0)
 texts = pageObj.extractText()
 # print the extracted texts
 print(texts)
-

@@ -1,7 +1,9 @@
+#!/usr/bin/env python3
 import PyPDF2
+
 # open two pdfs
-pdf1File = open('example.pdf', 'rb')
-pdf2File = open('example2.pdf', 'rb')
+pdf1File = open("example.pdf", "rb")
+pdf2File = open("example2.pdf", "rb")
 # read first pdf
 pdf1Reader = PyPDF2.PdfFileReader(pdf1File)
 # read second pdf
@@ -14,10 +16,9 @@ for pageNum in range(pdf1Reader.numPages):
 for pageNum in range(pdf2Reader.numPages):
     pageObj = pdf2Reader.getPage(pageNum)
     pdfWriter.addPage(pageObj)
-# create new pdf 'example3.pdf' 
-pdfOutputFile = open('example3.pdf', 'wb')
+# create new pdf 'example3.pdf'
+pdfOutputFile = open("example3.pdf", "wb")
 pdfWriter.write(pdfOutputFile)
 pdfOutputFile.close()
 pdf1File.close()
 pdf2File.close()
-
