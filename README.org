@@ -4,8 +4,6 @@
 
 * Configuração
 
-Dotfiles gerenciados com [chezmoi](https://github.com/twpayne/chezmoi).
-
 Repositório [dotfiles](http://github.com/suderio/dotfiles.git)
 
 * Configurações de Shell
@@ -264,6 +262,10 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 alias eclipse='eclipse --launcher.ini $HOME/.config/eclipse/eclipse.ini'
 #+end_src
 
+#+begin_src shell :tangle ~/.aliases
+alias config='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'
+#+end_src
+
 
 Alguns alias para serem revistos:
 
@@ -277,6 +279,13 @@ alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" '
 
 alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree -r "$in"; done'
 ** TODO
+
+
+git init --bare $HOME/.cfg
+alias config='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'
+config config --local status.showUntrackedFiles no
+echo "alias config='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'" >> $HOME/.bashrc
+
 
 *** A configuração do neovim precisa de um bootstrap do Packer. Ver https://dev.to/oinak/neovim-config-from-scratch-part-i-3o2m .
 #+begin_src shell
