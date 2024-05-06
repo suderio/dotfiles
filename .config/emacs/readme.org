@@ -538,7 +538,7 @@ Defining the various fonts that Emacs will use.
 ** Setting the Font Face
 #+begin_src emacs-lisp
 (set-face-attribute 'default nil
-  :font "Noto Sans"
+  :font "Noto Sans Mono"
   :height 110
   :weight 'medium)
 (set-face-attribute 'variable-pitch nil
@@ -546,7 +546,7 @@ Defining the various fonts that Emacs will use.
   :height 120
   :weight 'medium)
 (set-face-attribute 'fixed-pitch nil
-  :font "Noto Sans"
+  :font "Noto Sans Mono"
   :height 110
   :weight 'medium)
 ;; Makes commented text and keywords italics.
@@ -560,7 +560,7 @@ Defining the various fonts that Emacs will use.
 ;; This sets the default font on all graphical frames created after restarting Emacs.
 ;; Does the same thing as 'set-face-attribute default' above, but emacsclient fonts
 ;; are not right unless I also add this method of setting the default font.
-(add-to-list 'default-frame-alist '(font . "Noto Sans-11"))
+(add-to-list 'default-frame-alist '(font . "Noto Sans Mono-11"))
 
 ;; Uncomment the following line if line spacing needs adjusting.
 (setq-default line-spacing 0.12)
@@ -887,12 +887,12 @@ Adding highlights to TODO and related words.
 Emacs has built-in programming language modes for Lisp, Scheme, DSSSL, Ada, ASM, AWK, C, C++, Fortran, Icon, IDL (CORBA), IDLWAVE, Java, Javascript, M4, Makefiles, Metafont, Modula2, Object Pascal, Objective-C, Octave, Pascal, Perl, Pike, PostScript, Prolog, Python, Ruby, Simula, SQL, Tcl, Verilog, and VHDL.  Other languages will require you to install additional modes.
 
 #+begin_src emacs-lisp
-(use-package haskell-mode)
-(use-package lua-mode)
-(use-package php-mode)
-(use-package yaml-mode)
-;;(use-package bash-mode)
-
+(use-package treesit-auto
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
 #+end_src
 
 * LATEX
@@ -1249,7 +1249,7 @@ The first line below designates the directory where will place all of our custom
 With Emacs version 29, true transparency has been added.  I have turned transparency off by setting the alpha to '100'.  If you want some slight transparency, try setting alpha to '90'.  Of course, if you set alpha to '0', the background of Emacs would completely transparent.
 
 #+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(alpha-background . 80)) ; For all new frames henceforth
+(add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
 
 #+end_src
 
