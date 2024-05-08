@@ -4,6 +4,7 @@
 
 [github]
 	user = suderio
+	sshCommand = "ssh -i ~/.ssh/id_ed25519"
 
 [core]
 	editor = vim

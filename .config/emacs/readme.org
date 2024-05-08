@@ -24,6 +24,8 @@
 - [[#elfeed][ELFEED]]
 - [[#eradio][ERADIO]]
 - [[#evil][EVIL]]
+  - [[#anzu--anzu-for-evil-mode][anzu & anzu for evil-mode]]
+  - [[#evil-collection][evil-collection]]
 - [[#flycheck][FLYCHECK]]
 - [[#fonts][FONTS]]
   - [[#setting-the-font-face][Setting the Font Face]]
@@ -520,6 +522,40 @@ An RSS newsfeed reader for Emacs.  Move through the articles with 'j/k'.  Move t
 
 #+end_src
 
+** anzu & anzu for evil-mode
+
+anzu.el provides a minor mode which displays current match/total matches in the mode-line in various search modes. This makes it easy to understand how many matches there are in the current buffer for your search query.
+https://github.com/emacsorphanage/evil-anzu
+
+#+begin_src emacs-lisp
+(use-package anzu
+  :defer 10
+  :config (global-anzu-mode))
+
+(use-package evil-anzu
+  :after (evil anzu))
+
+#+end_src
+
+** evil-collection
+This is a collection of Evil bindings for the parts of Emacs that Evil does not cover properly by default.
+
+https://github.com/emacs-evil/evil-collection
+
+#+begin_src emacs-lisp
+(use-package evil-collection
+  :ensure (:remotes ("origin"
+                     ("fork" :repo "progfolio/evil-collection")))
+  :after (evil)
+  :config
+  (setq evil-collection-mode-list (remq 'elpaca evil-collection-mode-list))
+  (evil-collection-init)
+  :init (setq evil-collection-setup-minibuffer t)
+  :custom
+  (evil-collection-elpaca-want-g-filters nil)
+  (evil-collection-ement-want-auto-retro t))
+
+#+end_src
 * FLYCHECK
 Install =luacheck= from your Linux distro's repositories for flycheck to work correctly with lua files.  Install =python-pylint= for flycheck to work with python files.  Haskell works with flycheck as long as =haskell-ghc= or =haskell-stack-ghc= is installed.  For more information on language support for flycheck, [[https://www.flycheck.org/en/latest/languages.html][read this]].
 
@@ -818,7 +854,6 @@ You can use the bindings CTRL plus =/- for zooming in/out.  You can also use CTR
 
 #+begin_src emacs-lisp
 (use-package magit)
-
 #+end_src
 
 * HIGHLIGHT TODO
