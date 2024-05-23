@@ -123,3 +123,5 @@
 	defaultBranch = main
 #[http]
 #	sslBackend = schannel
+[http]
+	sslVerify = false

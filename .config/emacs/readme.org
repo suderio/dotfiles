@@ -556,15 +556,15 @@ Defining the various fonts that Emacs will use.
 #+begin_src emacs-lisp
 (set-face-attribute 'default nil
   :font "Noto Sans Mono"
-  :height 110
+  :height 100
   :weight 'medium)
 (set-face-attribute 'variable-pitch nil
   :font "DejaVu Serif"
-  :height 120
+  :height 110
   :weight 'medium)
 (set-face-attribute 'fixed-pitch nil
   :font "Noto Sans Mono"
-  :height 110
+  :height 100
   :weight 'medium)
 ;; Makes commented text and keywords italics.
 ;; This is working in emacsclient but not emacs.
@@ -577,7 +577,7 @@ Defining the various fonts that Emacs will use.
 ;; This sets the default font on all graphical frames created after restarting Emacs.
 ;; Does the same thing as 'set-face-attribute default' above, but emacsclient fonts
 ;; are not right unless I also add this method of setting the default font.
-(add-to-list 'default-frame-alist '(font . "Noto Sans Mono-11"))
+(add-to-list 'default-frame-alist '(font . "Noto Sans Mono-10"))
 
 ;; Uncomment the following line if line spacing needs adjusting.
 (setq-default line-spacing 0.12)
