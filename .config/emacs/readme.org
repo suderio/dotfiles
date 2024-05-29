@@ -1,4 +1,3 @@
-
 #+title: Suderio's GNU Emacs Config
 #+AUTHOR: Paulo Suderio
 #+DESCRIPTION: Suderio's personal Emacs config.
@@ -9,11 +8,11 @@
 - [[#important-things-to-do-first][IMPORTANT THINGS TO DO FIRST]]
   - [[#what-should-be-installed-in-your-os][What should be installed in your OS]]
   - [[#non-versioned-local-files][Non-versioned, local files]]
-  - [[#package-manager][Package Manager]]
+  - [[#adding-the-scripts-directory-to-path][Adding the scripts directory to path]]
+  - [[#sourcing-the-scripts][Sourcing the scripts]]
   - [[#no-littering][No littering]]
-  - [[#moving-windows][Moving windows]]
+  - [[#backup][BACKUP]]
 - [[#all-the-icons][ALL THE ICONS]]
-- [[#backup][BACKUP]]
 - [[#bell][BELL]]
 - [[#company][COMPANY]]
 - [[#dashboard][DASHBOARD]]
@@ -73,7 +72,6 @@ This configuration was heavily influenced by:
 
 ** What should be installed in your OS
 We must install a bunch of os packages in order to everything work:
-
 #+begin_src emacs-lisp
 (defun em/check-os-deps (dep)
   "Checks and reports missing dependencies"
@@ -87,205 +85,36 @@ We must install a bunch of os packages in order to everything work:
 #+end_src
 ** Non-versioned, local files
 Everything temporary should go in the .local directory.
-
 #+begin_src emacs-lisp
 ;; (defvar em/local-dir (expand-file-name ".local/" user-emacs-directory) "Local state directory")
 (setq no-littering-etc-directory (expand-file-name "config/" user-emacs-directory)
       no-littering-var-directory (expand-file-name "data/" user-emacs-directory))
 #+end_src
-** Package Manager
-Elpaca seems to be a lot easier and dependable.
-
-#+begin_src emacs-lisp
-
-(defvar elpaca-installer-version 0.7)
-(defvar elpaca-directory (expand-file-name "elpaca/" no-littering-var-directory))
-(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-			:ref nil
-			:files (:defaults (:exclude "extensions"))
-			:build (:not elpaca--activate-package)))
-(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
- (build (expand-file-name "elpaca/" elpaca-builds-directory))
- (order (cdr elpaca-order))
- (default-directory repo))
-  (add-to-list 'load-path (if (file-exists-p build) build repo))
-  (unless (file-exists-p repo)
-    (make-directory repo t)
-    (when (< emacs-major-version 28) (require 'subr-x))
-    (condition-case-unless-debug err
-  (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-	   ((zerop (call-process "git" nil buffer t "clone"
-				 (plist-get order :repo) repo)))
-	   ((zerop (call-process "git" nil buffer t "checkout"
-				 (or (plist-get order :ref) "--"))))
-	   (emacs (concat invocation-directory invocation-name))
-	   ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-				 "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-	   ((require 'elpaca))
-	   ((elpaca-generate-autoloads "elpaca" repo)))
-      (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-    (error "%s" (with-current-buffer buffer (buffer-string))))
-((error) (warn "%s" err) (delete-directory repo 'recursive))))
-  (unless (require 'elpaca-autoloads nil t)
-    (require 'elpaca)
-    (elpaca-generate-autoloads "elpaca" repo)
-    (load "./elpaca-autoloads")))
-(add-hook 'after-init-hook #'elpaca-process-queues)
-(elpaca `(,@elpaca-order))
-
-;; Install use-package support
-(elpaca elpaca-use-package
-  ;; Enable :elpaca use-package keyword.
-  (elpaca-use-package-mode)
-  ;; Assume :elpaca t unless otherwise specified.
-  (setq elpaca-use-package-by-default t))
-
-;; Block until current queue processed.
-(elpaca-wait)
-
-;; This seems to be a bug 
-(defun +elpaca-unload-seq (e) 
-"Unload seq before continuing the elpaca build, then continue to build the recipe E."
-  (and (featurep 'seq) (unload-feature 'seq t))
-  (elpaca--continue-build e))
-(elpaca `(seq :build ,(append (butlast (if (file-exists-p (expand-file-name "seq" elpaca-builds-directory))
-                                          elpaca--pre-built-steps
-                                        elpaca-build-steps))
-                             (list '+elpaca-unload-seq 'elpaca--activate-package))))
-;;When installing a package which modifies a form used at the top-level
-;;(e.g. a package which adds a use-package key word),
-;;use `elpaca-wait' to block until that package has been installed/configured.
-;;For example:
-;;(use-package general :demand t)
-;;(elpaca-wait)
-
-;;Turns off elpaca-use-package-mode current declartion
-;;Note this will cause the declaration to be interpreted immediately (not deferred).
-;;Useful for configuring built-in emacs features.
-;;(use-package emacs :elpaca nil :config (setq ring-bell-function #'ignore))
-
-;; Don't install anything. Defer execution of BODY
-;;(elpaca nil (message "deferred"))
-
-;;; elpaca-setup.el ends here
+** Adding the scripts directory to path
+#+begin_src 
+(add-to-list 'load-path "~/.config/emacs/scripts/")
 #+end_src
+** Sourcing the scripts
+#+begin_src 
+(org-babel-tangle-file "~/.config/emacs/scripts/elpaca.org")
+(org-babel-tangle-file "~/.config/emacs/scripts/window.org")
 
+(require 'elpaca)  ;; Elpaca Configurations
+(require 'window)  ;; Windows' Configurations
+#+end_src
 ** No littering
-
 #+begin_src emacs-lisp
 (use-package no-littering
    :ensure t)
 ;; Emacs will save customizations into your init.el file by default. Instead, save in the "etc" directory:
 (setq custom-file (expand-file-name "custom.el" no-littering-etc-directory))
-
 #+end_src
-** Moving windows
-
+** BACKUP 
+By default, Emacs creates automatic backups of files in their original directories, such "file.el" and the backup "file.el~".  This leads to a lot of clutter, so let's tell Emacs to put all backups that it creates in the =TRASH= directory.
 #+begin_src emacs-lisp
+(setq backup-directory-alist '((".*" . "~/.local/share/Trash/files")))
 
-;;; buffer-move.el --- Buffer move allows for better window controls.
-
-;; Copyright (C) 2004-2014  Lucas Bonnet <lucas@rincevent.net.fr>
-
-;; Author: Lucas Bonnet <lucas@rincevent.net>
-;; Keywords: lisp,convenience
-;; Version: 0.5
-;; URL : https://github.com/lukhas/buffer-move
-
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License
-;; as published by the Free Software Foundation; either version 2
-;; of the License, or (at your option) any later version.
-
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
-
-;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, write to the Free Software
-;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-;; 02111-1307, USA.
-
-;;; Commentary:
-
-;; This file is for lazy people wanting to swap buffers without
-;; typing C-x b on each window.
-
-;;; Code:
-(require 'windmove)
-
-;;;###autoload
-(defun buf-move-up ()
-  "Swap the current buffer and the buffer above the split.
-If there is no split, ie now window above the current one, an
-error is signaled."
-;;  "Switches between the current buffer, and the buffer above the
-;;  split, if possible."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'up))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No window above this one")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-down ()
-"Swap the current buffer and the buffer under the split.
-If there is no split, ie now window under the current one, an
-error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'down))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (or (null other-win) 
-            (string-match "^ \\*Minibuf" (buffer-name (window-buffer other-win))))
-        (error "No window under this one")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-left ()
-"Swap the current buffer and the buffer on the left of the split.
-If there is no split, ie now window on the left of the current
-one, an error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'left))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No left split")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-right ()
-"Swap the current buffer and the buffer on the right of the split.
-If there is no split, ie now window on the right of the current
-one, an error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'right))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No right split")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-;;; buffer-move.el ends here
 #+end_src
-
 
 * ALL THE ICONS
 This is an icon set that can be used with dashboard, dired, ibuffer and other Emacs programs.
@@ -299,13 +128,6 @@ This is an icon set that can be used with dashboard, dired, ibuffer and other Em
   :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
 #+end_src
 
-* BACKUP 
-By default, Emacs creates automatic backups of files in their original directories, such "file.el" and the backup "file.el~".  This leads to a lot of clutter, so let's tell Emacs to put all backups that it creates in the =TRASH= directory.
-
-#+begin_src emacs-lisp
-(setq backup-directory-alist '((".*" . "~/.local/share/Trash/files")))
-
-#+end_src
 
 * BELL
 
