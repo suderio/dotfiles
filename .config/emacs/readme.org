@@ -11,12 +11,19 @@
   - [[#adding-the-scripts-directory-to-path][Adding the scripts directory to path]]
   - [[#sourcing-the-scripts][Sourcing the scripts]]
   - [[#no-littering][No littering]]
-  - [[#backup][BACKUP]]
-- [[#all-the-icons][ALL THE ICONS]]
-- [[#bell][BELL]]
+  - [[#backup][Backup]]
+- [[#gui][GUI]]
+  - [[#all-the-icons][All The Icons]]
+  - [[#bell][Bell]]
+  - [[#dashboard][Dashboard]]
+  - [[#diminish][Diminish]]
+  - [[#setting-the-font-face][Setting the Font Face]]
+  - [[#zooming-inout][Zooming In/Out]]
+  - [[#modeline][Modeline]]
+  - [[#rainbow-delimiters][Rainbow Delimiters]]
+  - [[#theme][Theme]]
+  - [[#transparency][TRANSPARENCY]]
 - [[#company][COMPANY]]
-- [[#dashboard][DASHBOARD]]
-- [[#diminish][DIMINISH]]
 - [[#dired][DIRED]]
 - [[#drag-stuff][DRAG-STUFF]]
 - [[#ediff][EDIFF]]
@@ -25,9 +32,6 @@
 - [[#evil][EVIL]]
   - [[#anzu--anzu-for-evil-mode][anzu & anzu for evil-mode]]
 - [[#flycheck][FLYCHECK]]
-- [[#fonts][FONTS]]
-  - [[#setting-the-font-face][Setting the Font Face]]
-  - [[#zooming-inout][Zooming In/Out]]
 - [[#general-keybindings][GENERAL KEYBINDINGS]]
 - [[#git-programs][GIT PROGRAMS]]
   - [[#git-time-machine][Git Time Machine]]
@@ -37,7 +41,6 @@
 - [[#language-support][LANGUAGE SUPPORT]]
 - [[#latex][LATEX]]
 - [[#minibuffer-escape][MINIBUFFER ESCAPE]]
-- [[#modeline][MODELINE]]
 - [[#neotree][NEOTREE]]
 - [[#org-mode][ORG MODE]]
   - [[#diminish-org-indent-mode][Diminish Org Indent Mode]]
@@ -49,7 +52,6 @@
 - [[#pdfs][PDFs]]
 - [[#perspective][PERSPECTIVE]]
 - [[#projectile][PROJECTILE]]
-- [[#rainbow-delimiters][RAINBOW DELIMITERS]]
 - [[#rainbow-mode][RAINBOW MODE]]
 - [[#rest][REST]]
 - [[#sane-defaults][SANE DEFAULTS]]
@@ -58,9 +60,7 @@
   - [[#vterm][Vterm]]
   - [[#vterm-toggle][Vterm-Toggle]]
 - [[#sudo-edit][SUDO EDIT]]
-- [[#theme][THEME]]
 - [[#tldr][TLDR]]
-- [[#transparency][TRANSPARENCY]]
 - [[#which-key][WHICH-KEY]]
 
 * IMPORTANT THINGS TO DO FIRST
@@ -109,16 +109,17 @@ Everything temporary should go in the .local directory.
 ;; Emacs will save customizations into your init.el file by default. Instead, save in the "etc" directory:
 (setq custom-file (expand-file-name "custom.el" no-littering-etc-directory))
 #+end_src
-** BACKUP 
+** Backup 
 By default, Emacs creates automatic backups of files in their original directories, such "file.el" and the backup "file.el~".  This leads to a lot of clutter, so let's tell Emacs to put all backups that it creates in the =TRASH= directory.
 #+begin_src emacs-lisp
 (setq backup-directory-alist '((".*" . "~/.local/share/Trash/files")))
 
 #+end_src
 
-* ALL THE ICONS
+* GUI
+** All The Icons
+
 This is an icon set that can be used with dashboard, dired, ibuffer and other Emacs programs.
-  
 #+begin_src emacs-lisp
 (use-package all-the-icons
   :ensure t
@@ -128,38 +129,14 @@ This is an icon set that can be used with dashboard, dired, ibuffer and other Em
   :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
 #+end_src
 
-
-* BELL
-
+** Bell
 Disables anoying bell
-
 #+begin_src emacs-lisp
 (setq visible-bell nil)
 (setq ring-bell-function 'ignore)
-
-#+end_src
-* COMPANY
-[[https://company-mode.github.io/][Company]] is a text completion framework for Emacs. The name stands for "complete anything".  Completion will start automatically after you type a few letters. Use M-n and M-p to select, <return> to complete or <tab> to complete the common part.
-
-#+begin_src emacs-lisp
-(use-package company
-  :defer 2
-  :diminish
-  :custom
-  (company-begin-commands '(self-insert-command))
-  (company-idle-delay .1)
-  (company-minimum-prefix-length 2)
-  (company-show-numbers t)
-  (company-tooltip-align-annotations 't)
-  (global-company-mode t))
-
-(use-package company-box
-  :after company
-  :diminish
-  :hook (company-mode . company-box-mode))
 #+end_src
 
-* DASHBOARD
+** Dashboard
 Emacs Dashboard is an extensible startup screen showing you recent files, bookmarks, agenda items and an Emacs banner.
 
 #+begin_src emacs-lisp
@@ -186,12 +163,124 @@ Emacs Dashboard is an extensible startup screen showing you recent files, bookma
 
 #+end_src
 
-* DIMINISH
+** Diminish
 This package implements hiding or abbreviation of the modeline displays (lighters) of minor-modes.  With this package installed, you can add ':diminish' to any use-package block to hide that particular mode in the modeline.
 
 #+begin_src emacs-lisp
 (use-package diminish)
 
+#+end_src
+** Setting the Font Face
+Defining the various fonts that Emacs will use.
+#+begin_src emacs-lisp
+(set-face-attribute 'default nil
+  :font "Noto Sans Mono"
+  :height 100
+  :weight 'medium)
+(set-face-attribute 'variable-pitch nil
+  :font "DejaVu Serif"
+  :height 110
+  :weight 'medium)
+(set-face-attribute 'fixed-pitch nil
+  :font "Noto Sans Mono"
+  :height 100
+  :weight 'medium)
+;; Makes commented text and keywords italics.
+;; This is working in emacsclient but not emacs.
+;; Your font must have an italic face available.
+(set-face-attribute 'font-lock-comment-face nil
+  :slant 'italic)
+(set-face-attribute 'font-lock-keyword-face nil
+  :slant 'italic)
+
+;; This sets the default font on all graphical frames created after restarting Emacs.
+;; Does the same thing as 'set-face-attribute default' above, but emacsclient fonts
+;; are not right unless I also add this method of setting the default font.
+(add-to-list 'default-frame-alist '(font . "Noto Sans Mono-10"))
+
+;; Uncomment the following line if line spacing needs adjusting.
+(setq-default line-spacing 0.12)
+
+#+end_src
+** Zooming In/Out
+You can use the bindings CTRL plus =/- for zooming in/out.  You can also use CTRL plus the mouse wheel for zooming in/out.
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-=") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
+(global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
+(global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
+#+end_src
+** Modeline
+The modeline is the bottom status bar that appears in Emacs windows.  While you can create your own custom modeline, why go to the trouble when Doom Emacs already has a nice modeline package available.  For more information on what is available to configure in the Doom modeline, check out: [[https://github.com/seagle0128/doom-modeline][Doom Modeline]]
+
+#+begin_src emacs-lisp
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1)
+  :config
+  (setq doom-modeline-height 35                                                        ;; sets modeline height
+        doom-modeline-bar-width 5                                                      ;; sets right bar width
+        doom-modeline-persp-name t                                                     ;; adds perspective name to modeline
+        doom-modeline-persp-icon t                                                     ;; adds folder icon next to persp name
+        doom-modeline-minor-modes t                                                    ;; shows minor modes
+        doom-modeline-enable-word-count t                                              ;; counts how many words
+        doom-modeline-continuous-word-count-modes '(markdown-mode org-mode latex-mode) ;; in which modes
+        doom-modeline-total-line-number t))  
+#+end_src
+** Rainbow Delimiters
+Adding rainbow coloring to parentheses.
+
+#+begin_src emacs-lisp
+(use-package rainbow-delimiters
+  :hook ((emacs-lisp-mode . rainbow-delimiters-mode)
+         (clojure-mode . rainbow-delimiters-mode)))
+
+#+end_src
+** Theme
+The first line below designates the directory where will place all of our custom-made themes, which I have created only one (dtmacs).  You can create your own Emacs themes with the help of the [[https://emacsfodder.github.io/emacs-theme-editor/][Emacs Theme Editor]].  I am also installing =doom-themes= because it contains a huge collection of themes.  M-x load-theme will list all of the themes available.
+
+#+begin_src emacs-lisp
+(add-to-list 'custom-theme-load-path "~/.config/emacs/themes/")
+
+(use-package doom-themes
+  :config
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  ;; Sets the default theme to load!!! 
+  (load-theme 'doom-one t)
+  ;; Enable custom neotree theme (all-the-icons must be installed!)
+  (doom-themes-neotree-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
+#+end_src
+** TRANSPARENCY
+With Emacs version 29, true transparency has been added.  If you want some slight transparency, try setting alpha to '90'.  Of course, if you set alpha to '0', the background of Emacs would completely transparent.
+
+#+begin_src emacs-lisp
+(add-to-list 'default-frame-alist '(alpha-background . 65)) ; For all new frames henceforth
+
+#+end_src
+
+* COMPANY
+[[https://company-mode.github.io/][Company]] is a text completion framework for Emacs. The name stands for "complete anything".  Completion will start automatically after you type a few letters. Use M-n and M-p to select, <return> to complete or <tab> to complete the common part.
+
+#+begin_src emacs-lisp
+(use-package company
+  :defer 2
+  :diminish
+  :custom
+  (company-begin-commands '(self-insert-command))
+  (company-idle-delay .1)
+  (company-minimum-prefix-length 2)
+  (company-show-numbers t)
+  (company-tooltip-align-annotations 't)
+  (global-company-mode t))
+
+(use-package company-box
+  :after company
+  :diminish
+  :hook (company-mode . company-box-mode))
 #+end_src
 
 * DIRED
@@ -370,51 +459,6 @@ Install =luacheck= from your Linux distro's repositories for flycheck to work co
   :diminish
   :init (global-flycheck-mode))
 
-#+end_src
-
-* FONTS
-Defining the various fonts that Emacs will use.
-
-** Setting the Font Face
-#+begin_src emacs-lisp
-(set-face-attribute 'default nil
-  :font "Noto Sans Mono"
-  :height 100
-  :weight 'medium)
-(set-face-attribute 'variable-pitch nil
-  :font "DejaVu Serif"
-  :height 110
-  :weight 'medium)
-(set-face-attribute 'fixed-pitch nil
-  :font "Noto Sans Mono"
-  :height 100
-  :weight 'medium)
-;; Makes commented text and keywords italics.
-;; This is working in emacsclient but not emacs.
-;; Your font must have an italic face available.
-(set-face-attribute 'font-lock-comment-face nil
-  :slant 'italic)
-(set-face-attribute 'font-lock-keyword-face nil
-  :slant 'italic)
-
-;; This sets the default font on all graphical frames created after restarting Emacs.
-;; Does the same thing as 'set-face-attribute default' above, but emacsclient fonts
-;; are not right unless I also add this method of setting the default font.
-(add-to-list 'default-frame-alist '(font . "Noto Sans Mono-10"))
-
-;; Uncomment the following line if line spacing needs adjusting.
-(setq-default line-spacing 0.12)
-
-#+end_src
-
-** Zooming In/Out
-You can use the bindings CTRL plus =/- for zooming in/out.  You can also use CTRL plus the mouse wheel for zooming in/out.
-
-#+begin_src emacs-lisp
-(global-set-key (kbd "C-=") 'text-scale-increase)
-(global-set-key (kbd "C--") 'text-scale-decrease)
-(global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
-(global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 #+end_src
 
 * GENERAL KEYBINDINGS
@@ -753,23 +797,6 @@ By default, Emacs requires you to hit ESC three times to escape quit the minibuf
 (global-set-key [escape] 'keyboard-escape-quit)
 #+end_src
 
-* MODELINE
-The modeline is the bottom status bar that appears in Emacs windows.  While you can create your own custom modeline, why go to the trouble when Doom Emacs already has a nice modeline package available.  For more information on what is available to configure in the Doom modeline, check out: [[https://github.com/seagle0128/doom-modeline][Doom Modeline]]
-
-#+begin_src emacs-lisp
-(use-package doom-modeline
-  :ensure t
-  :init (doom-modeline-mode 1)
-  :config
-  (setq doom-modeline-height 35                                                        ;; sets modeline height
-        doom-modeline-bar-width 5                                                      ;; sets right bar width
-        doom-modeline-persp-name t                                                     ;; adds perspective name to modeline
-        doom-modeline-persp-icon t                                                     ;; adds folder icon next to persp name
-        doom-modeline-minor-modes t                                                    ;; shows minor modes
-        doom-modeline-enable-word-count t                                              ;; counts how many words
-        doom-modeline-continuous-word-count-modes '(markdown-mode org-mode latex-mode) ;; in which modes
-        doom-modeline-total-line-number t))  
-#+end_src
 
 * NEOTREE
 Neotree is a file tree viewer.  When you open neotree, it jumps to the current file thanks to neo-smart-open.  The neo-window-fixed-size setting makes the neotree width be adjustable.  NeoTree provides following themes: classic, ascii, arrow, icons, and nerd.  Theme can be config'd by setting "two" themes for neo-theme: one for the GUI and one for the terminal.  I like to use 'SPC t' for 'toggle' keybindings, so I have used 'SPC t n' for toggle-neotree.
@@ -930,15 +957,6 @@ Allows us to create a Table of Contents in our Org docs.
   (projectile-mode 1))
 #+end_src
 
-* RAINBOW DELIMITERS
-Adding rainbow coloring to parentheses.
-
-#+begin_src emacs-lisp
-(use-package rainbow-delimiters
-  :hook ((emacs-lisp-mode . rainbow-delimiters-mode)
-         (clojure-mode . rainbow-delimiters-mode)))
-
-#+end_src
 
 * RAINBOW MODE
 Display the actual color as a background for any hex color value (ex. #ffffff).  The code block below enables rainbow-mode in all programming modes (prog-mode) as well as org-mode, which is why rainbow works in this document.  
@@ -1077,23 +1095,6 @@ Vterm is a terminal emulator within Emacs.  The 'shell-file-name' setting sets t
 (use-package sudo-edit)
 #+end_src
 
-* THEME
-The first line below designates the directory where will place all of our custom-made themes, which I have created only one (dtmacs).  You can create your own Emacs themes with the help of the [[https://emacsfodder.github.io/emacs-theme-editor/][Emacs Theme Editor]].  I am also installing =doom-themes= because it contains a huge collection of themes.  M-x load-theme will list all of the themes available.
-
-#+begin_src emacs-lisp
-(add-to-list 'custom-theme-load-path "~/.config/emacs/themes/")
-
-(use-package doom-themes
-  :config
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  ;; Sets the default theme to load!!! 
-  (load-theme 'doom-one t)
-  ;; Enable custom neotree theme (all-the-icons must be installed!)
-  (doom-themes-neotree-config)
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
-#+end_src
 
 * TLDR
 
@@ -1102,13 +1103,6 @@ The first line below designates the directory where will place all of our custom
 
 #+end_src
 
-* TRANSPARENCY
-With Emacs version 29, true transparency has been added.  I have turned transparency off by setting the alpha to '100'.  If you want some slight transparency, try setting alpha to '90'.  Of course, if you set alpha to '0', the background of Emacs would completely transparent.
-
-#+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
-
-#+end_src
 
 * WHICH-KEY
 #+begin_src emacs-lisp
