@@ -10,6 +10,8 @@
   - [[#non-versioned-local-files][Non-versioned, local files]]
   - [[#adding-the-scripts-directory-to-path][Adding the scripts directory to path]]
   - [[#sourcing-the-scripts][Sourcing the scripts]]
+- [[#elpaca-config][Elpaca config]]
+  - [[#package-manager][Package Manager]]
   - [[#no-littering][No littering]]
   - [[#backup][Backup]]
 - [[#gui][GUI]]
@@ -68,11 +70,16 @@ These are the bare minimum.
 
 This configuration was heavily influenced by:
 - https://github.com/iocanel/emacs.d
-- https://gitlab.com/dwt1/dotfiles
+- https://gitlab.com/dwt1/dashboard-set-file-icons
+- https://codeberg.org/ashton314/emacs-bedrock/src/branch/main/init.el
 
 ** What should be installed in your OS
 We must install a bunch of os packages in order to everything work:
 #+begin_src emacs-lisp
+
+(when (< emacs-major-version 29)
+  (error (format "Evilmacs only works with Emacs 29 and newer; you have version ~a" emacs-major-version)))
+
 (defun em/check-os-deps (dep)
   "Checks and reports missing dependencies"
   (unless (executable-find dep) (message "%s is not installed, some packages may not work" dep))
@@ -92,16 +99,99 @@ Everything temporary should go in the .local directory.
 #+end_src
 ** Adding the scripts directory to path
 #+begin_src 
-(add-to-list 'load-path "~/.config/emacs/scripts/")
+;; (add-to-list 'load-path "~/.config/emacs/scripts/")
 #+end_src
 ** Sourcing the scripts
 #+begin_src 
-(org-babel-tangle-file "~/.config/emacs/scripts/elpaca.org")
-(org-babel-tangle-file "~/.config/emacs/scripts/window.org")
+;;(org-babel-tangle-file "~/.config/emacs/scripts/elpaca.org")
+;; (org-babel-tangle-file "~/.config/emacs/scripts/window.org")
 
-(require 'elpaca)  ;; Elpaca Configurations
-(require 'window)  ;; Windows' Configurations
+;; (require 'elpaca)  ;; Elpaca Configurations
+;; (require 'window)  ;; Windows' Configurations
 #+end_src
+
+
+* Elpaca config
+** Package Manager
+Elpaca seems to be a lot easier and dependable.
+
+#+begin_src emacs-lisp 
+
+(defvar elpaca-installer-version 0.7)
+(defvar elpaca-directory (expand-file-name "elpaca/" no-littering-var-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+			:ref nil
+			:files (:defaults (:exclude "extensions"))
+			:build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+ (build (expand-file-name "elpaca/" elpaca-builds-directory))
+ (order (cdr elpaca-order))
+ (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (< emacs-major-version 28) (require 'subr-x))
+    (condition-case-unless-debug err
+  (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+	   ((zerop (call-process "git" nil buffer t "clone"
+				 (plist-get order :repo) repo)))
+	   ((zerop (call-process "git" nil buffer t "checkout"
+				 (or (plist-get order :ref) "--"))))
+	   (emacs (concat invocation-directory invocation-name))
+	   ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+				 "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+	   ((require 'elpaca))
+	   ((elpaca-generate-autoloads "elpaca" repo)))
+      (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+    (error "%s" (with-current-buffer buffer (buffer-string))))
+((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
+
+;; Install use-package support
+(elpaca elpaca-use-package
+  ;; Enable :elpaca use-package keyword.
+  (elpaca-use-package-mode)
+  ;; Assume :elpaca t unless otherwise specified.
+  (setq elpaca-use-package-by-default t))
+
+;; Block until current queue processed.
+(elpaca-wait)
+
+;; This seems to be a bug 
+(defun +elpaca-unload-seq (e) 
+"Unload seq before continuing the elpaca build, then continue to build the recipe E."
+  (and (featurep 'seq) (unload-feature 'seq t))
+  (elpaca--continue-build e))
+(elpaca `(seq :build ,(append (butlast (if (file-exists-p (expand-file-name "seq" elpaca-builds-directory))
+                                          elpaca--pre-built-steps
+                                        elpaca-build-steps))
+                             (list '+elpaca-unload-seq 'elpaca--activate-package))))
+;;When installing a package which modifies a form used at the top-level
+;;(e.g. a package which adds a use-package key word),
+;;use `elpaca-wait' to block until that package has been installed/configured.
+;;For example:
+;;(use-package general :demand t)
+;;(elpaca-wait)
+
+;;Turns off elpaca-use-package-mode current declartion
+;;Note this will cause the declaration to be interpreted immediately (not deferred).
+;;Useful for configuring built-in emacs features.
+;;(use-package emacs :elpaca nil :config (setq ring-bell-function #'ignore))
+
+;; Don't install anything. Defer execution of BODY
+;;(elpaca nil (message "deferred"))
+
+;;; elpaca-setup.el ends here
+#+end_src
+
+
 ** No littering
 #+begin_src emacs-lisp
 (use-package no-littering
@@ -1003,7 +1093,10 @@ The following settings are simple modes that are enabled (or disabled) so that E
            (setq-local electric-pair-inhibit-predicate
                    `(lambda (c)
                   (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))))))
-(global-auto-revert-mode t)  ;; Automatically show changes if the file has changed
+(setopt auto-revert-avoid-polling t) ;; Automatically reread from disk if the underlying file changes
+(setopt auto-revert-interval 5)      ;; Some systems don't do file notifications well; see 
+(setopt auto-revert-check-vc-info t) ;; https://todo.sr.ht/~ashton314/emacs-bedrock/11
+(global-auto-revert-mode t)          ;; Automatically show changes if the file has changed
 (global-display-line-numbers-mode 1) ;; Display line numbers
 (global-visual-line-mode t)  ;; Enable truncated lines
 (menu-bar-mode -1)           ;; Disable the menu bar 
@@ -1016,6 +1109,19 @@ The following settings are simple modes that are enabled (or disabled) so that E
 (setq vc-follow-symlinks t)  ;; When editing a symlink pointing to version control, edit the file without asking
 (setq inhibit-compacting-font-caches t) ;; Don’t compact font caches during GC.
 (setq find-file-visit-truename t) ;; To avoid ridiculous path displayed on the mode-line while visiting a symbolink
+
+(savehist-mode) ;; Save history of minibuffer
+
+;; Move through windows with Ctrl-<arrow keys>
+(windmove-default-keybindings 'control) ; You can use other modifiers here
+
+;; Fix archaic defaults
+(setopt sentence-end-double-space nil)
+
+;; Make right-click do something sensible
+(when (display-graphic-p)
+  (context-menu-mode))
+
 #+end_src
 
 * SHELLS AND TERMINALS
