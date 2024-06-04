@@ -116,6 +116,12 @@ Everything temporary should go in the .local directory.
 Elpaca seems to be a lot easier and dependable.
 
 #+begin_src emacs-lisp 
+;; this is for debug reasons
+     (when init-file-debug
+       (setq use-package-verbose t
+             use-package-expand-minimally nil
+             use-package-compute-statistics t
+             debug-on-error t))
 
 (defvar elpaca-installer-version 0.7)
 (defvar elpaca-directory (expand-file-name "elpaca/" no-littering-var-directory))
@@ -216,6 +222,7 @@ This is an icon set that can be used with dashboard, dired, ibuffer and other Em
   :if (display-graphic-p))
 
 (use-package all-the-icons-dired
+  :diminish
   :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
 #+end_src
 
@@ -400,6 +407,7 @@ With Emacs version 29, true transparency has been added.  If you want some sligh
 
 #+begin_src emacs-lisp
 (use-package drag-stuff
+  :diminish
   :init
   (drag-stuff-global-mode 1)
   (drag-stuff-define-keys))
@@ -531,7 +539,7 @@ https://github.com/emacsorphanage/evil-anzu
 #+begin_src emacs-lisp
 (use-package anzu
   :defer 10
-  :diminish t
+  :diminish 
   :config (global-anzu-mode))
 
 (use-package evil-anzu
@@ -794,7 +802,7 @@ Install =luacheck= from your Linux distro's repositories for flycheck to work co
 #+begin_src emacs-lisp
 (use-package magit
   :defer t
-  :after (general))
+  :after (general transient))
 #+end_src
 
 * HIGHLIGHT TODO
