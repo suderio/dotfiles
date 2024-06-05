@@ -150,6 +150,6 @@ The first line below designates the directory where will place all of our custom
 With Emacs version 29, true transparency has been added.  If you want some slight transparency, try setting alpha to '90'.  Of course, if you set alpha to '0', the background of Emacs would completely transparent.
 
 #+begin_src emacs-lisp :tangle yes
-(add-to-list 'default-frame-alist '(alpha-background . 65)) ; For all new frames henceforth
+(add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
 
 #+end_src
