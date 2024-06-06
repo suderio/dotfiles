@@ -25,6 +25,7 @@ This configuration was heavily influenced by:
 - https://github.com/iocanel/emacs.d
 - https://gitlab.com/dwt1/dashboard-set-file-icons
 - https://codeberg.org/ashton314/emacs-bedrock/src/branch/main/init.el
+- https://github.com/pprevos/emacs-writing-studio
 
 ** What should be installed in your OS
 We must install a bunch of os packages in order to everything work:

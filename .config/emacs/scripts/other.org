@@ -318,6 +318,13 @@ Display the actual color as a background for any hex color value (ex. #ffffff). 
 Eshell is an Emacs 'shell' that is written in Elisp.
 
 #+begin_src emacs-lisp :tangle yes
+;(use-package eshell
+;  :init
+;  (defun em/setup-eshell ()
+;    ;; Something funny is going on with how Eshell sets up its keymaps; this is
+;    ;; a work-around to make C-r bound in the keymap
+;    (keymap-set eshell-mode-map "C-r" 'consult-history))
+;  :hook ((eshell-mode . em/setup-eshell)))
 (use-package eshell-toggle
   :custom
   (eshell-toggle-size-fraction 3)
