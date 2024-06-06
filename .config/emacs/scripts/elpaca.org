@@ -3,6 +3,7 @@
 #+DESCRIPTION: Suderio's personal Emacs config - Elpaca.
 #+STARTUP: showeverything
 #+OPTIONS: toc:2
+#+PROPERTY: header-args    :tangle yes
 
 * Elpaca config
 ** Package Manager

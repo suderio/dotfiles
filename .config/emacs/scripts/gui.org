@@ -3,6 +3,7 @@
 #+DESCRIPTION: Suderio's personal Emacs config.
 #+STARTUP: showeverything
 #+OPTIONS: toc:2
+#+PROPERTY: header-args    :tangle yes
 
 * GUI
 ** All The Icons
@@ -143,7 +144,7 @@ The first line below designates the directory where will place all of our custom
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
 
-(load-theme 'modus-vivendi)
+(load-theme 'modus-vivendi t)
 #+end_src
 ** TRANSPARENCY
 With Emacs version 29, true transparency has been added.  If you want some slight transparency, try setting alpha to '90'.  Of course, if you set alpha to '0', the background of Emacs would completely transparent.
