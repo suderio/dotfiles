@@ -185,16 +185,6 @@
     "h x" '(describe-command :wk "Display full documentation for command"))
 
   (em/leader-keys
-    "m" '(:ignore t :wk "Org")
-    "m a" '(org-agenda :wk "Org agenda")
-    "m c" '(org-capture :wk "Org capture")
-    "m e" '(org-export-dispatch :wk "Org export dispatch")
-    "m i" '(org-toggle-item :wk "Org toggle item")
-    "m t" '(org-todo :wk "Org todo")
-    "m B" '(org-babel-tangle :wk "Org babel tangle")
-    "m T" '(org-todo-list :wk "Org todo list"))
-
-  (em/leader-keys
     "m b" '(:ignore t :wk "Tables")
     "m b -" '(org-table-insert-hline :wk "Insert hline in table"))
 
@@ -203,11 +193,14 @@
     "m d t" '(org-time-stamp :wk "Org time stamp"))
 
   (em/leader-keys
-    "o" '(:ignore t :wk "Open")
-    "o d" '(dashboard-open :wk "Dashboard")
-    "o e" '(elfeed :wk "Elfeed RSS")
-    "o f" '(make-frame :wk "Open buffer in new frame")
-    "o F" '(select-frame-by-name :wk "Select frame by name"))
+    "o" '(:ignore t :wk "Org")
+    "o a" '(org-agenda :wk "Org agenda")
+    "o c" '(org-capture :wk "Org capture")
+    "o e" '(org-export-dispatch :wk "Org export dispatch")
+    "o i" '(org-toggle-item :wk "Org toggle item")
+    "o t" '(org-todo :wk "Org todo")
+    "o B" '(org-babel-tangle :wk "Org babel tangle")
+    "o T" '(org-todo-list :wk "Org todo list"))
 
   ;; projectile-command-map already has a ton of bindings 
   ;; set for us, so no need to specify each individually.
@@ -263,6 +256,14 @@
     "w d" '(downcase-word :wk "Downcase word")
     "w u" '(upcase-word :wk "Upcase word")
     "w =" '(count-words :wk "Count words/lines for buffer"))
+
+  (em/leader-keys
+    "z" '(:ignore t :wk "Open")
+    "z d" '(dashboard-open :wk "Dashboard")
+    "z e" '(elfeed :wk "Elfeed RSS")
+    "z f" '(make-frame :wk "Open buffer in new frame")
+    "z F" '(select-frame-by-name :wk "Select frame by name"))
+  
 )
 
 #+end_src

@@ -37,12 +37,12 @@ Emacs Dashboard is an extensible startup screen showing you recent files, bookma
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
   (setq dashboard-banner-logo-title "Evil Emacs The Ultimate!")
-  ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-  (setq dashboard-startup-banner "~/.config/emacs/images/emacs-logo.png")  ;; use custom image as banner
+  (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+  ;;(setq dashboard-startup-banner "~/.config/emacs/images/emacs-logo.png")  ;; use custom image as banner
   (setq dashboard-center-content nil) ;; set to 't' for centered content
-  (setq dashboard-items '((recents . 5)
+  (setq dashboard-items '((recents . 15)
                           (agenda . 5 )
-                          (bookmarks . 3)
+                          (bookmarks . 5)
                           (projects . 3)
                           (registers . 3)))
   :custom 
@@ -65,15 +65,15 @@ Defining the various fonts that Emacs will use.
 #+begin_src emacs-lisp :tangle yes
 (set-face-attribute 'default nil
   :font "Noto Sans Mono"
-  :height 100
+  :height 80
   :weight 'medium)
 (set-face-attribute 'variable-pitch nil
   :font "DejaVu Serif"
-  :height 110
+  :height 90
   :weight 'medium)
 (set-face-attribute 'fixed-pitch nil
   :font "Noto Sans Mono"
-  :height 100
+  :height 80
   :weight 'medium)
 ;; Makes commented text and keywords italics.
 ;; This is working in emacsclient but not emacs.
@@ -86,10 +86,10 @@ Defining the various fonts that Emacs will use.
 ;; This sets the default font on all graphical frames created after restarting Emacs.
 ;; Does the same thing as 'set-face-attribute default' above, but emacsclient fonts
 ;; are not right unless I also add this method of setting the default font.
-(add-to-list 'default-frame-alist '(font . "Noto Sans Mono-10"))
+(add-to-list 'default-frame-alist '(font . "Noto Sans Mono-8"))
 
 ;; Uncomment the following line if line spacing needs adjusting.
-(setq-default line-spacing 0.12)
+(setq-default line-spacing 0.02)
 
 #+end_src
 ** Zooming In/Out
