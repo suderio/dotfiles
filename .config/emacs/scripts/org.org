@@ -1,15 +1,25 @@
-#+title: Suderio's GNU Emacs Config
+#+title: Suderio's GNU Emacs Config - Org
 #+AUTHOR: Paulo Suderio
 #+DESCRIPTION: Suderio's personal Emacs config.
 #+STARTUP: showeverything
 #+OPTIONS: toc:2
 #+PROPERTY: header-args    :tangle yes
 
-* ORG MODE
+* ORG MODE :toc:
+  - [[#some-critical-variables][Some Critical variables]]
+- [[#highlight-todo][Highlight TODO]]
+  - [[#org][Org]]
+  - [[#org-roam][Org-roam]]
+  - [[#diminish-org-indent-mode][Diminish Org Indent Mode]]
+  - [[#org-bullets][Org-Bullets]]
+  - [[#org-level-headers][Org Level Headers]]
+  - [[#org-tempo][Org-Tempo]]
+  - [[#toc-org][Toc-Org]]
+
 ** Some Critical variables
 #+begin_src emacs-lisp :tangle yes
 ;; Agenda variables
-(setq org-directory "~/repos/org/") ; Non-absolute paths for agenda and
+(setq org-directory "~/Org/") ; Non-absolute paths for agenda and
                                     ; capture templates will look here.
 
 (setq org-agenda-files '("inbox.org" "work.org"))
@@ -40,8 +50,8 @@
 ;;; Phase 3 variables
 
 ;; Org-roam variables
-(setq org-roam-directory "~/repos/org/org-roam/")
-(setq org-roam-index-file "~/repos/org/org-roam/index.org")
+(setq org-roam-directory "~/Org/org-roam/")
+(setq org-roam-index-file "~/Org/org-roam/index.org")
 
 ;;; Optional variables
 
@@ -51,17 +61,26 @@
 (setq org-link-abbrev-alist
       '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")))
 #+end_src
+* Highlight TODO
+Adding highlights to TODO and related words.
+
+#+begin_src emacs-lisp :tangle yes
+(use-package hl-todo
+  :hook ((org-mode . hl-todo-mode)
+         (prog-mode . hl-todo-mode))
+  :config
+  (setq hl-todo-highlight-punctuation ":"
+        hl-todo-keyword-faces
+        `(("TODO"       warning bold)
+          ("WAITING"      error bold)
+          ("DOING"       font-lock-constant-face bold)
+          ("DONE"     font-lock-keyword-face bold)
+          ("NOTE"       success bold)
+          ("CANCELLED" font-lock-doc-face bold))))
+
+#+end_src
 ** Org
 #+begin_src emacs-lisp :tangle yes
-;(use-package org
-;  :hook ((org-mode . visual-line-mode)  ; wrap lines at word breaks
-;         (org-mode . flyspell-mode))    ; spell checking!
-;
-;  :bind (:map global-map
-;              ("C-c l s" . org-store-link)          ; Mnemonic: link → store
-;              ("C-c l i" . org-insert-link-global)) ; Mnemonic: link → insert
-;  :config
-;  (require 'oc-csl)                     ; citation support
   (add-to-list 'org-export-backends 'md)
 
   ;; Make org-open-at-point follow file links in the same window

@@ -135,6 +135,8 @@ The following settings are simple modes that are enabled (or disabled) so that E
 (when (display-graphic-p)
   (context-menu-mode))
 
+;; Short answers only please
+(setq use-short-answers t)
 #+end_src
 
 ** Minibuffer/completion
@@ -155,13 +157,6 @@ For help, see: https://www.masteringemacs.org/article/understanding-minibuffer-c
 ;(setopt completion-auto-select t)                     ; See `C-h v completion-auto-select' for more possible values
 
 (keymap-set minibuffer-mode-map "TAB" 'minibuffer-complete) ; TAB acts more like how it does in the shell
-
-;; For a fancier built-in completion option, try ido-mode,
-;; icomplete-vertical, or fido-mode. See also the file extras/base.el
-
-;(icomplete-vertical-mode)
-;(fido-vertical-mode)
-;(setopt icomplete-delay-completions-threshold 4000)
 #+end_src
 
 ** Interface enhancements/defaults

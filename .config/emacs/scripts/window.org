@@ -5,7 +5,9 @@
 #+OPTIONS: toc:2
 #+PROPERTY: header-args    :tangle yes
 
-* Windows Configurations
+* Windows Configurations :toc:
+  - [[#moving-windows][Moving windows]]
+
 ** Moving windows
 
 #+begin_src emacs-lisp :tangle yes

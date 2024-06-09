@@ -7,78 +7,18 @@
 #+PROPERTY: header-args    :tangle yes
 
 * TABLE OF CONTENTS :toc:
-- [[#dired][DIRED]]
-- [[#drag-stuff][DRAG-STUFF]]
-- [[#ediff][EDIFF]]
-- [[#elfeed][ELFEED]]
-- [[#eradio][ERADIO]]
-- [[#anzu--anzu-for-evil-mode][ANZU & ANZU FOR EVIL-MODE]]
-- [[#highlight-todo][HIGHLIGHT TODO]]
-- [[#latex][LATEX]]
-- [[#neotree][NEOTREE]]
+- [[#elfeed][Elfeed]]
+- [[#eradio][Eradio]]
+- [[#latex][Latex]]
 - [[#pdfs][PDFs]]
-- [[#perspective][PERSPECTIVE]]
-- [[#projectile][PROJECTILE]]
-- [[#rainbow-mode][RAINBOW MODE]]
-- [[#rest][REST]]
-- [[#shells-and-terminals][SHELLS AND TERMINALS]]
+- [[#shells-and-terminals][Shells and Terminals]]
   - [[#eshell][Eshell]]
   - [[#vterm][Vterm]]
   - [[#vterm-toggle][Vterm-Toggle]]
-- [[#sudo-edit][SUDO EDIT]]
+- [[#sudo-edit][Sudo Edit]]
 - [[#tldr][TLDR]]
-- [[#which-key][WHICH-KEY]]
 
-* DIRED
-#+begin_src emacs-lisp :tangle yes
-(use-package dired-open
-  :config
-  (setq dired-open-extensions '(("gif" . "sxiv")
-                                ("jpg" . "sxiv")
-                                ("png" . "sxiv")
-                                ("mkv" . "mpv")
-                                ("mp4" . "mpv"))))
-
-(use-package peep-dired
-  :after dired
-  :hook (evil-normalize-keymaps . peep-dired-hook)
-  :config
-    (evil-define-key 'normal dired-mode-map (kbd "h") 'dired-up-directory)
-    (evil-define-key 'normal dired-mode-map (kbd "l") 'dired-open-file) ; use dired-find-file instead if not using dired-open package
-    (evil-define-key 'normal peep-dired-mode-map (kbd "j") 'peep-dired-next-file)
-    (evil-define-key 'normal peep-dired-mode-map (kbd "k") 'peep-dired-prev-file)
-)
-
-#+end_src
-
-* DRAG-STUFF
-[[https://github.com/rejeep/drag-stuff.el][Drag Stuff]] is a minor mode for Emacs that makes it possible to drag stuff (words, region, lines) around in Emacs.  When 'drag-stuff-define-keys' is enabled, then the following keybindings are set: M-up, M-down, M-left, and M-right.
-
-#+begin_src emacs-lisp :tangle yes
-(use-package drag-stuff
-  :diminish
-  :init
-  (drag-stuff-global-mode 1)
-  (drag-stuff-define-keys))
-
-#+end_src
-
-* EDIFF
-'ediff' is a diff program that is built into Emacs.  By default, 'ediff' splits files vertically and places the 'help' frame in its own window.  I have changed this so the two files are split horizontally and the 'help' frame appears as a lower split within the existing window.  Also, I create my own 'dt-ediff-hook' where I add 'j/k' for moving to next/prev diffs.  By default, this is set to 'n/p'.
-
-#+begin_src emacs-lisp :tangle yes
-(setq ediff-split-window-function 'split-window-horizontally
-      ediff-window-setup-function 'ediff-setup-windows-plain)
-
-(defun dt-ediff-hook ()
-  (ediff-setup-keymap)
-  (define-key ediff-mode-map "j" 'ediff-next-difference)
-  (define-key ediff-mode-map "k" 'ediff-previous-difference))
-
-(add-hook 'ediff-mode-hook 'dt-ediff-hook)
-#+end_src 
-
-* ELFEED
+* Elfeed
 An RSS newsfeed reader for Emacs.  Move through the articles with 'j/k'.  Move through the stories with 'CTRL j/k' when in other frame.
 
 #+begin_src emacs-lisp :tangle yes
@@ -114,7 +54,7 @@ An RSS newsfeed reader for Emacs.  Move through the articles with 'j/k'.  Move t
 
 #+end_src
 
-* ERADIO
+* Eradio
 [[https://github.com/olavfosse/eradio][eradio]] is a simple Internet radio player for Emacs.  It uses 'vlc as its backend by default, but you can change the =eradio-player= variable to use another multimedia player.  I have set eradio to use 'mpv' instead of 'vlc' because it supports more types of Internet radio streams.
 
 #+begin_src emacs-lisp :tangle yes
@@ -142,46 +82,7 @@ An RSS newsfeed reader for Emacs.  Move through the articles with 'j/k'.  Move t
                           ("RadioMetal" . "https://zeno.fm/radio/radio-metal/")
                           ("RocknRoll Radio" . "https://zeno.fm/radio/rocknroll-radio994c7517qs8uv/"))))
 #+end_src
-
-
-* ANZU & ANZU FOR EVIL-MODE
-
-anzu.el provides a minor mode which displays current match/total matches in the mode-line in various search modes. This makes it easy to understand how many matches there are in the current buffer for your search query.
-https://github.com/emacsorphanage/evil-anzu
-
-#+begin_src emacs-lisp :tangle yes
-(use-package anzu
-  :defer 10
-  :diminish 
-  :config (global-anzu-mode))
-
-(use-package evil-anzu
-  :after (evil anzu))
-
-#+end_src
-
-* HIGHLIGHT TODO
-Adding highlights to TODO and related words.
-
-#+begin_src emacs-lisp :tangle yes
-(use-package hl-todo
-  :hook ((org-mode . hl-todo-mode)
-         (prog-mode . hl-todo-mode))
-  :config
-  (setq hl-todo-highlight-punctuation ":"
-        hl-todo-keyword-faces
-        `(("TODO"       warning bold)
-          ("FIXME"      error bold)
-          ("HACK"       font-lock-constant-face bold)
-          ("REVIEW"     font-lock-keyword-face bold)
-          ("NOTE"       success bold)
-          ("DEPRECATED" font-lock-doc-face bold))))
-
-#+end_src
-
-
-
-* LATEX
+* Latex
 #+begin_src emacs-lisp :tangle yes
 (use-package latex-preview-pane
   :defer t
@@ -189,33 +90,6 @@ Adding highlights to TODO and related words.
   :hook ((latex-mode . latex-preview-pane-mode)))
 #+end_src
 
-* NEOTREE
-Neotree is a file tree viewer.  When you open neotree, it jumps to the current file thanks to neo-smart-open.  The neo-window-fixed-size setting makes the neotree width be adjustable.  NeoTree provides following themes: classic, ascii, arrow, icons, and nerd.  Theme can be config'd by setting "two" themes for neo-theme: one for the GUI and one for the terminal.  I like to use 'SPC t' for 'toggle' keybindings, so I have used 'SPC t n' for toggle-neotree.
-
-| COMMAND        | DESCRIPTION               | KEYBINDING |
-|----------------+---------------------------+------------|
-| neotree-toggle | /Toggle neotree/            | SPC t n    |
-| neotree- dir   | /Open directory in neotree/ | SPC d n    |
-
-#+BEGIN_SRC emacs-lisp :tangle yes
-(use-package neotree
-  :config
-  (setq neo-smart-open t
-        neo-show-hidden-files t
-        neo-window-width 55
-        neo-window-fixed-size nil
-        inhibit-compacting-font-caches t
-        projectile-switch-project-action 'neotree-projectile-action) 
-        ;; truncate long file names in neotree
-        (add-hook 'neo-after-create-hook
-           #'(lambda (_)
-               (with-current-buffer (get-buffer neo-buffer-name)
-                 (setq truncate-lines t)
-                 (setq word-wrap nil)
-                 (make-local-variable 'auto-hscroll-mode)
-                 (setq auto-hscroll-mode nil)))))
-
-#+end_src
 
 * PDFs
 [[https://github.com/vedang/pdf-tools][pdf-tools]] is a replacement of DocView for viewing PDF files inside Emacs.  It uses the =poppler= library, which also means that 'pdf-tools' can be used to modify PDFs.  I use to disable 'display-line-numbers-mode' in 'pdf-view-mode' because line numbers crash it.
@@ -238,81 +112,10 @@ Neotree is a file tree viewer.  When you open neotree, it jumps to the current f
                                                          (doom-modeline-mode -1)))
 #+end_src
 
-* PERSPECTIVE
-[[https://github.com/nex3/perspective-el][Perspective]] provides multiple named workspaces (or "perspectives") in Emacs, similar to multiple desktops in window managers.  Each perspective has its own buffer list and its own window layout, along with some other isolated niceties, like the [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Xref.html][xref]] ring.
-
-#+begin_src emacs-lisp :tangle yes
-(use-package perspective
-  :custom
-  ;; NOTE! I have also set 'SCP =' to open the perspective menu.
-  ;; I'm only setting the additional binding because setting it
-  ;; helps suppress an annoying warning message.
-  (persp-mode-prefix-key (kbd "C-c M-p"))
-  :init 
-  (persp-mode)
-  :config
-  ;; Sets a file to write to when we save states
-  (setq persp-state-default-file "~/.config/emacs/sessions"))
-
-;; This will group buffers by persp-name in ibuffer.
-(add-hook 'ibuffer-hook
-          (lambda ()
-            (persp-ibuffer-set-filter-groups)
-            (unless (eq ibuffer-sorting-mode 'alphabetic)
-              (ibuffer-do-sort-by-alphabetic))))
-
-;; Automatically save perspective states to file when Emacs exits.
-(add-hook 'kill-emacs-hook #'persp-state-save)
-
-#+end_src
-
-* PROJECTILE
-[[https://github.com/bbatsov/projectile][Projectile]] is a project interaction library for Emacs.  It should be noted that many projectile commands do not work if you have set "fish" as the "shell-file-name" for Emacs.  I had initially set "fish" as the "shell-file-name" in the Vterm section of this config, but oddly enough I changed it to "bin/sh" and projectile now works as expected, and Vterm still uses "fish" because my default user "sh" on my Linux system is "fish".
-
-#+begin_src emacs-lisp :tangle yes
-(use-package projectile
-  :config
-  (projectile-mode 1))
-#+end_src
 
 
-* RAINBOW MODE
-Display the actual color as a background for any hex color value (ex. #ffffff).  The code block below enables rainbow-mode in all programming modes (prog-mode) as well as org-mode, which is why rainbow works in this document.  
 
-#+begin_src emacs-lisp :tangle yes
-(use-package rainbow-mode
-  :diminish
-  :hook org-mode prog-mode)
-#+end_src
-
-* REST
-
-#+begin_src emacs-lisp :tangle yes
-(use-package restclient)
-
-;; Ver como traduzir isso para o elpaca
-
-(use-package know-your-http-well)
-
-(use-package company-restclient
-;  :when (modulep :completion company)
-  :after (restclient know-your-http-well)
-  :config (set-company-backend! 'restclient-mode 'company-restclient))
-
-
-(use-package restclient-jq
-;  :when (modulep +jq)
-  :after restclient)
-
-
-(use-package jq-mode
-;  :when (modulep +jq)
-  :after restclient-jq)
-
-(em/check-os-deps "jq")
-#+end_src
-
-* SHELLS AND TERMINALS
+* Shells and Terminals
 
 ** Eshell
 Eshell is an Emacs 'shell' that is written in Elisp.
@@ -389,7 +192,7 @@ Vterm is a terminal emulator within Emacs.  The 'shell-file-name' setting sets t
 
 #+end_src
 
-* SUDO EDIT
+* Sudo Edit
 [[https://github.com/nflath/sudo-edit][sudo-edit]] gives us the ability to open files with sudo privileges or switch over to editing with sudo privileges if we initially opened the file without such privileges.
 
 #+begin_src emacs-lisp :tangle yes
@@ -405,24 +208,3 @@ Vterm is a terminal emulator within Emacs.  The 'shell-file-name' setting sets t
 #+end_src
 
 
-* WHICH-KEY
-#+begin_src emacs-lisp :tangle yes
-(use-package which-key
-  :init
-    (which-key-mode 1)
-  :diminish
-  :config
-  (setq which-key-side-window-location 'bottom
-	  which-key-sort-order #'which-key-key-order-alpha
-	  which-key-allow-imprecise-window-fit nil
-	  which-key-sort-uppercase-first nil
-	  which-key-add-column-padding 1
-	  which-key-max-display-columns nil
-	  which-key-min-display-lines 6
-	  which-key-side-window-slot -10
-	  which-key-side-window-max-height 0.25
-	  which-key-idle-delay 0.8
-	  which-key-max-description-length 55
-	  which-key-allow-imprecise-window-fit nil
-	  which-key-separator " → " ))
-#+end_src

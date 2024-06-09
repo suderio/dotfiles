@@ -1,83 +1,79 @@
-#+title: Suderio's GNU Emacs Config
+#+title: Suderio's GNU Emacs Config - basic stuff
 #+AUTHOR: Paulo Suderio
 #+DESCRIPTION: Suderio's personal Emacs config.
 #+STARTUP: showeverything
 #+OPTIONS: toc:2
 #+PROPERTY: header-args    :tangle yes
+* Basic Configuration :toc:
+- [[#dired][Dired]]
+- [[#drag-stuff][Drag-stuff]]
+- [[#flycheck][Flycheck]]
+- [[#motion-aids][Motion Aids]]
+- [[#embark--consult][Embark & Consult]]
+- [[#minibuffer--completion][Minibuffer & Completion]]
+  - [[#minibuffer-escape][Minibuffer Escape]]
+- [[#editing-enhancements][Editing Enhancements]]
+- [[#anzu--anzu-for-evil-mode][Anzu & Anzu for evil-mode]]
+- [[#which-key][Which-key]]
+- [[#better-help][Better Help]]
+- [[#projectile][Projectile]]
+- [[#treemacs][Treemacs]]
 
-* IVY (COUNSEL)
-+ Ivy, a generic completion mechanism for Emacs.
-+ Counsel, a collection of Ivy-enhanced versions of common Emacs commands.
-+ Ivy-rich allows us to add descriptions alongside the commands in M-x.
-
+* Dired
 #+begin_src emacs-lisp :tangle yes
-(use-package counsel
-  :after ivy
-  :diminish
-  :config 
-    (counsel-mode)
-    (setq ivy-initial-inputs-alist nil)) ;; removes starting ^ regex in M-x
-
-(use-package ivy
- ; :bind
-  ;; ivy-resume resumes the last Ivy-based completion.
- ; (("C-c C-r" . ivy-resume)
- ;  ("C-x B" . ivy-switch-buffer-other-window))
-  :diminish
-  :custom
-  (setq ivy-use-virtual-buffers t)
-  (setq ivy-count-format "(%d/%d) ")
-  (setq enable-recursive-minibuffers t)
+(use-package dired-open
   :config
-  (ivy-mode))
+  (setq dired-open-extensions '(("gif" . "sxiv")
+                                ("jpg" . "sxiv")
+                                ("png" . "sxiv")
+                                ("mkv" . "mpv")
+                                ("mp4" . "mpv"))))
 
-(use-package all-the-icons-ivy-rich
-  :ensure t
-  :init (all-the-icons-ivy-rich-mode 1))
-
-(use-package ivy-rich
-  :after ivy
-  :ensure t
-  :init (ivy-rich-mode 1) ;; this gets us descriptions in M-x.
-  :custom
-  (ivy-virtual-abbreviate 'full
-   ivy-rich-switch-buffer-align-virtual-buffer t
-   ivy-rich-path-style 'abbrev)
+(use-package peep-dired
+  :after dired
+  :hook (evil-normalize-keymaps . peep-dired-hook)
   :config
-  (ivy-set-display-transformer 'ivy-switch-buffer
-                               'ivy-rich-switch-buffer-transformer))
+    (evil-define-key 'normal dired-mode-map (kbd "h") 'dired-up-directory)
+    (evil-define-key 'normal dired-mode-map (kbd "l") 'dired-open-file) ; use dired-find-file instead if not using dired-open package
+    (evil-define-key 'normal peep-dired-mode-map (kbd "j") 'peep-dired-next-file)
+    (evil-define-key 'normal peep-dired-mode-map (kbd "k") 'peep-dired-prev-file)
+)
 
 #+end_src
-* MOTION AIDS
+
+* Drag-stuff
+[[https://github.com/rejeep/drag-stuff.el][Drag Stuff]] is a minor mode for Emacs that makes it possible to drag stuff (words, region, lines) around in Emacs.  When 'drag-stuff-define-keys' is enabled, then the following keybindings are set: M-up, M-down, M-left, and M-right.
+
+#+begin_src emacs-lisp :tangle yes
+(use-package drag-stuff
+  :diminish
+  :init
+  (drag-stuff-global-mode 1)
+  (drag-stuff-define-keys))
+
+#+end_src
+* Flycheck
+Install =luacheck= from your Linux distro's repositories for flycheck to work correctly with lua files.  Install =python-pylint= for flycheck to work with python files.  Haskell works with flycheck as long as =haskell-ghc= or =haskell-stack-ghc= is installed.  For more information on language support for flycheck, [[https://www.flycheck.org/en/latest/languages.html][read this]].
+
+#+begin_src emacs-lisp :tangle yes
+(use-package flycheck
+  :ensure t
+  :defer t
+  :diminish
+  :init (global-flycheck-mode))
+
+#+end_src
+* Motion Aids
 #+begin_src emacs-lisp
 (use-package avy
   :ensure t
-  :demand t
-  :bind (("C-c j" . avy-goto-line)
-         ("s-j"   . avy-goto-char-timer)))
+  :demand t)
 #+end_src
-* EMBARK & CONSULT
+* Embark & Consult
 #+begin_src emacs-lisp
 ;; Consult: Misc. enhanced commands
 (use-package consult
   :ensure t
-  :bind (
-         ;; Drop-in replacements
-         ("C-x b" . consult-buffer)     ; orig. switch-to-buffer
-         ("M-y"   . consult-yank-pop)   ; orig. yank-pop
-         ;; Searching
-         ("M-s r" . consult-ripgrep)
-         ("M-s l" . consult-line)       ; Alternative: rebind C-s to use
-         ("M-s s" . consult-line)       ; consult-line instead of isearch, bind
-         ("M-s L" . consult-line-multi) ; isearch to M-s s
-         ("M-s o" . consult-outline)
-         ;; Isearch integration
-         :map isearch-mode-map
-         ("M-e" . consult-isearch-history)   ; orig. isearch-edit-string
-         ("M-s e" . consult-isearch-history) ; orig. isearch-edit-string
-         ("M-s l" . consult-line)            ; needed by consult-line to detect isearch
-         ("M-s L" . consult-line-multi)      ; needed by consult-line to detect isearch
-         )
   :config
   ;; Narrowing lets you restrict results to certain groups of candidates
   (setq consult-narrow-key "<"))
@@ -86,10 +82,9 @@
   :ensure t
   :demand t
   :after avy
-  :bind (("C-c a" . embark-act))        ; bind this to an easy key to hit
   :init
   ;; Add the option to run embark when using avy
-  (defun bedrock/avy-action-embark (pt)
+  (defun em/avy-action-embark (pt)
     (unwind-protect
         (save-excursion
           (goto-char pt)
@@ -100,12 +95,12 @@
 
   ;; After invoking avy-goto-char-timer, hit "." to run embark at the next
   ;; candidate you select
-  (setf (alist-get ?. avy-dispatch-alist) 'bedrock/avy-action-embark))
+  (setf (alist-get ?. avy-dispatch-alist) 'em/avy-action-embark))
 
 (use-package embark-consult
   :ensure t)
 #+end_src
-* MINIBUFFER & COMPLETION
+* Minibuffer & Completion
 #+begin_src emacs-lisp
 ;; Vertico: better vertical completion for minibuffer commands
 (use-package vertico
@@ -176,17 +171,191 @@
   :config
   (setq completion-styles '(orderless)))
 #+end_src
-** MINIBUFFER ESCAPE
+** Minibuffer Escape
 By default, Emacs requires you to hit ESC three times to escape quit the minibuffer.  
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp
 (global-set-key [escape] 'keyboard-escape-quit)
 #+end_src
-* EDITING ENHANCEMENTS
+* Editing Enhancements
 #+begin_src emacs-lisp
 ;; Modify search results en masse
 (use-package wgrep
   :ensure t
   :config
   (setq wgrep-auto-save-buffer t))
+#+end_src
+
+* Anzu & Anzu for evil-mode
+
+anzu.el provides a minor mode which displays current match/total matches in the mode-line in various search modes. This makes it easy to understand how many matches there are in the current buffer for your search query.
+https://github.com/emacsorphanage/evil-anzu
+
+#+begin_src emacs-lisp :tangle yes
+(use-package anzu
+  :defer 10
+  :diminish 
+  :config (global-anzu-mode))
+
+(use-package evil-anzu
+  :after (evil anzu))
+
+#+end_src
+* Which-key
+#+begin_src emacs-lisp :tangle yes
+(use-package which-key
+  :init
+    (which-key-mode 1)
+  :diminish
+  :config
+  (setq which-key-side-window-location 'bottom
+	  which-key-sort-order #'which-key-key-order-alpha
+	  which-key-allow-imprecise-window-fit nil
+	  which-key-sort-uppercase-first nil
+	  which-key-add-column-padding 1
+	  which-key-max-display-columns nil
+	  which-key-min-display-lines 6
+	  which-key-side-window-slot -10
+	  which-key-side-window-max-height 0.25
+	  which-key-idle-delay 0.8
+	  which-key-max-description-length 55
+	  which-key-allow-imprecise-window-fit nil
+	  which-key-separator " → " ))
+#+end_src
+* Better Help
+#+begin_src emacs-lisp
+(use-package helpful
+  :bind
+  (("C-h x" . helpful-command)
+   ("C-h k" . helpful-key)
+   ("C-h v" . helpful-variable)))
+
+#+end_src
+
+* Projectile
+[[https://github.com/bbatsov/projectile][Projectile]] is a project interaction library for Emacs.  It should be noted that many projectile commands do not work if you have set "fish" as the "shell-file-name" for Emacs.  I had initially set "fish" as the "shell-file-name" in the Vterm section of this config, but oddly enough I changed it to "bin/sh" and projectile now works as expected, and Vterm still uses "fish" because my default user "sh" on my Linux system is "fish".
+
+#+begin_src emacs-lisp :tangle yes
+(use-package projectile
+  :config
+  (projectile-mode 1))
+#+end_src
+* Treemacs
+#+begin_src emacs-lisp
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
+          treemacs-deferred-git-apply-delay        0.5
+          treemacs-directory-name-transformer      #'identity
+          treemacs-display-in-side-window          t
+          treemacs-eldoc-display                   'simple
+          treemacs-file-event-delay                2000
+          treemacs-file-extension-regex            treemacs-last-period-regex-value
+          treemacs-file-follow-delay               0.2
+          treemacs-file-name-transformer           #'identity
+          treemacs-follow-after-init               t
+          treemacs-expand-after-init               t
+          treemacs-find-workspace-method           'find-for-file-or-pick-first
+          treemacs-git-command-pipe                ""
+          treemacs-goto-tag-strategy               'refetch-index
+          treemacs-header-scroll-indicators        '(nil . "^^^^^^")
+          treemacs-hide-dot-git-directory          t
+          treemacs-indentation                     2
+          treemacs-indentation-string              " "
+          treemacs-is-never-other-window           nil
+          treemacs-max-git-entries                 5000
+          treemacs-missing-project-action          'ask
+          treemacs-move-files-by-mouse-dragging    t
+          treemacs-move-forward-on-expand          nil
+          treemacs-no-png-images                   nil
+          treemacs-no-delete-other-windows         t
+          treemacs-project-follow-cleanup          nil
+          treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-position                        'left
+          treemacs-read-string-input               'from-child-frame
+          treemacs-recenter-distance               0.1
+          treemacs-recenter-after-file-follow      nil
+          treemacs-recenter-after-tag-follow       nil
+          treemacs-recenter-after-project-jump     'always
+          treemacs-recenter-after-project-expand   'on-distance
+          treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
+          treemacs-project-follow-into-home        nil
+          treemacs-show-cursor                     nil
+          treemacs-show-hidden-files               t
+          treemacs-silent-filewatch                nil
+          treemacs-silent-refresh                  nil
+          treemacs-sorting                         'alphabetic-asc
+          treemacs-select-when-already-in-treemacs 'move-back
+          treemacs-space-between-root-nodes        t
+          treemacs-tag-follow-cleanup              t
+          treemacs-tag-follow-delay                1.5
+          treemacs-text-scale                      nil
+          treemacs-user-mode-line-format           nil
+          treemacs-user-header-line-format         nil
+          treemacs-wide-toggle-width               70
+          treemacs-width                           35
+          treemacs-width-increment                 1
+          treemacs-width-is-initially-locked       t
+          treemacs-workspace-switch-cleanup        nil)
+
+    ;; The default width and height of the icons is 22 pixels. If you are
+    ;; using a Hi-DPI display, uncomment this to double the icon size.
+    ;;(treemacs-resize-icons 44)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode 'always)
+    (when treemacs-python-executable
+      (treemacs-git-commit-diff-mode t))
+
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null treemacs-python-executable)))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'simple)))
+
+    (treemacs-hide-gitignored-files-mode nil))
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ("C-x t t"   . treemacs)
+        ("C-x t d"   . treemacs-select-directory)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag)))
+
+(use-package treemacs-evil
+  :after (treemacs evil)
+  :ensure t)
+
+(use-package treemacs-projectile
+  :after (treemacs projectile)
+  :ensure t)
+
+(use-package treemacs-icons-dired
+  :hook (dired-mode . treemacs-icons-dired-enable-once)
+  :ensure t)
+
+(use-package treemacs-magit
+  :after (treemacs magit)
+  :ensure t)
+
+;(use-package treemacs-persp ;;treemacs-perspective if you use perspective.el vs. persp-mode
+;  :after (treemacs persp-mode) ;;or perspective vs. persp-mode
+;  :ensure t
+;  :config (treemacs-set-scope-type 'Perspectives))
+
+(use-package treemacs-tab-bar ;;treemacs-tab-bar if you use tab-bar-mode
+  :after (treemacs)
+  :ensure t
+  :config (treemacs-set-scope-type 'Tabs))
+
 #+end_src

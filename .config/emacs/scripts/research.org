@@ -20,7 +20,13 @@
 ;;; Also recommended is the `writer.el' extra config, which adds some nice features for
 ;;; spell-checking etc.
 
-* Critical variables
+* Research :toc:
+  - [[#critical-variables][Critical variables]]
+  - [[#citation-management][Citation Management]]
+  - [[#note-taking-org-roam][Note Taking: Org-roam]]
+  - [[#note-taking-denote][Note Taking: Denote]]
+
+** Critical variables
 These variables must be set for Citar to work properly!
 #+begin_src emacs-lisp 
 (setopt citar-bibliography '("~/repos/org/refs.bib")) ; paths to your bibtex files
@@ -28,7 +34,7 @@ These variables must be set for Citar to work properly!
 ;(setopt denote-directory (expand-file-name "~/Docs/denote-notes/"))
 #+end_src
 
-* Citation Management
+** Citation Management
 #+begin_src emacs-lisp
 (use-package citar
   :ensure t
@@ -43,11 +49,11 @@ These variables must be set for Citar to work properly!
 
 ;; Optional: if you have the embark package installed, enable the ability to act
 ;; on citations with Citar by invoking `embark-act'.
-;(use-package citar-embark
-;  :after citar embark
-;  :diminish ""
-;  :no-require
-;  :config (citar-embark-mode))
+(use-package citar-embark
+  :after citar embark
+  :diminish ""
+  :no-require
+  :config (citar-embark-mode))
 
 (use-package citar-org-roam
   :diminish ""
@@ -59,7 +65,7 @@ These variables must be set for Citar to work properly!
   (setq citar-org-roam-note-title-template "${author} - ${title}\n#+filetags: ${tags}"))
 #+end_src
 
-* Note Taking: Org-roam
+** Note Taking: Org-roam
 #+begin_src emacs-lisp 
 (use-package org-roam
   :ensure t
@@ -75,7 +81,7 @@ These variables must be set for Citar to work properly!
   (org-roam-db-autosync-mode))
 
 #+end_src
-* Note Taking: Denote
+** Note Taking: Denote
 #+begin_src emacs-lisp
 ;(use-package denote
 ;  :config

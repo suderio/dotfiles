@@ -1,11 +1,22 @@
-#+title: Suderio's GNU Emacs Config
+#+title: Suderio's GNU Emacs Config - GUI
 #+AUTHOR: Paulo Suderio
 #+DESCRIPTION: Suderio's personal Emacs config.
 #+STARTUP: showeverything
 #+OPTIONS: toc:2
 #+PROPERTY: header-args    :tangle yes
 
-* GUI
+* GUI :toc:
+  - [[#all-the-icons][All The Icons]]
+  - [[#bell][Bell]]
+  - [[#dashboard][Dashboard]]
+  - [[#diminish][Diminish]]
+  - [[#setting-the-font-face][Setting the Font Face]]
+  - [[#zooming-inout][Zooming In/Out]]
+  - [[#modeline][Modeline]]
+  - [[#rainbow-delimiters][Rainbow Delimiters]]
+  - [[#theme][Theme]]
+  - [[#transparency][Transparency]]
+
 ** All The Icons
 
 This is an icon set that can be used with dashboard, dired, ibuffer and other Emacs programs.
@@ -36,7 +47,7 @@ Emacs Dashboard is an extensible startup screen showing you recent files, bookma
   (setq initial-buffer-choice 'dashboard-open)
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
-  (setq dashboard-banner-logo-title "Evil Emacs The Ultimate!")
+  ;; (setq dashboard-banner-logo-title "Emacs The Ultimate!")
   (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
   ;;(setq dashboard-startup-banner "~/.config/emacs/images/emacs-logo.png")  ;; use custom image as banner
   (setq dashboard-center-content nil) ;; set to 't' for centered content
@@ -138,15 +149,13 @@ The first line below designates the directory where will place all of our custom
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
   ;; Sets the default theme to load!!! 
-  (load-theme 'doom-one t)
+  (load-theme 'doom-acario-dark t)
   ;; Enable custom neotree theme (all-the-icons must be installed!)
   (doom-themes-neotree-config)
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
-
-(load-theme 'modus-vivendi t)
 #+end_src
-** TRANSPARENCY
+** Transparency
 With Emacs version 29, true transparency has been added.  If you want some slight transparency, try setting alpha to '90'.  Of course, if you set alpha to '0', the background of Emacs would completely transparent.
 
 #+begin_src emacs-lisp :tangle yes
