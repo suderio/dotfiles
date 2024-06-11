@@ -50,12 +50,20 @@ Emacs Dashboard is an extensible startup screen showing you recent files, bookma
   ;; (setq dashboard-banner-logo-title "Emacs The Ultimate!")
   (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
   ;;(setq dashboard-startup-banner "~/.config/emacs/images/emacs-logo.png")  ;; use custom image as banner
-  (setq dashboard-center-content nil) ;; set to 't' for centered content
+  (setq dashboard-center-content t) ;; set to 't' for centered content
   (setq dashboard-items '((recents . 15)
                           (agenda . 5 )
                           (bookmarks . 5)
                           (projects . 3)
                           (registers . 3)))
+  (setq dashboard-navigation-cycle t)
+  (setq dashboard-icon-type 'nerd-icons) ;; all-the-icons or nerd-icons
+  (setq dashboard-display-icons-p t)
+  (setq dashboard-projects-switch-function 'counsel-projectile-switch-project-by-name)
+  
+  (setq dashboard-week-agenda t)
+  (setq dashboard-filter-agenda-entry 'dashboard-no-filter-agenda)
+
   :custom 
   (dashboard-modify-heading-icons '((recents . "file-text")
 				      (bookmarks . "book")))

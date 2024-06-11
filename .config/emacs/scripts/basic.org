@@ -238,7 +238,9 @@ https://github.com/emacsorphanage/evil-anzu
 #+begin_src emacs-lisp :tangle yes
 (use-package projectile
   :config
-  (projectile-mode 1))
+  (projectile-mode 1)
+  (setq projectile-project-search-path '("~/repos/"))
+)
 #+end_src
 * Treemacs
 #+begin_src emacs-lisp
