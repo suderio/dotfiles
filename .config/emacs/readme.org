@@ -87,6 +87,7 @@ By default, Emacs creates automatic backups of files in their original directori
   "dev"
   "other" 
   "org"
+  "custom"
   ))
   (org-babel-tangle-file (expand-file-name (concat script ".org") scripts-directory))
   (load script)

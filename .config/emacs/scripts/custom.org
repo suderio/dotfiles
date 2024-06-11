@@ -1,6 +1,6 @@
 #+title: Suderio's GNU Emacs Git --Git-Dir=$HOME/.Local/Dotfiles/ --Work-Tree=$HOME - custom functions
 #+AUTHOR: Paulo Suderio
-#+DESCRIPTION: Suderio's personal Emacs git --git-dir=$HOME/.local/dotfiles/ --work-tree=$HOME.
+#+DESCRIPTION: Suderio's personal Emacs config - Custom Code
 #+STARTUP: showeverything
 #+OPTIONS: toc:2
 #+PROPERTY: header-args    :tangle yes
@@ -9,14 +9,30 @@
   - [[#commit-and-push-git-config][Commit and push git config]]
 
 ** Commit and push git config
-#+begin_src shell :tangle ~/bin/sync-config :shebang "#!/bin/bash"
-git --git-dir=$HOME/.local/dotfiles/ --work-tree=$HOME pull --all 
-git --git-dir=$HOME/.local/dotfiles/ --work-tree=$HOME add -u ~/.config/emacs 
-git --git-dir=$HOME/.local/dotfiles/ --work-tree=$HOME commit -m "Emacs config autocommit" 
-git --git-dir=$HOME/.local/dotfiles/ --work-tree=$HOME push
+#+begin_src shell :tangle ~/.shrc.d/config-sync :shebang "#!/bin/bash"
+
+# manage dotfiles with git, see https://www.atlassian.com/git/tutorials/dotfiles
+alias config='/usr/bin/git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
+
+configsync () {
+  configpath="${1:-$HOME}"
+  config pull --all 
+  config add -u "$configpath"
+  config commit -m "config autocommit: $configpath" 
+  config push
+}
+
+configstatus () {
+  config status -s
+}
 #+end_src
-#+begin_src emacs-lisp
-(defun sync-config ()
+
+#+begin_src emacs-lisp :tangle ./custom.el
+(defun config-sync ()
     (interactive)
-    (shell-command "sync-config"))
+    (shell-command ". ~/.shrc.d/config-sync ; configsync ~/.config/emacs"))
+
+(defun config-status ()
+  (interactive)
+  (shell-command ". ~/.shrc.d/config-sync ; configstatus"))
 #+end_src

@@ -1,0 +1,14 @@
+#!/bin/bash
+# manage dotfiles with git, see https://www.atlassian.com/git/tutorials/dotfiles
+alias config='/usr/bin/git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
+
+configsync () {
+  config pull --all 
+  config add -u ~/.config/emacs 
+  config commit -m "Emacs config autocommit" 
+  config push
+}
+
+configstatus () {
+  config status -s
+}
