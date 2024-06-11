@@ -12,7 +12,9 @@
 - [[#language-support][Language Support]]
 - [[#treesitter][Treesitter]]
 - [[#eglot][Eglot]]
-- [[#bash][Bash]]
+- [[#languages][Languages]]
+  - [[#bash][Bash]]
+  - [[#java][Java]]
 - [[#rainbow-mode][Rainbow Mode]]
 - [[#rest][Rest]]
 
@@ -78,13 +80,19 @@
 
 * Eglot
 https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-sources-eldoc
-* Bash
+* Languages
+** Bash
 #+begin_src emacs-lisp
 (setq sh-basic-offset 2
       sh-indentation 2)
 
 #+end_src
+** Java
+#+begin_src emacs-lisp
+(use-package eglot-java)
+(add-hook 'java-mode-hook 'eglot-java-mode)
 
+#+end_src
 * Rainbow Mode
 Display the actual color as a background for any hex color value (ex. #ffffff).  The code block below enables rainbow-mode in all programming modes (prog-mode) as well as org-mode, which is why rainbow works in this document.  
 
