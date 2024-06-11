@@ -12,6 +12,7 @@
 - [[#language-support][Language Support]]
 - [[#treesitter][Treesitter]]
 - [[#eglot][Eglot]]
+- [[#agressively-indent][Agressively Indent]]
 - [[#languages][Languages]]
   - [[#bash][Bash]]
   - [[#java][Java]]
@@ -80,6 +81,14 @@
 
 * Eglot
 https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-sources-eldoc
+
+* Agressively Indent
+#+begin_src emacs-lisp
+(use-package aggressive-indent
+  :config
+  (global-aggressive-indent-mode 1)
+  (add-to-list 'aggressive-indent-excluded-modes 'html-mode))
+#+end_src
 * Languages
 ** Bash
 #+begin_src emacs-lisp
@@ -91,6 +100,7 @@ https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-s
 #+begin_src emacs-lisp
 (use-package eglot-java)
 (add-hook 'java-mode-hook 'eglot-java-mode)
+(add-hook 'java-ts-mode-hook 'eglot-java-mode)
 
 #+end_src
 * Rainbow Mode

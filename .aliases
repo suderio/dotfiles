@@ -33,5 +33,3 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 
 alias eclipse='eclipse --launcher.ini $HOME/.config/eclipse/eclipse.ini'
 
-# manage dotfiles with git, see https://www.atlassian.com/git/tutorials/dotfiles
-alias config='/usr/bin/git --git-dir=$HOME/.local/dotfiles/ --work-tree=$HOME'
