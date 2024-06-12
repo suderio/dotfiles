@@ -9,8 +9,6 @@
 * TABLE OF CONTENTS :toc:
 - [[#elfeed][Elfeed]]
 - [[#eradio][Eradio]]
-- [[#latex][Latex]]
-- [[#pdfs][PDFs]]
 - [[#shells-and-terminals][Shells and Terminals]]
   - [[#eshell][Eshell]]
   - [[#vterm][Vterm]]
@@ -82,39 +80,6 @@ An RSS newsfeed reader for Emacs.  Move through the articles with 'j/k'.  Move t
                           ("RadioMetal" . "https://zeno.fm/radio/radio-metal/")
                           ("RocknRoll Radio" . "https://zeno.fm/radio/rocknroll-radio994c7517qs8uv/"))))
 #+end_src
-* Latex
-#+begin_src emacs-lisp :tangle yes
-(use-package latex-preview-pane
-  :defer t
-  :commands  (latex-preview-pane-mode)
-  :hook ((latex-mode . latex-preview-pane-mode)))
-#+end_src
-
-
-* PDFs
-[[https://github.com/vedang/pdf-tools][pdf-tools]] is a replacement of DocView for viewing PDF files inside Emacs.  It uses the =poppler= library, which also means that 'pdf-tools' can be used to modify PDFs.  I use to disable 'display-line-numbers-mode' in 'pdf-view-mode' because line numbers crash it.
-
-#+begin_src emacs-lisp :tangle yes
-(use-package pdf-tools
-  :defer t
-  :commands (pdf-loader-install)
-  :mode "\\.pdf\\'"
-  :bind (:map pdf-view-mode-map
-              ("j" . pdf-view-next-line-or-next-page)
-              ("k" . pdf-view-previous-line-or-previous-page)
-              ("C-=" . pdf-view-enlarge)
-              ("C--" . pdf-view-shrink))
-  :init (pdf-loader-install)
-  :config (add-to-list 'revert-without-query ".pdf"))
-
-(add-hook 'pdf-view-mode-hook #'(lambda () (interactive) (display-line-numbers-mode -1)
-                                                         (blink-cursor-mode -1)
-                                                         (doom-modeline-mode -1)))
-#+end_src
-
-
-
-
 * Shells and Terminals
 
 ** Eshell
