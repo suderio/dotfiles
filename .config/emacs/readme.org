@@ -27,6 +27,9 @@ This configuration was heavily influenced by:
 - https://codeberg.org/ashton314/emacs-bedrock/src/branch/main/init.el
 - https://github.com/pprevos/emacs-writing-studio
 
+With some ideas stealed from:
+- https://protesilaos.com/emacs/dotemacs
+- https://github.com/purcell/emacs.d
 ** What should be installed in your OS
 We must install a bunch of os packages in order to everything work:
 #+begin_src emacs-lisp
