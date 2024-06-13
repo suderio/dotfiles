@@ -274,10 +274,16 @@
 
   (em/leader-keys
     "z" '(:ignore t :wk "Open")
+    "z c" '(:ignore t :wk "Config")
+    "z c s" '(config-status :wk "Config Status")
+    "z c p" '(config-sync :wk "Config Sync")
     "z d" '(dashboard-open :wk "Dashboard")
     "z e" '(elfeed :wk "Elfeed RSS")
     "z f" '(make-frame :wk "Open buffer in new frame")
-    "z F" '(select-frame-by-name :wk "Select frame by name"))
+    "z F" '(select-frame-by-name :wk "Select frame by name")
+    "z q" '(evil-quit :wk "Quit")
+    "z Q" '(evil-quit-all :wk "Quit all")
+)
   
 )
 
