@@ -13,7 +13,6 @@
   - [[#org-roam][Org-roam]]
   - [[#auto-tangle][Auto Tangle]]
   - [[#diminish-org-indent-mode][Diminish Org Indent Mode]]
-  - [[#org-bullets][Org-Bullets]]
   - [[#org-level-headers][Org Level Headers]]
   - [[#org-tempo][Org-Tempo]]
   - [[#toc-org][Toc-Org]]
@@ -201,25 +200,6 @@ Removes "Ind" from showing in the modeline.
 (eval-after-load 'org-indent '(diminish 'org-indent-mode))
 #+end_src
 
-** Org-Bullets
-Org-bullets gives us attractive bullets rather than asterisks.
-
-#+begin_src emacs-lisp :tangle yes
-(add-hook 'org-mode-hook 'org-indent-mode)
-(use-package org-bullets)
-(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
-
-(use-package org-superstar
-  :after (org))
-(add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
-;; This is usually the default, but keep in mind it must be nil
-(setq org-hide-leading-stars nil)
-;; This line is necessary.
-(setq org-superstar-leading-bullet ?\s)
-;; If you use Org Indent you also need to add this, otherwise the
-;; above has no effect while Indent is enabled.
-(setq org-indent-mode-turns-on-hiding-stars nil)
-#+end_src
 ** Org Level Headers
 #+begin_src emacs-lisp :tangle yes
 (custom-set-faces
