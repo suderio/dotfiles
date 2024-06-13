@@ -24,217 +24,212 @@
 
 ** Some Critical variables
 #+begin_src emacs-lisp :tangle yes
-  ;; Agenda variables
-  (setq org-directory "~/Org/") ; Non-absolute paths for agenda and
-                                          ; capture templates will look here.
+;; Agenda variables
+(setq org-directory "~/Org/") ; Non-absolute paths for agenda and
+                                        ; capture templates will look here.
 
-  (setq org-agenda-files '("inbox.org" "work.org"))
+(setq org-agenda-files '("inbox.org" "work.org"))
 
-  ;; Default tags
-  (setq org-tag-alist '(
-                        ;; locale
-                        (:startgroup)
-                        ("home" . ?h)
-                        ("work" . ?w)
-                        ("school" . ?s)
-                        (:endgroup)
-                        (:newline)
-                        ;; scale
-                        (:startgroup)
-                        ("one-shot" . ?o)
-                        ("project" . ?j)
-                        ("throwaway" . ?t)
-                        (:endgroup)
-                        ;; misc
-                        ("writing")
-                        ("review")
-                        ("reading")))
+;; Default tags
+(setq org-tag-alist '(
+                      ;; locale
+                      (:startgroup)
+                      ("home" . ?h)
+                      ("work" . ?w)
+                      ("school" . ?s)
+                      (:endgroup)
+                      (:newline)
+                      ;; scale
+                      (:startgroup)
+                      ("one-shot" . ?o)
+                      ("project" . ?j)
+                      ("throwaway" . ?t)
+                      (:endgroup)
+                      ;; misc
+                      ("writing")
+                      ("review")
+                      ("reading")))
 
-  ;; Org-refile: where should org-refile look?
-  (setq org-refile-targets 'FIXME)
+;; Org-refile: where should org-refile look?
+(setq org-refile-targets 'FIXME)
 
-  ;;; Phase 3 variables
+;;; Phase 3 variables
 
-  ;; Org-roam variables
-  (setq org-roam-directory "~/Org/org-roam/")
-  (setq org-roam-index-file "~/Org/org-roam/index.org")
+;; Org-roam variables
+(setq org-roam-directory "~/Org/org-roam/")
+(setq org-roam-index-file "~/Org/org-roam/index.org")
 
-  ;;; Optional variables
+;;; Optional variables
 
-  ;; Advanced: Custom link types
-  ;; This example is for linking a person's 7-character ID to their page on the
-  ;; free genealogy website Family Search.
-  (setq org-link-abbrev-alist
-        '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")))
+;; Advanced: Custom link types
+;; This example is for linking a person's 7-character ID to their page on the
+;; free genealogy website Family Search.
+(setq org-link-abbrev-alist
+      '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")))
 #+end_src
 ** UI Tweaks
 #+begin_src emacs-lisp
-  (setq-default org-startup-indented t
-                org-pretty-entities t
-                org-use-sub-superscripts "{}"
-                org-hide-emphasis-markers t
-                org-startup-with-inline-images t
-                org-image-actual-width '(300))
+(setq-default org-startup-indented t
+              org-pretty-entities t
+              org-use-sub-superscripts "{}"
+              org-hide-emphasis-markers t
+              org-startup-with-inline-images t
+              org-image-actual-width '(300))
 
-  (use-package org-appear
-    :hook
-    (org-mode . org-appear-mode))
+(use-package org-appear
+  :hook
+  (org-mode . org-appear-mode))
 
-  (use-package org-modern
-    :hook
-    (org-mode . global-org-modern-mode)
-    :custom
-    (org-modern-keyword nil)
-    (org-modern-checkbox nil)
-    (org-modern-table nil))
+(use-package org-modern
+  :hook
+  (org-mode . global-org-modern-mode)
+  :custom
+  (org-modern-keyword nil)
+  (org-modern-checkbox nil)
+  (org-modern-table nil))
 
-  ;; LaTeX previews
-  (use-package org-fragtog
-    :after org
-    :custom
-    (org-startup-with-latex-preview t)
-    :hook
-    (org-mode . org-fragtog-mode)
-    :custom
-    (org-format-latex-options
-     (plist-put org-format-latex-options :scale 2)
-     (plist-put org-format-latex-options :foreground 'auto)
-     (plist-put org-format-latex-options :background 'auto)))
+; LaTeX previews
+(use-package org-fragtog
+  :after org
+  :custom
+  (org-startup-with-latex-preview t)
+  :hook
+  (org-mode . org-fragtog-mode)
+  :custom
+  (org-format-latex-options
+   (plist-put org-format-latex-options :scale 2)
+   (plist-put org-format-latex-options :foreground 'auto)
+   (plist-put org-format-latex-options :background 'auto)))
 #+end_src
 ** Highlight TODO
 Adding highlights to TODO and related words.
 
 #+begin_src emacs-lisp :tangle yes
-  (use-package hl-todo
-    :hook ((org-mode . hl-todo-mode)
-           (prog-mode . hl-todo-mode))
-    :config
-    (setq hl-todo-highlight-punctuation ":"
-          hl-todo-keyword-faces
-          `(("TODO"       warning bold)
-            ("WAITING"      error bold)
-            ("DOING"       font-lock-constant-face bold)
-            ("DONE"     font-lock-keyword-face bold)
-            ("NOTE"       success bold)
-            ("CANCELLED" font-lock-doc-face bold))))
+(use-package hl-todo
+  :hook ((org-mode . hl-todo-mode)
+         (prog-mode . hl-todo-mode))
+  :config
+  (setq hl-todo-highlight-punctuation ":"
+        hl-todo-keyword-faces
+        `(("TODO"       warning bold)
+          ("WAITING"      error bold)
+          ("DOING"       font-lock-constant-face bold)
+          ("DONE"     font-lock-keyword-face bold)
+          ("NOTE"       success bold)
+          ("CANCELLED" font-lock-doc-face bold))))
 
 #+end_src
 ** Org
 #+begin_src emacs-lisp :tangle yes
-  (add-to-list 'org-export-backends 'md)
+(add-to-list 'org-export-backends 'md)
 
-  ;; Make org-open-at-point follow file links in the same window
-  (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file)
+;; Make org-open-at-point follow file links in the same window
+(setf (cdr (assoc 'file org-link-frame-setup)) 'find-file)
 
-  ;; Make exporting quotes better
-  (setq org-export-with-smart-quotes t)
+;; Make exporting quotes better
+(setq org-export-with-smart-quotes t)
 
-  (setq org-log-done 'time)
-  (setq org-todo-keywords
-        '((sequence "TODO" "WAITING" "DOING" "|" "DONE(!)" "CANCELLED(!)")))
-  ;; Refile configuration
-  (setq org-outline-path-complete-in-steps nil)
-  (setq org-refile-use-outline-path 'file)
+(setq org-log-done 'time)
+(setq org-todo-keywords
+      '((sequence "TODO" "WAITING" "DOING" "|" "DONE(!)" "CANCELLED(!)")))
+;; Refile configuration
+(setq org-outline-path-complete-in-steps nil)
+(setq org-refile-use-outline-path 'file)
 
-  (setq org-capture-templates
-        '(("c" "Default Capture" entry (file "inbox.org")
-           "* TODO %?\n%U\n%i")
-          ;; Capture and keep an org-link to the thing we're currently working with
-          ("r" "Capture with Reference" entry (file "inbox.org")
-           "* TODO %?\n%U\n%i\n%a")
-          ;; Define a section
-          ("w" "Work")
-          ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
-           "** TODO %?\n%U\n%i\n%a")
-          ("wt" "Work task" entry (file+headline "work.org" "Tasks")
-           "** TODO %?\n%U\n%i\n%a")
-          ("wr" "Work report" entry (file+headline "work.org" "Reports")
-           "** TODO %?\n%U\n%i\n%a")))
+(setq org-capture-templates
+      '(("c" "Default Capture" entry (file "inbox.org")
+         "* TODO %?\n%U\n%i")
+        ;; Capture and keep an org-link to the thing we're currently working with
+        ("r" "Capture with Reference" entry (file "inbox.org")
+         "* TODO %?\n%U\n%i\n%a")
+        ;; Define a section
+        ("w" "Work")
+        ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
+         "** TODO %?\n%U\n%i\n%a")
+        ("wt" "Work task" entry (file+headline "work.org" "Tasks")
+         "** TODO %?\n%U\n%i\n%a")
+        ("wr" "Work report" entry (file+headline "work.org" "Reports")
+         "** TODO %?\n%U\n%i\n%a")))
 
-  (setq org-agenda-custom-commands
-        '(("n" "Agenda and All Todos"
-           ((agenda)
-            (todo)))
-          ("w" "Work" agenda ""
-           ((org-agenda-files '("work.org"))))))
-
-
-                                          ;)
-
+(setq org-agenda-custom-commands
+      '(("n" "Agenda and All Todos"
+         ((agenda)
+          (todo)))
+        ("w" "Work" agenda ""
+         ((org-agenda-files '("work.org"))))))
 #+end_src
 ** Org-roam
 #+begin_src emacs-lisp
-  (use-package org-roam
-    :ensure t
-    :config
-    (org-roam-db-autosync-mode)
-    ;; Dedicated side window for backlinks
-    (add-to-list 'display-buffer-alist
-                 '("\\*org-roam\\*"
-                   (display-buffer-in-side-window)
-                   (side . right)
-                   (window-width . 0.4)
-                   (window-height . fit-window-to-buffer))))
+(use-package org-roam
+  :ensure t
+  :config
+  (org-roam-db-autosync-mode)
+  ;; Dedicated side window for backlinks
+  (add-to-list 'display-buffer-alist
+               '("\\*org-roam\\*"
+                 (display-buffer-in-side-window)
+                 (side . right)
+                 (window-width . 0.4)
+                 (window-height . fit-window-to-buffer))))
 
-  ;; Pretty web interface for org-roam
-  (use-package org-roam-ui
-    :ensure t
-    :after org-roam
-    :config
-    (setq org-roam-ui-sync-theme t
-          org-roam-ui-follow t
-          org-roam-ui-update-on-save t
-          org-roam-ui-open-on-start t))
-
+;; Pretty web interface for org-roam
+(use-package org-roam-ui
+  :ensure t
+  :after org-roam
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t))
 
 #+end_src
 ** Auto Tangle
 This is a very handy plugin to auto-tangle every org file.
 All you need to do is addd `#+auto_tangle: t` in the header of the org file.
 #+begin_src emacs-lisp
-  (use-package org-auto-tangle
-    :defer t
-    :diminish
-    :hook (org-mode . org-auto-tangle-mode)
-    :config (setq org-auto-tangle-default t))
+(use-package org-auto-tangle
+  :defer t
+  :diminish
+  :hook (org-mode . org-auto-tangle-mode)
+  :config (setq org-auto-tangle-default t))
 
 #+end_src
 ** Diminish Org Indent Mode
 Removes "Ind" from showing in the modeline.
 
 #+begin_src emacs-lisp :tangle yes
-  (eval-after-load 'org-indent '(diminish 'org-indent-mode))
+(eval-after-load 'org-indent '(diminish 'org-indent-mode))
 #+end_src
 
 ** Org-Bullets
 Org-bullets gives us attractive bullets rather than asterisks.
 
 #+begin_src emacs-lisp :tangle yes
-  (add-hook 'org-mode-hook 'org-indent-mode)
-  (use-package org-bullets)
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+(add-hook 'org-mode-hook 'org-indent-mode)
+(use-package org-bullets)
+(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
-  (use-package org-superstar
-    :after (org))
-  (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
-  ;; This is usually the default, but keep in mind it must be nil
-  (setq org-hide-leading-stars nil)
-  ;; This line is necessary.
-  (setq org-superstar-leading-bullet ?\s)
-  ;; If you use Org Indent you also need to add this, otherwise the
-  ;; above has no effect while Indent is enabled.
-  (setq org-indent-mode-turns-on-hiding-stars nil)
+(use-package org-superstar
+  :after (org))
+(add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
+;; This is usually the default, but keep in mind it must be nil
+(setq org-hide-leading-stars nil)
+;; This line is necessary.
+(setq org-superstar-leading-bullet ?\s)
+;; If you use Org Indent you also need to add this, otherwise the
+;; above has no effect while Indent is enabled.
+(setq org-indent-mode-turns-on-hiding-stars nil)
 #+end_src
 ** Org Level Headers
 #+begin_src emacs-lisp :tangle yes
-  (custom-set-faces
-   '(org-level-1 ((t (:inherit outline-1 :height 1.7))))
-   '(org-level-2 ((t (:inherit outline-2 :height 1.6))))
-   '(org-level-3 ((t (:inherit outline-3 :height 1.5))))
-   '(org-level-4 ((t (:inherit outline-4 :height 1.4))))
-   '(org-level-5 ((t (:inherit outline-5 :height 1.3))))
-   '(org-level-6 ((t (:inherit outline-5 :height 1.2))))
-   '(org-level-7 ((t (:inherit outline-5 :height 1.1)))))
+(custom-set-faces
+ '(org-level-1 ((t (:inherit outline-1 :height 1.7))))
+ '(org-level-2 ((t (:inherit outline-2 :height 1.6))))
+ '(org-level-3 ((t (:inherit outline-3 :height 1.5))))
+ '(org-level-4 ((t (:inherit outline-4 :height 1.4))))
+ '(org-level-5 ((t (:inherit outline-5 :height 1.3))))
+ '(org-level-6 ((t (:inherit outline-5 :height 1.2))))
+ '(org-level-7 ((t (:inherit outline-5 :height 1.1)))))
 #+end_src
 ** Org-Tempo
 Org-tempo is not a separate package but a module within org that can be enabled.  Org-tempo allows for '<s' followed by TAB to expand to a begin_src tag.  Other expansions available include:
@@ -253,16 +248,16 @@ Org-tempo is not a separate package but a module within org that can be enabled.
 | <v                     | '#+BEGIN_VERSE' … '#+END_VERSE'         |
 
 #+begin_src emacs-lisp :tangle yes 
-  (require 'org-tempo)
+(require 'org-tempo)
 #+end_src
 
 ** Toc-Org
 Allows us to create a Table of Contents in our Org docs.
 
 #+begin_src emacs-lisp :tangle yes
-  (use-package toc-org
-    :commands toc-org-enable
-    :init (add-hook 'org-mode-hook 'toc-org-enable))
+(use-package toc-org
+  :commands toc-org-enable
+  :init (add-hook 'org-mode-hook 'toc-org-enable))
 #+end_src
 ** Citations
 Citations configuration, using Citar.
@@ -270,46 +265,57 @@ See:
 - https://kristofferbalintona.me/posts/202206141852/
 - https://blog.tecosaur.com/tmio/2021-07-31-citations.html
 #+begin_src emacs-lisp
-  (use-package citar
-    :custom
-    (citar-bibliography '("~/Org/global.bib"))
-    :hook
-    (LaTeX-mode . citar-capf-setup)
-    (org-mode . citar-capf-setup))
+(use-package citar
+  :custom
+  (citar-bibliography '("~/Org/global.bib"))
+  :hook
+  (LaTeX-mode . citar-capf-setup)
+  (org-mode . citar-capf-setup))
 
-  (use-package citar-embark
-    :after citar embark
-    :diminish
-    :no-require
-    :config (citar-embark-mode))
+(use-package citar-embark
+  :after citar embark
+  :diminish
+  :no-require
+  :config (citar-embark-mode))
 
 
 #+end_src
 ** Latex generation to ABNT
 #+begin_src emacs-lisp
-   (with-eval-after-load 'ox-latex
-     (add-to-list 'org-latex-classes
-                  '("abntex2"
-                    "[NO-DEFAULT-PACKAGES]
-                         \\documentclass{abntex2}
-                         \\usepackage{lmodern}	
-                         \\usepackage[T1]{fontenc}
-                         \\usepackage[utf8]{inputenc}
-                         \\usepackage{indentfirst}
-                         \\usepackage{nomencl}
-                         \\usepackage{color}
-                         \\usepackage{graphicx}
-                         \\usepackage{microtype}
-                         \\usepackage[brazilian,hyperpageref]{backref}
-                         \\usepackage[alf]{abntex2cite}
-                         \\usepackage{fourier}
-                         [EXTRA]"
-                    ("\\section{%s}" . "\\section{%s}")
-                    ("\\subsection{%s}" . "\\subsection{%s}")
-                    ("\\subsubsection{%s}" . "\\subsubsection{%s}")
-                    ("\\paragraph{%s}" . "\\paragraph{%s}")
-                    ("\\subparagraph{%s}" . "\\subparagraph{%s}"))))
+(with-eval-after-load 'ox-latex
+  (add-to-list 'org-latex-classes
+               '("abntex2"
+"[NO-DEFAULT-PACKAGES]
+\\documentclass{abntex2}
+\\usepackage{lmodern}	
+\\usepackage[T1]{fontenc}
+\\usepackage[utf8]{inputenc}
+\\usepackage{indentfirst}
+\\usepackage{nomencl}
+\\usepackage{color}
+\\usepackage{graphicx}
+\\usepackage{microtype}
+\\usepackage[brazilian,hyperpageref]{backref}
+\\usepackage[alf]{abntex2cite}
+\\usepackage{fourier}
+[EXTRA]"
+                 )))
 
+(setq org-latex-hyperref-template 
+"\\hypersetup{
+ pdftitle={%t}, 
+ pdfauthor={%a},
+ pdfsubject={%d},
+ pdfcreator={%c},
+ pdfkeywords={%k},
+ pdflang={%L},
+ colorlinks=true,
+ linkcolor=blue,
+ citecolor=blue,
+ filecolor=magenta,
+ urlcolor=blue,
+ bookmarksdepth=4}
+")
 #+end_src
 
 ** Latex Preview

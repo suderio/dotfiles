@@ -1,9 +1,9 @@
-#+title: Suderio's GNU Emacs Git --Git-Dir=$HOME/.Local/Dotfiles/ --Work-Tree=$HOME - custom functions
+#+title: Suderio's GNU Emacs Config - custom functions
 #+AUTHOR: Paulo Suderio
 #+DESCRIPTION: Suderio's personal Emacs config - Custom Code
 #+STARTUP: showeverything
 #+OPTIONS: toc:2
-#+PROPERTY: header-args    :tangle yes
+#+PROPERTY: header-args :tangle yes
 
 * Custom Functions :toc:
   - [[#commit-and-push-git-config][Commit and push git config]]
@@ -29,8 +29,8 @@ configstatus () {
 
 #+begin_src emacs-lisp :tangle ./custom.el
 (defun config-sync ()
-    (interactive)
-    (shell-command ". ~/.shrc.d/config-sync ; configsync ~/.config/emacs"))
+  (interactive)
+  (shell-command ". ~/.shrc.d/config-sync ; configsync ~/.config/emacs"))
 
 (defun config-status ()
   (interactive)
