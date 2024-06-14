@@ -7,6 +7,7 @@
 
 * Custom Functions :toc:
   - [[#commit-and-push-git-config][Commit and push git config]]
+  - [[#rotate-workorg][Rotate work.org]]
 
 ** Commit and push git config
 #+begin_src shell :tangle ~/.shrc.d/config-sync :shebang "#!/bin/bash"
@@ -35,4 +36,46 @@ configstatus () {
 (defun config-status ()
   (interactive)
   (shell-command ". ~/.shrc.d/config-sync ; configstatus"))
+#+end_src
+** Rotate work.org
+#+begin_src emacs-lisp
+(defun move-done-cancelled-tasks ()
+  "Move DONE and CANCELLED tasks from work.org to the previous month's work-yyyymm.org file."
+  (let* ((current-date (decode-time (current-time)))
+         (year (nth 5 current-date))
+         (month (nth 4 current-date))
+         (prev-month (if (= month 1) 12 (1- month)))
+         (prev-year (if (= prev-month 12) (1- year) year))
+         (prev-file (format "work-%04d%02d.org" prev-year prev-month))
+         (work-file "work.org")
+         (prev-file-created nil))
+
+    ;; Check if the previous month's file exists, if not, create it and mark as created
+    (unless (file-exists-p prev-file)
+      (with-temp-buffer (write-file prev-file))
+      (setq prev-file-created t))
+
+    ;; If the previous month's file was created, move DONE and CANCELLED tasks
+    (when prev-file-created
+      (with-current-buffer (find-file-noselect work-file)
+        (goto-char (point-min))
+        (let ((case-fold-search t)
+              (org-refile-targets `((,prev-file :maxlevel . 1)))
+              (org-refile-allow-creating-parent-nodes t)
+              (tasks-to-move nil))
+          
+          ;; Collect DONE and CANCELLED tasks
+          (while (re-search-forward "^\\*+ \\(DONE\\|CANCELLED\\) " nil t)
+            (let ((pos (point)))
+              (push (list nil work-file nil pos) tasks-to-move)))
+          
+          ;; Refile tasks
+          (dolist (task tasks-to-move)
+            (goto-char (nth 3 task))
+            (org-refile nil nil (list nil prev-file nil (point-max)))))
+
+        (save-buffer)))))
+
+;; (move-done-cancelled-tasks)
+
 #+end_src
