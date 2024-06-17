@@ -17,9 +17,11 @@
   - [[#org-tempo][Org-Tempo]]
   - [[#toc-org][Toc-Org]]
   - [[#citations][Citations]]
+  - [[#latex-pdf-export-configuration][Latex PDF Export configuration]]
   - [[#latex-generation-to-abnt][Latex generation to ABNT]]
   - [[#latex-preview][Latex Preview]]
   - [[#pdfs][PDFs]]
+  - [[#epub-export][Epub export]]
 
 ** Some Critical variables
 #+begin_src emacs-lisp :tangle yes
@@ -126,7 +128,16 @@ Adding highlights to TODO and related words.
 (setf (cdr (assoc 'file org-link-frame-setup)) 'find-file)
 
 ;; Make exporting quotes better
-(setq org-export-with-smart-quotes t)
+(setq org-export-with-smart-quotes t
+      org-export-with-drawers nil
+      org-export-with-todo-keywords nil
+      org-export-with-broken-links t
+      org-export-with-toc nil
+      org-export-date-timestamp-format "%d %B %Y")
+;; Export ODT to MS-Word
+(setq-default org-odt-preferred-output-format "docx")
+;; Export ODT to PDF
+;; (setq-default org-odt-preferred-output-format "pdf")
 
 (setq org-log-done 'time)
 (setq org-todo-keywords
@@ -260,6 +271,27 @@ See:
 
 
 #+end_src
+** Latex PDF Export configuration
+#+begin_src emacs-lisp
+  (use-package ox-latex
+    :ensure nil
+    :demand t
+    :custom
+    ;; Multiple LaTeX passes for bibliographies
+    (org-latex-pdf-process
+     '("pdflatex -interaction nonstopmode -output-directory %o %f"
+       "bibtex %b"
+       "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+       "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+    ;; Clean temporary files after export
+    (org-latex-logfiles-extensions
+     (quote ("lof" "lot" "tex~" "aux" "idx" "log" "out"
+             "toc" "nav" "snm" "vrb" "dvi" "fdb_latexmk"
+             "blg" "brf" "fls" "entoc" "ps" "spl" "bbl"
+             "tex" "bcf"))))
+
+
+#+end_src
 ** Latex generation to ABNT
 #+begin_src emacs-lisp
 (with-eval-after-load 'ox-latex
@@ -324,4 +356,10 @@ See:
 (add-hook 'pdf-view-mode-hook #'(lambda () (interactive) (display-line-numbers-mode -1)
                                                          (blink-cursor-mode -1)
                                                          (doom-modeline-mode -1)))
+#+end_src
+** Epub export
+#+begin_src emacs-lisp
+  (use-package ox-epub
+    :demand t)
+
 #+end_src

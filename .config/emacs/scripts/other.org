@@ -7,6 +7,7 @@
 #+PROPERTY: header-args    :tangle yes
 
 * TABLE OF CONTENTS :toc:
+- [[#emms][EMMS]]
 - [[#elfeed][Elfeed]]
 - [[#eradio][Eradio]]
 - [[#shells-and-terminals][Shells and Terminals]]
@@ -16,6 +17,27 @@
 - [[#sudo-edit][Sudo Edit]]
 - [[#tldr][TLDR]]
 
+* EMMS
+#+begin_src emacs-lisp :tangle yes 
+;; Emacs Multimedia System
+  (use-package emms
+    :init
+    (require 'emms-setup)
+    (require 'emms-mpris)
+    (emms-all)
+    (emms-default-players)
+    (emms-mpris-enable)
+    :custom
+    (emms-source-file-default-directory "~/Música")
+    (emms-browser-covers #'emms-browser-cache-thumbnail-async)
+    :bind
+    (("<f5>"   . emms-browser)
+     ("M-<f5>" . emms)
+     ("<XF86AudioPrev>" . emms-previous)
+     ("<XF86AudioNext>" . emms-next)
+     ("<XF86AudioPlay>" . emms-pause)))
+
+#+end_src
 * Elfeed
 An RSS newsfeed reader for Emacs.  Move through the articles with 'j/k'.  Move through the stories with 'CTRL j/k' when in other frame.
 
