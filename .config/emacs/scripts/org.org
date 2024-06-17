@@ -269,7 +269,11 @@ See:
   :no-require
   :config (citar-embark-mode))
 
-
+(setq citar-templates '(
+			(main . "${author editor:30%sn}     ${date year issued:4}     ${title:48}")
+			(suffix . "          ${=key= id:15}    ${=type=:12}    ${tags keywords keywords:*}")
+			(preview . "${author editor:%etal} (${year issued date}) ${title}, ${journal journaltitle publisher container-title collection-title}.")
+			(note . "Notes on ${author editor:%etal}, ${title}")))
 #+end_src
 ** Latex PDF Export configuration
 #+begin_src emacs-lisp
@@ -311,6 +315,11 @@ See:
 \\usepackage[alf]{abntex2cite}
 \\usepackage{fourier}
 [EXTRA]"
+("\\section{%s}" . "\\section*{%s}")
+("\\subsection{%s}" . "\\subsection*{%s}")
+("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+("\\paragraph{%s}" . "\\paragraph*{%s}")
+("\\subparagraph{%s}" . "\\subparagraph*{%s}")
                  )))
 
 (setq org-latex-hyperref-template 
