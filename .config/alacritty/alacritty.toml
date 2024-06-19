@@ -1,11 +1,11 @@
 live_config_reload = true
-save_to_clipboard = true
-theme = "Catppuccin"
-"window.dynamic_title" = true
+#save_to_clipboard = true
+#theme = "Catppuccin"
+#"window.dynamic_title" = true
 
 [colors]
 draw_bold_text_with_bright_colors = true
-semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+#semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
 
 [colors.bright]
 black = "#666666"
@@ -66,7 +66,7 @@ style = "Bold"
 
 [font.bold_italic]
 family = "DejaVu Sans Mono"
-size = 9.0
+#size = 9.0
 style = "Bold Italic"
 
 [font.italic]
