@@ -10,11 +10,15 @@
   - [[#rotate-workorg][Rotate work.org]]
 
 ** Commit and push git config
-#+begin_src shell :tangle ~/.shrc.d/config-sync :shebang "#!/bin/bash"
+#+begin_src shell :tangle ~/.bashrc.d/config-sync :shebang "#!/bin/bash"
 
 # manage dotfiles with git, see https://www.atlassian.com/git/tutorials/dotfiles
 alias config='/usr/bin/git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
 
+# Config in new machine
+# git clone --bare git@github.com:suderio/dotfiles $HOME/.local/dotfiles
+# config config --local status.showUntrackedFiles no
+# config checkout
 configsync () {
   configpath="${1:-$HOME}"
   config pull --all 
@@ -31,11 +35,11 @@ configstatus () {
 #+begin_src emacs-lisp :tangle ./custom.el
 (defun config-sync ()
   (interactive)
-  (shell-command ". ~/.shrc.d/config-sync ; configsync ~/.config/emacs"))
+  (shell-command ". ~/.bashrc.d/config-sync ; configsync ~/.config/emacs"))
 
 (defun config-status ()
   (interactive)
-  (shell-command ". ~/.shrc.d/config-sync ; configstatus"))
+  (shell-command ". ~/.bashrc.d/config-sync ; configstatus"))
 #+end_src
 ** Rotate work.org
 #+begin_src emacs-lisp

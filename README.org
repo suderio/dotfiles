@@ -1128,25 +1128,13 @@ Depois disso, abrir o .config/nvim/init.lua no nvim, :so % PackerSync :e
 	email = paulo.suderio@gmail.com
 	name = Paulo Suderio
 
-[github]
-	user = suderio
-	sshCommand = "ssh -i ~/.ssh/id_ed25519"
-
 [core]
 	editor = vim
 	whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
 	excludesfile = ~/.gitignore
-	autocrlf = false
+	autocrlf = true
 	safecrlf = warn
 	filemode = false
-#	sshCommand = "ssh -i ~/.ssh/id_rsa_gitlab"
-
-#[includeIf "gitdir:$HOME/repos/github"]#
-#	[user]
-#		email = paulo.suderio@gmail.com
-#		name = Paulo Alipio Suderio Rodrigues
-#	[core]
-#		sshCommand = "ssh -i ~/.ssh/id_ed25519"
 
 [filter "lfs"]
 	clean = git-lfs clean -- %f
@@ -1264,6 +1252,4 @@ generateResolvConf=false
 
 [user]
 default=paulo
-
-
 #+end_src
