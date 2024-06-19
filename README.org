@@ -22,7 +22,6 @@ Repositório [dotfiles](http://github.com/suderio/dotfiles.git)
   - [[#java][Java]]
 - [[#aliases][Aliases]]
   - [[#basic][Basic]]
-  - [[#todo][TODO]]
 - [[#git][Git]]
   - [[#gitconfig][gitconfig]]
 - [[#wsl][WSL]]
@@ -42,16 +41,8 @@ export VISUAL=emacs
 #
 # ~/.bash_profile
 #
+[[ -f ~/.profile ]] && . ~/.profile
 [[ -f ~/.bashrc ]] && . ~/.bashrc
-
-export AMD_VULKAN_ICD=RADV
-#export BROWSER=firedragon
-export EDITOR=vim
-export GTK2_RC_FILES="$HOME/.gtkrc-2.0"
-#export MAIL=thunderbird
-#export TERM=xterm
-export VISUAL=emacs
-
 #+end_src
 ** bash_logout
 #+begin_src shell :tangle ~/.bash_logout
@@ -70,9 +61,6 @@ Não está rodando interativamente, não faz nada.
 Prompt básico, podemos melhorar depois.
 #+begin_src shell :tangle ~/.bashrc
 PS1='[\u@\h \W]\$ '
-##
-##
-##
 #+end_src
 
 History
@@ -107,7 +95,7 @@ Less mais amigável para arquivo binários, ver lesspipe(1)
 Para identificar o chroot em que se está
 #+begin_src shell :tangle ~/.bashrc
 if [ -z "${chroot_ps1:-}" ] && [ -r /etc/chroot_ps1 ]; then
-    chroot_ps1=$(cat /etc/chroot_ps1)
+  chroot_ps1=$(cat /etc/chroot_ps1)
 fi
 #+end_src
 
@@ -115,7 +103,7 @@ fi
 set a fancy prompt (non-color, unless we know we "want" color)
 #+begin_src shell :tangle ~/.bashrc
 case "$TERM" in
-    xterm-color|*-256color) color_prompt=yes;;
+  xterm-color|*-256color) color_prompt=yes;;
 esac
 #+end_src
 
@@ -123,20 +111,20 @@ colored prompt
 #+begin_src shell :tangle ~/.bashrc
 force_color_prompt=yes
 if [ -n "$force_color_prompt" ]; then
-    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	# We have color support; assume it's compliant with Ecma-48
-	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-	# a case would tend to support setf rather than setaf.)
-	color_prompt=yes
-    else
-	color_prompt=
-    fi
+  if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+    # We have color support; assume it's compliant with Ecma-48
+    # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+    # a case would tend to support setf rather than setaf.)
+    color_prompt=yes
+  else
+    color_prompt=
+  fi
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1='${chroot_ps1:+($chroot_ps1)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+  PS1='${chroot_ps1:+($chroot_ps1)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 else
-    PS1='${chroot_ps1:+($chroot_ps1)}\u@\h:\w\$ '
+  PS1='${chroot_ps1:+($chroot_ps1)}\u@\h:\w\$ '
 fi
 unset color_prompt force_color_prompt
 #+end_src
@@ -156,14 +144,14 @@ export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 enable color support of ls and also add handy aliases
 #+begin_src shell :tangle ~/.bashrc
 if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=auto'
-    alias dir='dir --color=auto'
-    alias vdir='vdir --color=auto'
+  test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+  alias ls='ls --color=auto'
+  alias dir='dir --color=auto'
+  alias vdir='vdir --color=auto'
 
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
+  alias grep='grep --color=auto'
+  alias fgrep='fgrep --color=auto'
+  alias egrep='egrep --color=auto'
 fi
 #+end_src
 
@@ -206,13 +194,12 @@ if [ -d $HOME/.bashrc.d ]; then
     source $f
   done
 fi
-[ -f "$HOME"/.shrc ] && source "$HOME"/.shrc
 #+end_src
 
 Aliases
 #+begin_src shell :tangle ~/.bashrc
 if [ -f ~/.aliases ]; then
-    . ~/.aliases
+  . ~/.aliases
 fi
 #+end_src
 
@@ -236,146 +223,30 @@ Adicionar rust no ambiente
 #+begin_src shell :tangle ~/.bashrc
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 #+end_src
-*** shrc (old file)
 #+begin_src shell :tangle ~/.bashrc
-
-
-
-# Add some paths
-if [ -d "$HOME/.local/share/gem/ruby/3.0.0/bin" ]; then
-    export PATH=$HOME/.local/share/gem/ruby/3.0.0/bin:$PATH
-fi
-
 # set PATH to include cargo
 if [ -d "$HOME/.cargo/bin" ] ; then
-    PATH="$HOME/.cargo/bin:$PATH"
+  PATH="$HOME/.cargo/bin:$PATH"
 fi
 
 # set PATH to include go
 if [ -d "$HOME/go/bin" ] ; then
-    PATH="$HOME/go/bin:$PATH"
+  PATH="$HOME/go/bin:$PATH"
 fi
-
 # set PATH so it includes user's private bin if it exists
 if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
+  PATH="$HOME/bin:$PATH"
 fi
 
 # set PATH so it includes user's private bin if it exists
 if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
+  PATH="$HOME/.local/bin:$PATH"
 fi
-
-# Add JBang to environment
-alias j!=jbang
-export PATH="$HOME/.jbang/bin:$PATH"
 
 # add some custom or local configs
 if [ -d "$HOME/bin/custom" ] ; then
-    source $HOME/bin/custom
+  source $HOME/bin/custom
 fi
-
-if [ -d "$HOME/.shrc.d" ] ; then
-    for f in $HOME/.shrc.d/*
-    do
-        source $f
-    done
-fi
-# TODO add run everything in bashrc.d
-# ex. function, aliases, custom, prompt
-
-# Use neovim as vim
-
-if [ -x "$(command -v nvim)" ] ; then
-    alias vim='nvim'
-fi
-
-# User specific aliases and functions
-alias lsd="ls -alF | grep /$"
-alias ll="ls -l"
-
-## pass options to free ## 
-alias meminfo='free -m -l -t'
- 
-## get top process eating memory
-alias psmem='ps auxf | sort -nr -k 4'
-alias psmem10='ps auxf | sort -nr -k 4 | head -10'
- 
-## get top process eating cpu ##
-alias pscpu='ps auxf | sort -nr -k 3'
-alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
- 
-## Get server cpu info ##
-alias cpuinfo='lscpu'
- 
-## get GPU ram on desktop / laptop## 
-alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
-
-
-# This is GOLD for finding out what is taking so much space on your drives!
-alias diskspace="du -S | sort -n -r |more"
-
-# Some docker shit
-alias dockrrmi='docker images | grep '\''<none>'\'' | grep -P '\''[1234567890abcdef]{12}'\'' -o | xargs -L1 docker rmi'
-alias dockrrm='docker ps -a | grep -v '\''CONTAINER\|_config\|_data\|_run'\'' | cut -c-12 | xargs docker rm'
-alias dockerm='docker rm -v $(docker ps -a -q -f status=exited)'
-alias dockermi='docker rmi $(docker images -f "dangling=true" -q)'
-alias dockermv='docker volume rm $(docker volume ls -qf dangling=true)'
-
-# cd and ls
-alias lcd=changeDirectory
-function changeDirectory {
-  cd $1 ; ls -la
-}
-
-# Add an "alert" alias for long running commands.  Use like so:
-#   sleep 10; alert
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
-
-# Always recover a session named $USER
-alias restmux='[[ -z "$TMUX" ]] && exec tmux new-session -A -s $USER'
-
-# Remember to run this now and then
-alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" '
-
-# This is too hard to remember
-alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree -r "$in"; done'
-
-# Google drive sync
-google_drive() {
-  mount | grep "${HOME}/gdrive" >/dev/null || /usr/bin/google-drive-ocamlfuse "${HOME}/gdrive"
-}
-
-# Just to annoy people
-test_iso_2022_locking_scape() {
-  echo -e "\033(0"
-}
-
-# Extract everything without man pages
-extract () {
-   if [ -f $1 ] ; then
-       case $1 in
-           *.tar.bz2)   tar xvjf $1    ;;
-           *.tar.gz)    tar xvzf $1    ;;
-           *.bz2)       bunzip2 $1     ;;
-           *.rar)       unrar x $1       ;;
-           *.gz)        gunzip $1      ;;
-           *.tar)       tar xvf $1     ;;
-           *.tbz2)      tar xvjf $1    ;;
-           *.tgz)       tar xvzf $1    ;;
-           *.zip)       unzip $1       ;;
-           *.Z)         uncompress $1  ;;
-           *.7z)        7z x $1        ;;
-           *)           echo "don't know how to extract '$1'..." ;;
-       esac
-   else
-       echo "'$1' is not a valid file!"
-   fi
-}
-
-
-
-
 #+end_src
 ** inputrc
 #+begin_src shell :tangle ~/.inputrc
@@ -409,11 +280,11 @@ set menu-complete-display-prefix On
 set show-mode-in-prompt on
 
 $if term=linux
-	set vi-ins-mode-string \1\e[?0c\2
-	set vi-cmd-mode-string \1\e[?8c\2
+  set vi-ins-mode-string \1\e[?0c\2
+  set vi-cmd-mode-string \1\e[?8c\2
 $else
-	set vi-ins-mode-string \1\e[6 q\2
-	set vi-cmd-mode-string \1\e[2 q\2
+  set vi-ins-mode-string \1\e[6 q\2
+  set vi-cmd-mode-string \1\e[2 q\2
 $endif
 
 set show-all-if-ambiguous On
@@ -427,48 +298,48 @@ set completion-prefix-display-length 3
 !! Colorscheme
 !
 !! special
-*.foreground: #93a1a1
-*.background: #141c21
-*.cursorColor: #afbfbf
+,*.foreground: #93a1a1
+,*.background: #141c21
+,*.cursorColor: #afbfbf
 
 ! black
-*.color0: #263640
-*.color8: #4a697d
+,*.color0: #263640
+,*.color8: #4a697d
 
 ! red
-*.color1: #d12f2c
-*.color9: #fa3935
+,*.color1: #d12f2c
+,*.color9: #fa3935
 
 ! green
-*.color2: #819400
-*.color10: #a4bd00
+,*.color2: #819400
+,*.color10: #a4bd00
 
 ! yellow
-*.color3: #b08500
-*.color11: #d9a400
+,*.color3: #b08500
+,*.color11: #d9a400
 
 ! blue
-*.color4: #2587cc
-*.color12: #2ca2f5
+,*.color4: #2587cc
+,*.color12: #2ca2f5
 
 ! magenta
-*.color5: #696ebf
-*.color13: #8086e8
+,*.color5: #696ebf
+,*.color13: #8086e8
 
 ! cyan
-*.color6: #289c93
-*.color14: #33c5ba
+,*.color6: #289c93
+,*.color14: #33c5ba
 
 ! white
-*.color7: #bfbaac
-*.color15: #fdf6e3
+,*.color7: #bfbaac
+,*.color15: #fdf6e3
 
 
 #+end_src
 * Functions
 ** Shell Functions
 #+begin_src shell :tangle ~/.bashrc.d/functions
-#!/bin/sh
+#!/usr/bin/env bash
 
 google_drive() {
   mount | grep "${HOME}/gdrive" >/dev/null || /usr/bin/google-drive-ocamlfuse "${HOME}/gdrive"
@@ -479,524 +350,503 @@ test_iso_2022_locking_scape() {
 }
 
 extract () {
-   if [ -f "$1" ] ; then
-       case "$1" in
-           *.tar.bz2)   tar xvjf "$1"    ;;
-           *.tar.gz)    tar xvzf "$1"    ;;
-           *.bz2)       bunzip2 "$1"     ;;
-           *.rar)       unrar x "$1"       ;;
-           *.gz)        gunzip "$1"      ;;
-           *.tar)       tar xvf "$1"     ;;
-           *.tbz2)      tar xvjf "$1"    ;;
-           *.tgz)       tar xvzf "$1"    ;;
-           *.zip)       unzip "$1"       ;;
-           *.Z)         uncompress "$1"  ;;
-           *.7z)        7z x "$1"        ;;
-           *)           echo "don't know how to extract '$1'..." ;;
-       esac
-   else
-       echo "'$1' is not a valid file!"
-   fi
+  if [ -f "$1" ] ; then
+    case "$1" in
+      ,*.tar.bz2)   tar xvjf "$1"    ;;
+      ,*.tar.gz)    tar xvzf "$1"    ;;
+      ,*.bz2)       bunzip2 "$1"     ;;
+      ,*.rar)       unrar x "$1"       ;;
+      ,*.gz)        gunzip "$1"      ;;
+      ,*.tar)       tar xvf "$1"     ;;
+      ,*.tbz2)      tar xvjf "$1"    ;;
+      ,*.tgz)       tar xvzf "$1"    ;;
+      ,*.zip)       unzip "$1"       ;;
+      ,*.Z)         uncompress "$1"  ;;
+      ,*.7z)        7z x "$1"        ;;
+      ,*)           echo "don't know how to extract '$1'..." ;;
+    esac
+  else
+    echo "'$1' is not a valid file!"
+  fi
 }
 
 fawk() {
-    first="awk '{print "
-    last="}'"
-    cmd="${first}\$${1}${last}"
-    eval "$cmd"
+  first="awk '{print "
+  last="}'"
+  cmd="${first}\$${1}${last}"
+  eval "$cmd"
 }
 
 compare() {
-    ssh "$1" "cat $2" | diff - "$2"
+  ssh "$1" "cat $2" | diff - "$2"
 }
 
-#!/usr/bin/env bash
 true=0
 false=1
 
 repeatString() {
-    local stringToRepeat="${1}"
-    declare -i depth="${2}"
-    
-    if [[ -z "${stringToRepeat}" ]];then
-	printf "%s\n" "Usage:${FUNCNAME} string ?depth"
-	return $false
-    fi
-    
-    (( depth == 0 )) && depth=1
-    
-    (
-	# depthIndex will loose it value after been executed in this subshell	
-	for ((depthIndex=0;depthIndex<${depth};depthIndex+=1)) {
-		
-		printf "%s" "${stringToRepeat}"
-		
-	    }
-	    
-	    printf "\n"				
-    )    
+  local stringToRepeat="${1}"
+  declare -i depth="${2}"
+  
+  if [[ -z "${stringToRepeat}" ]];then
+    printf "%s\n" "Usage:${FUNCNAME} string ?depth"
+    return $false
+  fi
+  
+  (( depth == 0 )) && depth=1
+  
+  (
+    # depthIndex will loose it value after been executed in this subshell	
+    for ((depthIndex=0;depthIndex<${depth};depthIndex+=1)) {
+      
+      printf "%s" "${stringToRepeat}"
+      
+    }
+	
+	printf "\n"				
+  )    
 }
 charAt() {
-    local  char="${1}"
-    declare -i charPosition=${2}
+  local  char="${1}"
+  declare -i charPosition=${2}
+  
+  [[ -z "${char}" ]] && \
+    printf "%s\n" "Usage:${FUNCNAME} string (position to extract string)" && return $false
+  
+  {
+    [[ ${charPosition} -eq 0 ]] && printf "%c\n" "${char}" && return $true
+  } || {
+    # if the position specified is greater than the length of the string print out an empty string
+    [[ ${charPosition} -gt ${#char} ]] && printf "%s\n" "" && return $true
+  }
+  
+  
+  
+  (
+    # All the variables delcared here will get lost after this subshell finsih executing
     
-    [[ -z "${char}" ]] && \
-	printf "%s\n" "Usage:${FUNCNAME} string (position to extract string)" && return $false
-    
-    {
-	[[ ${charPosition} -eq 0 ]] && printf "%c\n" "${char}" && return $true
-    } || {
-	# if the position specified is greater than the length of the string print out an empty string
-	[[ ${charPosition} -gt ${#char} ]] && printf "%s\n" "" && return $true
-    }
-    
-    
-    
-    (
-	# All the variables delcared here will get lost after this subshell finsih executing
-	
-	local temp=${char}
-	local cutFirstString
-	declare -i i=0
-	while [[ -n "${temp}" ]];do
-	    #if [[ $charPosition == $i ]];then
-	    #	printf "%c" 
-	    #fi
-	    : $((i++))
-	    cutFirstString=$(printf "%c" "${temp}")
-	    temp=${temp#*$cutFirstString}
-	    (( i == charPosition )) && printf "%s\n" "${cutFirstString}"
-	    
-	done
-    )
+    local temp=${char}
+    local cutFirstString
+    declare -i i=0
+    while [[ -n "${temp}" ]];do
+      #if [[ $charPosition == $i ]];then
+      #	printf "%c" 
+      #fi
+      : $((i++))
+      cutFirstString=$(printf "%c" "${temp}")
+      temp=${temp#*$cutFirstString}
+      (( i == charPosition )) && printf "%s\n" "${cutFirstString}"
+      
+    done
+  )
 }
 includes() {
-    local char="${1}"
-    local includes="${2}"
-    declare -i depth="${3}"
-    {
-	[[ -z "$char" ]] || [[ -z "$includes" ]]
-    } && printf "%s\n" "Usage:${FUNCNAME} string includesToCheck ?depth" && return $false;
-    if  [[ $depth -gt ${#char} ]];then
-	depth=0
-    elif [[ $depth != 0 ]];then
-	while [[ -n $char ]];do
-	    if [[ ! $depth -eq ${#char} ]];then
-		char=${char#*?}
-		continue ;
-	    fi
-	    break ;
-	done
-    fi
-    
-    for ((i=$depth;i<=${#char};)) {
-	    while [[ -n $char ]] || [[ -n $includes ]];do
-		printChar=$(printf "%c\n" "$char")
-		printIncludes=$(printf "%c\n" "$includes" )
-		
-		[[ -z $printIncludes ]] && {
-		    printf "%s\n" "true"
-		    return $true
-		    
-		} # did this to fix a bug, if the string can be cut to the ending and printInlcudes become null that means all other test was true
+  local char="${1}"
+  local includes="${2}"
+  declare -i depth="${3}"
+  {
+    [[ -z "$char" ]] || [[ -z "$includes" ]]
+  } && printf "%s\n" "Usage:${FUNCNAME} string includesToCheck ?depth" && return $false;
+  if  [[ $depth -gt ${#char} ]];then
+    depth=0
+  elif [[ $depth != 0 ]];then
+    while [[ -n $char ]];do
+      if [[ ! $depth -eq ${#char} ]];then
+	char=${char#*?}
+	continue ;
+      fi
+      break ;
+    done
+  fi
+  
+  for ((i=$depth;i<=${#char};)) {
+    while [[ -n $char ]] || [[ -n $includes ]];do
+      printChar=$(printf "%c\n" "$char")
+      printIncludes=$(printf "%c\n" "$includes" )
+      
+      [[ -z $printIncludes ]] && {
+	printf "%s\n" "true"
+	return $true
+	
+      } # did this to fix a bug, if the string can be cut to the ending and printInlcudes become null that means all other test was true
 
 
-		
-		if [[ $printChar !=  $printIncludes ]];then
-		    printf "%s\n" "false" && return $false
-		fi
-		char=${char#*?}
-		includes=${includes#*?}
-		: $(( i++ ))
-	    done
-	}
+      
+      if [[ $printChar !=  $printIncludes ]];then
+	printf "%s\n" "false" && return $false
+      fi
+      char=${char#*?}
+      includes=${includes#*?}
+      : $(( i++ ))
+    done
+  }
 }
 
 endsWith() {
-    local char="${1}"
-    local endswith="${2}"
-    declare -i depth="${3}"
+  local char="${1}"
+  local endswith="${2}"
+  declare -i depth="${3}"
 
-    {
-	[[ -z "$char" ]] || [[ -z "$endswith" ]]
-    } && printf "%s\n" "Usage:${FUNCNAME} string endToCheck ?depth" && return $false
-    
-    (( depth == 0 )) && depth=${#char}
+  {
+    [[ -z "$char" ]] || [[ -z "$endswith" ]]
+  } && printf "%s\n" "Usage:${FUNCNAME} string endToCheck ?depth" && return $false
+  
+  (( depth == 0 )) && depth=${#char}
 
 
-    (
-	character="${char}"
-	for ((i=1;i<=$depth;i++)) {
-		while [ -n "$character" ];do
-		    
-		    printOne=$(printf "%c" "$character")
-		    character=${character#*"${printOne}"}
-		    
-		    (( i == depth )) && {
-			
-			[[ "${printOne}" == "${endswith}" ]] && {
-			    printf "%s\n" "true" && return $true\
-							   
-			} || {
-			    printf "%s\n" "false"
-			    return $false
-			}
-			
-			
-		    } || {
-			
-			continue 2;
-		    }
-		    
-		done
-		
-	    }
-    )
+  (
+    character="${char}"
+    for ((i=1;i<=$depth;i++)) {
+      while [ -n "$character" ];do
+	
+	printOne=$(printf "%c" "$character")
+	character=${character#*"${printOne}"}
+	
+	(( i == depth )) && {
+	  
+	  [[ "${printOne}" == "${endswith}" ]] && {
+	    printf "%s\n" "true" && return $true\
+					   
+	  } || {
+	    printf "%s\n" "false"
+	    return $false
+	  }
+	  
+	  
+	} || {
+	  
+	  continue 2;
+	}
+	
+      done
+      
+    }
+  )
 }
 offset() {
-    # Bug: It does not deal with negative numbers
-    # better still use ${var:position:length} to get the offset of a value
-    local string=${1}
-    local position=${2}
-    local length=${3}
+  # Bug: It does not deal with negative numbers
+  # better still use ${var:position:length} to get the offset of a value
+  local string=${1}
+  local position=${2}
+  local length=${3}
 
-    [[ -z "${string}" ]] && printf "%s\n" "Error: String to work with was not specified" && \
-	printf "%s\n" "Usage:${FUNCNAME} string ?postion ?length" && return $false
-    if [[ -z "${position}" ]] && [[ -z "${length}" ]];then
-	printf "%s\n" "${string}"
-	return $true
-    fi
+  [[ -z "${string}" ]] && printf "%s\n" "Error: String to work with was not specified" && \
+    printf "%s\n" "Usage:${FUNCNAME} string ?postion ?length" && return $false
+  if [[ -z "${position}" ]] && [[ -z "${length}" ]];then
+    printf "%s\n" "${string}"
+    return $true
+  fi
 
-    [[ "${position}" =~ [A-Za-z] ]] && \
-	printf "%s\n" "Error: Required an integer for postion but got a string"  && return $false
-    [[ "${length}"  =~ [A-Za-z] ]] && \
-	printf "%s\n" "Error: Required an integer for length but got a string" && return $false
-    if [[ ${position} -gt ${#string} ]] || [[ ${length} -gt ${#string} ]] ;then
-	printf "%s\n" "Error: index is greater than string length"
-	return $false
-    fi
-    
-    (
-	# Kill all the variables declared inside this subshell when done
-	# Using index++ inside the for (()) introduced an unwanted feature
-	# i had  to take it to the body of the while loop
-	for ((index=0;index<=${#string};)) {
-		
-		while [ -n "${string}" ];do
+  [[ "${position}" =~ [A-Za-z] ]] && \
+    printf "%s\n" "Error: Required an integer for postion but got a string"  && return $false
+  [[ "${length}"  =~ [A-Za-z] ]] && \
+    printf "%s\n" "Error: Required an integer for length but got a string" && return $false
+  if [[ ${position} -gt ${#string} ]] || [[ ${length} -gt ${#string} ]] ;then
+    printf "%s\n" "Error: index is greater than string length"
+    return $false
+  fi
+  
+  (
+    # Kill all the variables declared inside this subshell when done
+    # Using index++ inside the for (()) introduced an unwanted feature
+    # i had  to take it to the body of the while loop
+    for ((index=0;index<=${#string};)) {
+      
+      while [ -n "${string}" ];do
 
-		    (( index == position )) && {
-			# If the value of index equals to the position specified run this block of code
-			# if length is null print the string and return from this function ${FUNCNAME}
-			[[ -z "${length}" ]] && printf "%s\n" "${string}" && return $true
+	(( index == position )) && {
+	  # If the value of index equals to the position specified run this block of code
+	  # if length is null print the string and return from this function ${FUNCNAME}
+	  [[ -z "${length}" ]] && printf "%s\n" "${string}" && return $true
 
-			# if length is not null get the offset specified by the user
-			for ((ind=0;ind<=${#string};)) {
-				
-				while [ -n "${string}" ];do
-				    
-				    (( ${#string} == length )) && {
-					echo "$string" && return $true;
-				    }
-				    string=${string%$(printf "%c" "$(rev <<<${string})")*}
-				    # : >> don't run the result of $(( ind++ ))
-				    # better still ind=$(( ind++ ))
-				    : $(( ind++ ))
-				done
-			    }	
-		    }
-		    
-		    printOneChar=$(printf "%c" "${string}" )
-		    string=${string#*$printOneChar}
-		    : $((index++))
-		done
-	    }
-    )
+	  # if length is not null get the offset specified by the user
+	  for ((ind=0;ind<=${#string};)) {
+	    
+	    while [ -n "${string}" ];do
+	      
+	      (( ${#string} == length )) && {
+		echo "$string" && return $true;
+	      }
+	      string=${string%$(printf "%c" "$(rev <<<${string})")*}
+	      # : >> don't run the result of $(( ind++ ))
+	      # better still ind=$(( ind++ ))
+	      : $(( ind++ ))
+	    done
+	  }	
+	}
+	
+	printOneChar=$(printf "%c" "${string}" )
+	string=${string#*$printOneChar}
+	: $((index++))
+      done
+    }
+  )
 }
 
 isInteger() {
-    local number="${1}"
-    
-    [[ -z "${number}" ]] && {
-	printf "%s\n" "Usage: ${FUNCNAME} number"
-	return $false
+  local number="${1}"
+  
+  [[ -z "${number}" ]] && {
+    printf "%s\n" "Usage: ${FUNCNAME} number"
+    return $false
+  }
+  
+  # check if the content of $number is an alphabet or any punctuation mark
+
+  (
+    for ((i=0;i<=${#number};)) {
+      while [ -n "$number" ];do
+	printNumber=$(printf "%c" "$number")
+	[[ ! $printNumber == [0-9] ]] && return $false
+	number=${number#*?}
+	: $(( i++ ))
+      done
     }
-    
-    # check if the content of $number is an alphabet or any punctuation mark
+  )
 
-    (
-	for ((i=0;i<=${#number};)) {
-		while [ -n "$number" ];do
-		    printNumber=$(printf "%c" "$number")
-		    [[ ! $printNumber == [0-9] ]] && return $false
-		    number=${number#*?}
-		    : $(( i++ ))
-		done
-	    }
-    )
-
-    [[ $? == 1 ]] && return $false
-    
-    #if egrep -q "([[:alpha:]])|([[:punct:]])" <<<"${number}";then
-    #return $false
-    #fi
-    
-    return $true
+  [[ $? == 1 ]] && return $false
+  
+  #if egrep -q "([[:alpha:]])|([[:punct:]])" <<<"${number}";then
+  #return $false
+  #fi
+  
+  return $true
 }
 
 int() {
-    # get all the integers before the decimal point
-    # non integers values will cause an error
-    local integer="${1}"
+  # get all the integers before the decimal point
+  # non integers values will cause an error
+  local integer="${1}"
 
-    [[ -z "${integer}" ]] && {
-	printf "%s\n" "Usage: ${FUNCNAME} number"
-	return $false
+  [[ -z "${integer}" ]] && {
+    printf "%s\n" "Usage: ${FUNCNAME} number"
+    return $false
+  }
+
+  isInteger $integer
+
+  # if the exit status of "isInteger $integer" greater than 0 enter the below block of code
+  [[ $? != 0 ]] && {
+    # setting integer to another variable
+    local privInteger=$integer
+    local ind;
+    for ((ind=0;ind<=${#privInteger};)) {
+      
+      # while privInteger is non-zero i.e if there is still text in privInteger
+      
+      while [ -n "$privInteger" ];do
+	# save the first character of privInteger in printchar variable
+	local printchar=$(printf "%c" "${privInteger}" )
+	# cut the first character in privInteger until there is nothing in privInteger
+	privInteger=${privInteger#*$printchar}
+	# incase printchar variable does not contain 0-9 or .
+	[[ ! $printchar =~ ([0-9\.]) ]] && {
+	  # declare a variable space
+	  local space=""
+	  # save integer again on another variable
+	  local int=$integer
+	  local err;
+	  for ((err=0;err<=${#int};)) {
+	    # this block of code , will add a single space to the space variable
+	    # aslong as int is non-zero and $pchar(see the next while loop ) does not equal printchar
+	    # Note:- $printchar is the single value that does not equal 0-9 or .
+	    # if a match is find return from this function with return code of 1
+	    while [ -n "${int}" ];do
+	      local pchar=$(printf "%c" "${int}")
+	      [[ $pchar == $printchar ]] && {
+		printf "%s\n" "${integer}"
+		printf "%s\n" "$space^Invalid character"	    
+		return $false
+	      }
+	      space+=" "
+	      : $(( err++ ))
+	      # cut a single value from int until there is nothing inside
+	      int=${int#*$pchar}
+	    done
+	    
+	  } ; #end of $err
+	      
+	      
+	} ; # End of $printchar
+	
+	#for ((period=0;period<=${#integer};period++)) {
+	#	echo $printchar
+	#   }
+	
+	: $(( ind++ ))
+      done
+      # printchar does not equal any punct value
+      # cut any leading . forward
+      printf "%s\n" "${integer%%.*}"
+      return $true
     }
-
-    isInteger $integer
-
-    # if the exit status of "isInteger $integer" greater than 0 enter the below block of code
-    [[ $? != 0 ]] && {
-	# setting integer to another variable
-	local privInteger=$integer
-	local ind;
-	for ((ind=0;ind<=${#privInteger};)) {
-		
-		# while privInteger is non-zero i.e if there is still text in privInteger
-		
-		while [ -n "$privInteger" ];do
-		    # save the first character of privInteger in printchar variable
-		    local printchar=$(printf "%c" "${privInteger}" )
-		    # cut the first character in privInteger until there is nothing in privInteger
-		    privInteger=${privInteger#*$printchar}
-		    # incase printchar variable does not contain 0-9 or .
-		    [[ ! $printchar =~ ([0-9\.]) ]] && {
-			# declare a variable space
-			local space=""
-			# save integer again on another variable
-			local int=$integer
-			local err;
-			for ((err=0;err<=${#int};)) {
-				# this block of code , will add a single space to the space variable
-				# aslong as int is non-zero and $pchar(see the next while loop ) does not equal printchar
-				# Note:- $printchar is the single value that does not equal 0-9 or .
-				# if a match is find return from this function with return code of 1
-				while [ -n "${int}" ];do
-				    local pchar=$(printf "%c" "${int}")
-				    [[ $pchar == $printchar ]] && {
-					printf "%s\n" "${integer}"
-					printf "%s\n" "$space^Invalid character"	    
-					return $false
-				    }
-				    space+=" "
-				    : $(( err++ ))
-				    # cut a single value from int until there is nothing inside
-				    int=${int#*$pchar}
-				done
-				
-			    } ; #end of $err
-				
-			    
-		    } ; # End of $printchar
-		    
-		    #for ((period=0;period<=${#integer};period++)) {
-		    #	echo $printchar
-		    #   }
-		    
-		    : $(( ind++ ))
-		done
-		# printchar does not equal any punct value
-		# cut any leading . forward
-		printf "%s\n" "${integer%%.*}"
-		return $true
-	    }
-    }
-    printf "%s\n" "${integer}"
-    return $true
+  }
+  printf "%s\n" "${integer}"
+  return $true
 }
 raw() {
-    # you might not need this
-    local str="${1}"
-    [[ -z "${@}" ]] && {
-	printf "%s\n" "Usage: raw string"
-    }
-    sed 's|\\|\\\\|g' <<<"${str}"
+  # you might not need this
+  local str="${1}"
+  [[ -z "${@}" ]] && {
+    printf "%s\n" "Usage: raw string"
+  }
+  sed 's|\\|\\\\|g' <<<"${str}"
 }
 destructure() {
-    # do not quote the array argument ( first agument )
-    # it is important you quote the second argument to this function
-    # associative arrays work in alphabetical order
-    # use "," to separate the variables to assign each array element to
-    # for example
-    # array=( bash ksh zsh )
-    # destructure ${array[@]} "var1,var2,var3"
-    # echo $var1
-    # echo $var2
-    # echo $var3
-    [[ -z "${@}" ]] && {
-	
-	printf "%s\n" "Usage:${FUNCNAME}  array values"
-	printf "%s\n" "destructure \${array[@]} \"var1,var2,,var3\""
-	printf "%s\n" "The array should not be quoted but the variables to assign the array element should be quoted"
-	return $false
-    }
+  # do not quote the array argument ( first agument )
+  # it is important you quote the second argument to this function
+  # associative arrays work in alphabetical order
+  # use "," to separate the variables to assign each array element to
+  # for example
+  # array=( bash ksh zsh )
+  # destructure ${array[@]} "var1,var2,var3"
+  # echo $var1
+  # echo $var2
+  # echo $var3
+  [[ -z "${@}" ]] && {
     
-    # Substract 1 from the total number of arguments
-    local arrayLength=$(( ${#@} - 1))
-    # get the location of the last argument
-    local str=$(( arrayLength + 1 ))
-    # get the value of the last argument using indirect reference ( ! )
-    local strToDestruct="${!str},"
-    declare -i y=0;
-    local varList;
-    # loop through the length of arrayLength
-    for ((i=0;i<=$arrayLength;)) {
-	    # for j in the total number of arguments
-	    for j ; do
-		# if the value of i equals the length of our arrayLength variable, break from the 2 loops
-		(( i == arrayLength )) && break 2;
-		while [ -n "$strToDestruct" ] ;do
-		    (( y == arrayLength )) && break 3;
-		    local destruct=${strToDestruct%%,*}
-		    strToDestruct=${strToDestruct#*,}
-		    {
-			[[ -z "${destruct}" ]] || [[ "${destruct}" == +( ) ]]
-		    }  && {
-			declare -x null="null"
-			varList+=${!destruct}, # ${null} >> ignore this comment
-			: $(( y++ ))
-			continue 2
-		    }
-		    declare -g $destruct=$j
-		    varList+=${!destruct},
-		    : $(( y++ ))
-		    continue 2;
-		    
-		done
-		: $(( i++ ))
-	    done
+    printf "%s\n" "Usage:${FUNCNAME}  array values"
+    printf "%s\n" "destructure \${array[@]} \"var1,var2,,var3\""
+    printf "%s\n" "The array should not be quoted but the variables to assign the array element should be quoted"
+    return $false
+  }
+  
+  # Substract 1 from the total number of arguments
+  local arrayLength=$(( ${#@} - 1))
+  # get the location of the last argument
+  local str=$(( arrayLength + 1 ))
+  # get the value of the last argument using indirect reference ( ! )
+  local strToDestruct="${!str},"
+  declare -i y=0;
+  local varList;
+  # loop through the length of arrayLength
+  for ((i=0;i<=$arrayLength;)) {
+    # for j in the total number of arguments
+    for j ; do
+      # if the value of i equals the length of our arrayLength variable, break from the 2 loops
+      (( i == arrayLength )) && break 2;
+      while [ -n "$strToDestruct" ] ;do
+	(( y == arrayLength )) && break 3;
+	local destruct=${strToDestruct%%,*}
+	strToDestruct=${strToDestruct#*,}
+	{
+	  [[ -z "${destruct}" ]] || [[ "${destruct}" == +( ) ]]
+	}  && {
+	  declare -x null="null"
+	  varList+=${!destruct}, # ${null} >> ignore this comment
+	  : $(( y++ ))
+	  continue 2
 	}
-	varList=${varList%,*}
+	declare -g $destruct=$j
+	varList+=${!destruct},
+	: $(( y++ ))
+	continue 2;
+	
+      done
+      : $(( i++ ))
+    done
+  }
+      varList=${varList%,*}
 }
 
 ...() {
-    # Spread a bunch of string inside an array
-    # for example:-
-    # str=bash
-    # array=( $(... $str) )
-    # echo ${str[@]}
-    # b a s h
-    
-    local stringToSpread="$@"
+  # Spread a bunch of string inside an array
+  # for example:-
+  # str=bash
+  # array=( $(... $str) )
+  # echo ${str[@]}
+  # b a s h
+  
+  local stringToSpread="$@"
 
-    [[ -z "${stringToSpread}" ]] && {
+  [[ -z "${stringToSpread}" ]] && {
 
-	printf "%s\n" "Usage: ${FUNCNAME} string"
-	return $false
+    printf "%s\n" "Usage: ${FUNCNAME} string"
+    return $false
+  }
+  
+  [[ ${#@} -eq 1 ]] && {
+    for ((i=0;i<=${#stringToSpread};i++)) {
+      while [[ -n "${stringToSpread}" ]];do
+	printf "%c\n" "${stringToSpread}"
+	stringToSpread=${stringToSpread#*?}
+      done
     }
-    
-    [[ ${#@} -eq 1 ]] && {
-	for ((i=0;i<=${#stringToSpread};i++)) {
-		while [[ -n "${stringToSpread}" ]];do
-		    printf "%c\n" "${stringToSpread}"
-		    stringToSpread=${stringToSpread#*?}
-		done
-	    }
-    }
+  }
 }
 
 foreach() {
-    # dont'quote the array arugment ( i.e the first agument )
-    # If you pass in a function as the callback using the function command you should wrap it in single quotes
-    local array=$(( ${#@} - 1 ))
-    local callback=$(( array + 1 ))
-    declare -ga newArray
-    [[ -z ${#@} ]] && {
-	printf "%s\n" "Usage: ${FUNCNAME} array callback"
-	return $false
-    }
-    # stupid hack to test if argument 1 is an array
-    [[ ${array} -le 1 ]] && {
-	printf "%s\n" "Error: first argument is not an Array"
-	return $false
-    }
+  # dont'quote the array arugment ( i.e the first agument )
+  # If you pass in a function as the callback using the function command you should wrap it in single quotes
+  local array=$(( ${#@} - 1 ))
+  local callback=$(( array + 1 ))
+  declare -ga newArray
+  [[ -z ${#@} ]] && {
+    printf "%s\n" "Usage: ${FUNCNAME} array callback"
+    return $false
+  }
+  # stupid hack to test if argument 1 is an array
+  [[ ${array} -le 1 ]] && {
+    printf "%s\n" "Error: first argument is not an Array"
+    return $false
+  }
 
-    [[ -z "${callback}" ]] && {
-	printf "%s\n" "Error: No Callback argument was provided"
-	return $false
-    }
-    declare -F ${!callback} >/dev/null
+  [[ -z "${callback}" ]] && {
+    printf "%s\n" "Error: No Callback argument was provided"
+    return $false
+  }
+  declare -F ${!callback} >/dev/null
 
-    [[ $? -ge 1 ]] && {
-	#Evaluate the callback
-	eval ${!callback} &>/dev/null
-	#If the previous command exit status is greater or equal to 1
-	[[ $? -ge 1 ]] && {   
-	    printf "%s\n" "Error: bad array callback"
-	    return $false
-	}
-	
-	local command=$(egrep -o "\w+\(\)" <<<${!callback})
-	command=${command/()/}
-	for ((i=0;i<=${#array};)) {
-		for j; do
-		    (( i == array )) && break 2;
-		    newArray+=( $( $command $j ) )
-		    : $(( i++ ))
-		done
-	    }
-	    echo "${newArray[@]}"
-	return $true
+  [[ $? -ge 1 ]] && {
+    #Evaluate the callback
+    eval ${!callback} &>/dev/null
+    #If the previous command exit status is greater or equal to 1
+    [[ $? -ge 1 ]] && {   
+      printf "%s\n" "Error: bad array callback"
+      return $false
     }
-
+    
+    local command=$(egrep -o "\w+\(\)" <<<${!callback})
+    command=${command/()/}
     for ((i=0;i<=${#array};)) {
-	    for j;do
-		(( i == array )) && break 2;
-		newArray+=( $( ${!callback} $j) )
-
-		: $(( i++ ))
-	    done
-	}
+      for j; do
+	(( i == array )) && break 2;
+	newArray+=( $( $command $j ) )
+	: $(( i++ ))
+      done
+    }
 	echo "${newArray[@]}"
+	return $true
+  }
+
+  for ((i=0;i<=${#array};)) {
+    for j;do
+      (( i == array )) && break 2;
+      newArray+=( $( ${!callback} $j) )
+
+      : $(( i++ ))
+    done
+  }
+      echo "${newArray[@]}"
 }
 
 copyWithin() {
-    local array=$1
-    declare -i indexToCopyFrom=$2
-    declare -i indexToCopyTo=$3
-    read -a array <<<"$array"
-    local valueOfIndexToCopyFrom=${array[$indexToCopyFrom]}
-    local valueOfIndexToCopyTo=${array[$indexToCopyTo]}
-    {
-	[[ -z ${@} ]] || [[ -z "$array" ]]
-    } && {
-	printf "%s\n" "Usage: copyWithin arrayArgument indexToCopyFrom indexToCopyto"
-	return $false
-    }
-    array[$indexToCopyTo]=$valueOfIndexToCopyFrom
-    echo ${array[@]}
-    return $true;
+  local array=$1
+  declare -i indexToCopyFrom=$2
+  declare -i indexToCopyTo=$3
+  read -a array <<<"$array"
+  local valueOfIndexToCopyFrom=${array[$indexToCopyFrom]}
+  local valueOfIndexToCopyTo=${array[$indexToCopyTo]}
+  {
+    [[ -z ${@} ]] || [[ -z "$array" ]]
+  } && {
+    printf "%s\n" "Usage: copyWithin arrayArgument indexToCopyFrom indexToCopyto"
+    return $false
+  }
+  array[$indexToCopyTo]=$valueOfIndexToCopyFrom
+  echo ${array[@]}
+  return $true;
 }
-#<<'EOF'
-#keys() {
-#    local array=$1
-#    read -a array <<<"$array"
-#    local getInfo=$(declare -p array)
-#    [[ -z "$array" ]] && {
-#	printf "%s\n" "Usage: keys arrayArgument"
-#	return $false
-#    }
-#    a=( ["theif"]="victory" ["theif1"]="favour" ["theif2"]="johnson" )
-#    local getInfo=$(declare -p a)
-#    arrKeys=$(egrep -o '(\[[[:alnum:]]+\])' <<<"$getInfo")
-#    echo \'${arrKeys}\'    
-#}
-#
-#declare -A a=( ["theif"]="victory" ["theif1"]="favour" ["theif2"]="johnson" )
-#
-#keys "${a[*]}"
-#EOF
-
 #+end_src
 ** Java
 #+begin_src shell :tangle ~/.bashrc.d/java
@@ -1025,6 +875,24 @@ thread_analyze () {
 Definições de alias. Tentar manter simples. Qualquer definição controversa deve ser testada.
 ** Basic
 #+begin_src shell :tangle ~/.aliases :shebang "#!/bin/sh"
+# Use neovim as vim
+
+if [ -x "$(command -v nvim)" ] ; then
+    alias vim='nvim'
+fi
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+# Always recover a session named $USER
+alias restmux='[[ -z "$TMUX" ]] && exec tmux new-session -A -s $USER'
+
+# Remember to run this now and then
+alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" '
+
+# This is too hard to remember
+alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree -r "$in"; done'
 alias ll='ls -l'
 alias la='ls -A'
 alias l='ls -CF'
@@ -1063,7 +931,6 @@ get GPU ram on desktop / laptop##
 alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
 #+end_src
 
-
 This is GOLD for finding out what is taking so much space on your drives!
 #+begin_src shell :tangle ~/.aliases
 alias diskspace="du -S | sort -n -r |more"
@@ -1093,34 +960,71 @@ alias eclipse='eclipse --launcher.ini $HOME/.config/eclipse/eclipse.ini'
 #+begin_src shell :tangle ~/.aliases
 alias config='/usr/bin/git --git-dir=$HOME/.local/dotfiles/ --work-tree=$HOME'
 #+end_src
-
-
-Alguns alias para serem revistos:
-
-alias vin='nvim'
-alias intellij=intellij-idea-community
-alias apt-installed="comm -23 <(apt-mark showmanual | sort -u) <(gzip -dc /var/log/installer/initial-status.gz | sed -n 's/^Package: //p' | sort -u)"
-
-alias restmux='[[ -z "$TMUX" ]] && exec tmux new-session -A -s $USER'
-
+#+begin_src shell :tangle ~/.aliases
 alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" '
-
 alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree -r "$in"; done'
-** TODO
-
-
-git init --bare $HOME/.cfg
-alias config='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'
-config config --local status.showUntrackedFiles no
-echo "alias config='/usr/bin/git --git-dir=$HOME/repos/dotfiles/ --work-tree=$HOME'" >> $HOME/.bashrc
-
-
-*** A configuração do neovim precisa de um bootstrap do Packer. Ver https://dev.to/oinak/neovim-config-from-scratch-part-i-3o2m .
-#+begin_src shell
-git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
 #+end_src
+## Useful aliases (see if they can be used first)
 
-Depois disso, abrir o .config/nvim/init.lua no nvim, :so % PackerSync :e
+# Replace ls with exa
+alias ls='exa -al --color=always --group-directories-first --icons'     # preferred listing
+alias la='exa -a --color=always --group-directories-first --icons'      # all files and dirs
+alias ll='exa -l --color=always --group-directories-first --icons'      # long format
+alias lt='exa -aT --color=always --group-directories-first --icons'     # tree listing
+alias l.='exa -ald --color=always --group-directories-first --icons .*' # show only dotfiles
+
+# Replace some more things with better alternatives
+alias cat='bat --style header --style snip --style changes --style header'
+[ ! -x /usr/bin/yay ] && [ -x /usr/bin/paru ] && alias yay='paru'
+
+# Common use
+alias grubup="sudo update-grub"
+alias fixpacman="sudo rm /var/lib/pacman/db.lck"
+alias tarnow='tar -acf '
+alias untar='tar -zxvf '
+alias wget='wget -c '
+alias rmpkg="sudo pacman -Rdd"
+alias psmem='ps auxf | sort -nr -k 4'
+alias psmem10='ps auxf | sort -nr -k 4 | head -10'
+alias upd='/usr/bin/garuda-update'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+alias ......='cd ../../../../..'
+alias dir='dir --color=auto'
+alias vdir='vdir --color=auto'
+alias grep='ugrep --color=auto'
+alias fgrep='ugrep -F --color=auto'
+alias egrep='ugrep -E --color=auto'
+alias hw='hwinfo --short'                          # Hardware Info
+alias big="expac -H M '%m\t%n' | sort -h | nl"     # Sort installed packages according to size in MB (expac must be installed)
+alias gitpkg='pacman -Q | grep -i "\-git" | wc -l' # List amount of -git packages
+alias ip='ip -color'
+
+# Get fastest mirrors
+alias mirror="sudo reflector -f 30 -l 30 --number 10 --verbose --save /etc/pacman.d/mirrorlist"
+alias mirrord="sudo reflector --latest 50 --number 20 --sort delay --save /etc/pacman.d/mirrorlist"
+alias mirrors="sudo reflector --latest 50 --number 20 --sort score --save /etc/pacman.d/mirrorlist"
+alias mirrora="sudo reflector --latest 50 --number 20 --sort age --save /etc/pacman.d/mirrorlist"
+
+# Help people new to Arch
+alias apt='man pacman'
+alias apt-get='man pacman'
+alias please='sudo'
+alias tb='nc termbin.com 9999'
+alias helpme='cht.sh --shell'
+alias pacdiff='sudo -H DIFFPROG=meld pacdiff'
+
+# Cleanup orphaned packages
+alias cleanup='sudo pacman -Rns $(pacman -Qtdq)'
+
+# Get the error messages from journalctl
+alias jctl="journalctl -p 3 -xb"
+
+# Recent installed packages
+alias rip="expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort | tail -200 | nl"
+
 * Git
 ** gitconfig
 #+begin_src toml :tangle ~/.gitconfig

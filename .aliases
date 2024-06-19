@@ -1,4 +1,22 @@
 #!/bin/sh
+# Use neovim as vim
+
+if [ -x "$(command -v nvim)" ] ; then
+    alias vim='nvim'
+fi
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+# Always recover a session named $USER
+alias restmux='[[ -z "$TMUX" ]] && exec tmux new-session -A -s $USER'
+
+# Remember to run this now and then
+alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" '
+
+# This is too hard to remember
+alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree -r "$in"; done'
 alias ll='ls -l'
 alias la='ls -A'
 alias l='ls -CF'
@@ -34,3 +52,6 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 alias eclipse='eclipse --launcher.ini $HOME/.config/eclipse/eclipse.ini'
 
 alias config='/usr/bin/git --git-dir=$HOME/.local/dotfiles/ --work-tree=$HOME'
+
+alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" '
+alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree -r "$in"; done'
