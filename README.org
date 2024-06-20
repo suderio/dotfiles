@@ -198,8 +198,8 @@ fi
 
 Aliases
 #+begin_src shell :tangle ~/.bashrc
-if [ -f ~/.aliases ]; then
-  . ~/.aliases
+if [ -f ~/.bashrc.d/aliases ]; then
+  . ~/.bashrc.d/aliases
 fi
 #+end_src
 
@@ -874,7 +874,7 @@ thread_analyze () {
 * Aliases
 Definições de alias. Tentar manter simples. Qualquer definição controversa deve ser testada.
 ** Basic
-#+begin_src shell :tangle ~/.aliases :shebang "#!/bin/sh"
+#+begin_src shell :tangle ~/.bashrc.d/aliases :shebang "#!/bin/sh"
 # Use neovim as vim
 
 if [ -x "$(command -v nvim)" ] ; then
@@ -905,39 +905,39 @@ function changeDirectory {
 #+end_src
 
 Pass options to free ##
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias meminfo='free -m -l -t'
 #+end_src
 
 get top process eating memory
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias psmem='ps auxf | sort -nr -k 4'
 alias psmem10='ps auxf | sort -nr -k 4 | head -10'
 #+end_src
 
 get top process eating cpu ##
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias pscpu='ps auxf | sort -nr -k 3'
 alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
 #+end_src
 
 Get server cpu info ##
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias cpuinfo='lscpu'
 #+end_src
 
 get GPU ram on desktop / laptop##
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
 #+end_src
 
 This is GOLD for finding out what is taking so much space on your drives!
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias diskspace="du -S | sort -n -r |more"
 #+end_src
 
 Docker
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias dockrrmi='docker images | grep '\''<none>'\'' | grep -P '\''[1234567890abcdef]{12}'\'' -o | xargs -L1 docker rmi'
 alias dockrrm='docker ps -a | grep -v '\''CONTAINER\|_config\|_data\|_run'\'' | cut -c-12 | xargs docker rm'
 alias dockerm='docker rm -v $(docker ps -a -q -f status=exited)'
@@ -948,19 +948,19 @@ alias dockermv='docker volume rm $(docker volume ls -qf dangling=true)'
 
 Add an "alert" alias for long running commands.  Use like so:
 >  sleep 10; alert
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 #+end_src
 
 # temporario, melhorar isso!!!
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias eclipse='eclipse --launcher.ini $HOME/.config/eclipse/eclipse.ini'
 #+end_src
 
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias config='/usr/bin/git --git-dir=$HOME/.local/dotfiles/ --work-tree=$HOME'
 #+end_src
-#+begin_src shell :tangle ~/.aliases
+#+begin_src shell :tangle ~/.bashrc.d/aliases
 alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" '
 alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree -r "$in"; done'
 #+end_src

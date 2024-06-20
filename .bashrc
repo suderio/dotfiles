@@ -89,8 +89,8 @@ if [ -d $HOME/.bashrc.d ]; then
   done
 fi
 
-if [ -f ~/.aliases ]; then
-  . ~/.aliases
+if [ -f ~/.bashrc.d/aliases ]; then
+  . ~/.bashrc.d/aliases
 fi
 
 if [ -f $HOME/.jbang/bin/jbang ]; then
