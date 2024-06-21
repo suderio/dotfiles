@@ -25,6 +25,7 @@ Repositório [dotfiles](http://github.com/suderio/dotfiles.git)
 - [[#git][Git]]
   - [[#gitconfig][gitconfig]]
 - [[#wsl][WSL]]
+- [[#funções-para-gerenciar-a-configuração][Funções para gerenciar a configuração]]
 
 ** profile
 #+begin_src shell :tangle ~/.profile
@@ -1176,4 +1177,27 @@ generateResolvConf=false
 
 [user]
 default=paulo
+#+end_src
+* Funções para gerenciar a configuração
+Essas funções são usadas no emacs
+#+begin_src shell :tangle ~/.bashrc.d/config-sync :shebang "#!/bin/bash"
+
+# manage dotfiles with git, see https://www.atlassian.com/git/tutorials/dotfiles
+alias config='/usr/bin/git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
+
+# Config in new machine
+# git clone --bare git@github.com:suderio/dotfiles $HOME/.local/dotfiles
+# config config --local status.showUntrackedFiles no
+# config checkout
+configsync () {
+  configpath="${1:-$HOME}"
+  config pull --all 
+  config add -u "$configpath"
+  config commit -m "config autocommit: $configpath" 
+  config push
+}
+
+configstatus () {
+  config status -s
+}
 #+end_src

@@ -12,7 +12,6 @@
   - [[#org][Org]]
   - [[#org-roam][Org-roam]]
   - [[#auto-tangle][Auto Tangle]]
-  - [[#diminish-org-indent-mode][Diminish Org Indent Mode]]
   - [[#org-level-headers][Org Level Headers]]
   - [[#org-tempo][Org-Tempo]]
   - [[#toc-org][Toc-Org]]
@@ -191,7 +190,6 @@ Adding highlights to TODO and related words.
         org-roam-ui-follow t
         org-roam-ui-update-on-save t
         org-roam-ui-open-on-start t))
-
 #+end_src
 ** Auto Tangle
 This is a very handy plugin to auto-tangle every org file.
@@ -204,13 +202,6 @@ All you need to do is addd `#+auto_tangle: t` in the header of the org file.
   :config (setq org-auto-tangle-default t))
 
 #+end_src
-** Diminish Org Indent Mode
-Removes "Ind" from showing in the modeline.
-
-#+begin_src emacs-lisp :tangle yes
-(eval-after-load 'org-indent '(diminish 'org-indent-mode))
-#+end_src
-
 ** Org Level Headers
 #+begin_src emacs-lisp :tangle yes
 (custom-set-faces

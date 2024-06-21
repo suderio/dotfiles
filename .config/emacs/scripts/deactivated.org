@@ -126,3 +126,11 @@ Neotree is a file tree viewer.  When you open neotree, it jumps to the current f
 (add-hook 'kill-emacs-hook #'persp-state-save)
 
 #+end_src
+
+** Diminish Org Indent Mode
+Removes "Ind" from showing in the modeline.
+
+#+begin_src emacs-lisp :tangle yes
+(eval-after-load 'org-indent 
+'(diminish 'org-indent-mode))
+#+end_src

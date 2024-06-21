@@ -30,6 +30,22 @@ This configuration was heavily influenced by:
 With some ideas stealed from:
 - https://protesilaos.com/emacs/dotemacs
 - https://github.com/purcell/emacs.d
+
+These are excelent resources to learn more:
+- https://codeberg.org/ashton314/emacs-bedrock
+- https://sr.ht/~ashton314/emacs-bedrock/
+- https://github.com/thinkhuman/writingwithemacs
+- https://github.com/pprevos/emacs-writing-studio
+- https://www.masteringemacs.org/
+- https://github.com/progfolio/.emacs.d
+- https://orgmode.org/worg/org-tutorials/
+- https://list.orgmode.org/orgmode/20071221.230243.10858071.dto@pod.lab/
+- https://orgmode.org/manual/index.html
+- https://lucidmanager.org/productivity/configure-emacs/
+- https://www.gnu.org/software/emacs/manual/html_node/emacs/index.html
+- https://sachachua.com/blog/2007/12/emacs-getting-things-done-with-org-basic/
+- https://cachestocaches.com/2020/3/org-mode-annotated-bibliography/
+- https://www.bowmanjd.com/dotfiles/dotfiles-2-bare-repo/
 ** What should be installed in your OS
 We must install a bunch of os packages in order to everything work:
 #+begin_src emacs-lisp

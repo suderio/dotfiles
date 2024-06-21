@@ -70,6 +70,8 @@ Emacs Dashboard is an extensible startup screen showing you recent files, bookma
   :config
   (dashboard-setup-startup-hook))
 
+
+(setq frame-title-format "%f")
 #+end_src
 
 ** Diminish
