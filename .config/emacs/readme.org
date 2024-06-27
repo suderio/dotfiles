@@ -132,6 +132,7 @@ The following settings are simple modes that are enabled (or disabled) so that E
 (setopt auto-revert-check-vc-info t) ;; https://todo.sr.ht/~ashton314/emacs-bedrock/11
 (global-auto-revert-mode t)          ;; Automatically show changes if the file has changed
 (global-display-line-numbers-mode 1) ;; Display line numbers
+(setq display-line-numbers-type 'relative)         ; Show relative line
 (global-visual-line-mode t)  ;; Enable truncated lines
 (menu-bar-mode -1)           ;; Disable the menu bar 
 (scroll-bar-mode -1)         ;; Disable the scroll bar
@@ -207,7 +208,7 @@ For help, see: https://www.masteringemacs.org/article/understanding-minibuffer-c
 (pixel-scroll-precision-mode)                         ; Smooth scrolling
 
 ;; Use common keystrokes by default
-(cua-mode)
+;(cua-mode)
 
 ;; Display line numbers in programming mode
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)

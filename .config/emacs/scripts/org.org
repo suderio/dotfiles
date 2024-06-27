@@ -144,7 +144,6 @@ Adding highlights to TODO and related words.
 ;; Refile configuration
 (setq org-outline-path-complete-in-steps nil)
 (setq org-refile-use-outline-path 'file)
-
 (setq org-capture-templates
       '(("c" "Default Capture" entry (file "inbox.org")
          "* TODO %?\n%U\n%i")
@@ -156,9 +155,14 @@ Adding highlights to TODO and related words.
         ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
          "** TODO %?\n%U\n%i\n%a")
         ("wt" "Work task" entry (file+headline "work.org" "Tasks")
+         "** TODO %c\n%U\n[[http://itsmweb.bndes.net/servlet/ViewFormServlet?form=HPD%3AHelp+Desk&server=itsm.bndes.net&eid=%c][remedy]]\n%?")
+        ("wi" "Work incident" entry (file+headline "work.org" "Incidents")
+         "** TODO %c\n%U\n[[http://itsmweb.bndes.net/servlet/ViewFormServlet?form=HPD%3AHelp+Desk&server=itsm.bndes.net&eid=%c][remedy]]\n%?")
+        ("wa" "Work adhoc" entry (file+headline "work.org" "Ad hoc")
          "** TODO %?\n%U\n%i\n%a")
         ("wr" "Work report" entry (file+headline "work.org" "Reports")
          "** TODO %?\n%U\n%i\n%a")))
+
 
 (setq org-agenda-custom-commands
       '(("n" "Agenda and All Todos"
