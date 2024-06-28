@@ -58,7 +58,7 @@
 ;; Org-roam variables
 (setq org-roam-directory "~/Org/org-roam/")
 (setq org-roam-index-file "~/Org/org-roam/index.org")
-
+(setq org-attach-directory "~/Org/attach/")
 ;;; Optional variables
 
 ;; Advanced: Custom link types
