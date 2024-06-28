@@ -10,6 +10,7 @@
   - [[#ui-tweaks][UI Tweaks]]
   - [[#highlight-todo][Highlight TODO]]
   - [[#org][Org]]
+  - [[#org-attach][Org-attach]]
   - [[#org-roam][Org-roam]]
   - [[#auto-tangle][Auto Tangle]]
   - [[#org-level-headers][Org Level Headers]]
@@ -58,7 +59,6 @@
 ;; Org-roam variables
 (setq org-roam-directory "~/Org/org-roam/")
 (setq org-roam-index-file "~/Org/org-roam/index.org")
-(setq org-attach-directory "~/Org/attach/")
 ;;; Optional variables
 
 ;; Advanced: Custom link types
@@ -88,7 +88,7 @@
   (org-modern-checkbox nil)
   (org-modern-table nil))
 
-; LaTeX previews
+					; LaTeX previews
 (use-package org-fragtog
   :after org
   :custom
@@ -170,6 +170,11 @@ Adding highlights to TODO and related words.
           (todo)))
         ("w" "Work" agenda ""
          ((org-agenda-files '("work.org"))))))
+#+end_src
+** TODO Org-attach
+#+begin_src emacs-lisp
+(setq org-attach-directory "~/Org/attach/")
+(require 'org-attach-git)
 #+end_src
 ** Org-roam
 #+begin_src emacs-lisp
