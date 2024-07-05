@@ -128,6 +128,7 @@
     "f j" '(evil-collection-consult-jump-list :wk "Jump to a file below current directory")
     "f l" '(consult-locate :wk "Locate a file")
     "f r" '(consult-recent-file :wk "Find recent files")
+    "f s" '(write-file :wk "Save as")
     "f u" '(sudo-edit-find-file :wk "Sudo find file")
     "f U" '(sudo-edit :wk "Sudo edit file"))
 

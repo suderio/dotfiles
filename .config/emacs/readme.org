@@ -99,13 +99,13 @@ By default, Emacs creates automatic backups of files in their original directori
 ** Loading the scripts
 #+begin_src emacs-lisp
 (dolist (script '(
+  "org"
   "basic"
-  "window" 
-  "gui" 
+  "window"
+  "gui"
   "evil"
   "dev"
-  "other" 
-  "org"
+  "other"
   "custom"
   ))
   (org-babel-tangle-file (expand-file-name (concat script ".org") scripts-directory))

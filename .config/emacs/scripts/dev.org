@@ -16,6 +16,8 @@
 - [[#languages][Languages]]
   - [[#bash][Bash]]
   - [[#java][Java]]
+- [[#completion][Completion]]
+- [[#compilation][Compilation]]
 - [[#rainbow-mode][Rainbow Mode]]
 - [[#rest][Rest]]
 
@@ -103,6 +105,18 @@ https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-s
 (add-hook 'java-ts-mode-hook 'eglot-java-mode)
 
 #+end_src
+
+* Completion
+#+begin_src emacs-lisp
+
+#+end_src
+* Compilation
+#+begin_src emacs-lisp
+(use-package ansi-color
+  :elpaca nil
+  :hook (compilation-filter . ansi-color-compilation-filter))
+
+#+end_src
 * Rainbow Mode
 Display the actual color as a background for any hex color value (ex. #ffffff).  The code block below enables rainbow-mode in all programming modes (prog-mode) as well as org-mode, which is why rainbow works in this document.  
 
@@ -118,13 +132,9 @@ Display the actual color as a background for any hex color value (ex. #ffffff). 
 (use-package restclient)
 
 (use-package restclient-jq
-;  :when (modulep +jq)
   :after restclient)
 
 
 (use-package jq-mode
-;  :when (modulep +jq)
   :after restclient-jq)
-
-(em/check-os-deps "jq")
 #+end_src
