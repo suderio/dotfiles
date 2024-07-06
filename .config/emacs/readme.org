@@ -30,6 +30,7 @@ This configuration was heavily influenced by:
 With some ideas stealed from:
 - https://protesilaos.com/emacs/dotemacs
 - https://github.com/purcell/emacs.d
+- https://whhone.com/emacs-config/
 
 These are excelent resources to learn more:
 - https://codeberg.org/ashton314/emacs-bedrock
@@ -111,7 +112,6 @@ By default, Emacs creates automatic backups of files in their original directori
   (org-babel-tangle-file (expand-file-name (concat script ".org") scripts-directory))
   (load script)
 )
-;;(require 'org-git-sync)
 #+end_src
 
 ** Sane defaults

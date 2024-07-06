@@ -15,6 +15,7 @@
   - [[#auto-tangle][Auto Tangle]]
   - [[#org-level-headers][Org Level Headers]]
   - [[#org-tempo][Org-Tempo]]
+  - [[#org-git-sync][Org-git-sync]]
   - [[#toc-org][Toc-Org]]
   - [[#citations][Citations]]
   - [[#latex-pdf-export-configuration][Latex PDF Export configuration]]
@@ -241,7 +242,11 @@ Org-tempo is not a separate package but a module within org that can be enabled.
 #+begin_src emacs-lisp :tangle yes 
 (require 'org-tempo)
 #+end_src
-
+** Org-git-sync
+#+begin_src emacs-lisp
+(use-package org-git-sync
+  :ensure nil)
+#+end_src
 ** Toc-Org
 Allows us to create a Table of Contents in our Org docs.
 

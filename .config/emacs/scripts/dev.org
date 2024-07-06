@@ -16,6 +16,7 @@
 - [[#languages][Languages]]
   - [[#bash][Bash]]
   - [[#java][Java]]
+  - [[#kotlin][Kotlin]]
 - [[#completion][Completion]]
 - [[#compilation][Compilation]]
 - [[#rainbow-mode][Rainbow Mode]]
@@ -78,7 +79,9 @@
         (typescript-mode . typescript-ts-mode)
         (json-mode . json-ts-mode)
         (css-mode . css-ts-mode)
-        (python-mode . python-ts-mode)))
+        (python-mode . python-ts-mode)
+        (kotlin-mode . kotlin-ts-mode)
+))
 #+end_src
 
 * Eglot
@@ -105,7 +108,10 @@ https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-s
 (add-hook 'java-ts-mode-hook 'eglot-java-mode)
 
 #+end_src
-
+** Kotlin
+#+begin_src emacs-lisp
+(use-package kotlin-ts-mode)
+#+end_src
 * Completion
 #+begin_src emacs-lisp
 
