@@ -36,3 +36,6 @@
 ! white
 *.color7: #bfbaac
 *.color15: #fdf6e3
+
+Xcursor.theme: Qogir-dark
+Xcursor.size: 21
