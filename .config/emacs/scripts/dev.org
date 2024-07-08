@@ -12,6 +12,7 @@
 - [[#language-support][Language Support]]
 - [[#treesitter][Treesitter]]
 - [[#eglot][Eglot]]
+- [[#documentation][Documentation]]
 - [[#agressively-indent][Agressively Indent]]
 - [[#languages][Languages]]
   - [[#bash][Bash]]
@@ -80,13 +81,38 @@
         (json-mode . json-ts-mode)
         (css-mode . css-ts-mode)
         (python-mode . python-ts-mode)
+        (java-mode . java-ts-mode)))
         (kotlin-mode . kotlin-ts-mode)
 ))
 #+end_src
 
 * Eglot
 https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-sources-eldoc
+From Doom Emacs:
+Defer server shutdown for a few seconds.
+This gives the user a chance to open other project files before the server is
+auto-killed (which is a potentially expensive process). It also prevents the
+server getting expensively restarted when reverting buffers.
 
+Slightly edited from Doom Emacs as I don't use it's '+lsp-optmizations-mode`."
+#+begin_src emacs-lisp
+(use-package eglot
+  :ensure nil
+  :demand t
+  :hook (prog-mode . eglot-ensure)
+  :custom
+  (eglot-sync-connect 1)
+  (eglot-connect-timeout 10)
+  (eglot-autoshutdown t)
+  (eglot-send-changes-idle-time 0.5))
+
+#+end_src
+* Documentation
+#+begin_src emacs-lisp
+(use-package eldoc
+  :init
+  (global-eldoc-mode))
+#+end_src
 * Agressively Indent
 #+begin_src emacs-lisp
 (use-package aggressive-indent
@@ -114,7 +140,15 @@ https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-s
 #+end_src
 * Completion
 #+begin_src emacs-lisp
-
+  (use-package company
+    :ensure t
+    :commands (global-company-mode)
+    :init
+    (global-company-mode)
+    :custom
+    (company-tooltip-align-annotations 't)
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.1))
 #+end_src
 * Compilation
 #+begin_src emacs-lisp
