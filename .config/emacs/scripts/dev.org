@@ -18,6 +18,7 @@
   - [[#bash][Bash]]
   - [[#java][Java]]
   - [[#kotlin][Kotlin]]
+  - [[#rust][Rust]]
 - [[#completion][Completion]]
 - [[#compilation][Compilation]]
 - [[#rainbow-mode][Rainbow Mode]]
@@ -83,6 +84,7 @@
         (python-mode . python-ts-mode)
         (java-mode . java-ts-mode)))
         (kotlin-mode . kotlin-ts-mode)
+        (rust-mode . rust-ts-mode)
 ))
 #+end_src
 
@@ -137,6 +139,12 @@ Slightly edited from Doom Emacs as I don't use it's '+lsp-optmizations-mode`."
 ** Kotlin
 #+begin_src emacs-lisp
 (use-package kotlin-ts-mode)
+#+end_src
+** Rust
+#+begin_src emacs-lisp
+(use-package rust-mode
+  :init
+  (setq rust-mode-treesitter-derive t))
 #+end_src
 * Completion
 #+begin_src emacs-lisp
