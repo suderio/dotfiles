@@ -113,6 +113,7 @@ Slightly edited from Doom Emacs as I don't use it's '+lsp-optmizations-mode`."
 * Documentation
 #+begin_src emacs-lisp
 (use-package eldoc
+  :ensure nil
   :init
   (global-eldoc-mode))
 #+end_src
