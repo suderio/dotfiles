@@ -163,6 +163,11 @@ The following settings are simple modes that are enabled (or disabled) so that E
 
 ;; Short answers only please
 (setq use-short-answers t)
+
+
+;; Opens directory in "the same" buffer, i.e. kills current buffer an creates a new one
+(put 'dired-find-alternate-file 'disabled nil)
+
 #+end_src
 
 ** Minibuffer/completion
