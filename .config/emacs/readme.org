@@ -47,6 +47,10 @@ These are excelent resources to learn more:
 - https://sachachua.com/blog/2007/12/emacs-getting-things-done-with-org-basic/
 - https://cachestocaches.com/2020/3/org-mode-annotated-bibliography/
 - https://www.bowmanjd.com/dotfiles/dotfiles-2-bare-repo/
+
+These are some good resouces about specific points:
+- https://writequit.org/articles/working-with-logs-in-emacs.html
+- https://github.com/mickeynp/combobulate 
 ** What should be installed in your OS
 We must install a bunch of os packages in order to everything work:
 #+begin_src emacs-lisp

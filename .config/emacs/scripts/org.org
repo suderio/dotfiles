@@ -175,7 +175,8 @@ Adding highlights to TODO and related words.
 ** TODO Org-attach
 #+begin_src emacs-lisp
 (setq org-attach-directory "~/Org/attach/")
-(require 'org-attach-git)
+(use-package org-attach-git
+  :ensure nil)
 #+end_src
 ** Org-roam
 #+begin_src emacs-lisp

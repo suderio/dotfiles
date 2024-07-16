@@ -23,6 +23,7 @@
 - [[#compilation][Compilation]]
 - [[#rainbow-mode][Rainbow Mode]]
 - [[#rest][Rest]]
+- [[#logview][Logview]]
 
 * Ediff
 'ediff' is a diff program that is built into Emacs.  By default, 'ediff' splits files vertically and places the 'help' frame in its own window.  I have changed this so the two files are split horizontally and the 'help' frame appears as a lower split within the existing window.  Also, I create my own 'dt-ediff-hook' where I add 'j/k' for moving to next/prev diffs.  By default, this is set to 'n/p'.
@@ -82,7 +83,7 @@
         (json-mode . json-ts-mode)
         (css-mode . css-ts-mode)
         (python-mode . python-ts-mode)
-        (java-mode . java-ts-mode)))
+        (java-mode . java-ts-mode)
         (kotlin-mode . kotlin-ts-mode)
         (rust-mode . rust-ts-mode)
 ))
@@ -161,7 +162,7 @@ Slightly edited from Doom Emacs as I don't use it's '+lsp-optmizations-mode`."
 * Compilation
 #+begin_src emacs-lisp
 (use-package ansi-color
-  :elpaca nil
+  :ensure nil
   :hook (compilation-filter . ansi-color-compilation-filter))
 
 #+end_src
@@ -185,4 +186,9 @@ Display the actual color as a background for any hex color value (ex. #ffffff). 
 
 (use-package jq-mode
   :after restclient-jq)
+#+end_src
+* Logview
+#+begin_src emacs-lisp
+(use-package logview)
+
 #+end_src
