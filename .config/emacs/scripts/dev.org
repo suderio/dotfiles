@@ -85,12 +85,10 @@
         (python-mode . python-ts-mode)
         (java-mode . java-ts-mode)
         (kotlin-mode . kotlin-ts-mode)
-        (rust-mode . rust-ts-mode)
-))
+        (rust-mode . rust-ts-mode)))
 #+end_src
 
 * Eglot
-https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-sources-eldoc
 From Doom Emacs:
 Defer server shutdown for a few seconds.
 This gives the user a chance to open other project files before the server is
@@ -111,6 +109,7 @@ Slightly edited from Doom Emacs as I don't use it's '+lsp-optmizations-mode`."
 
 #+end_src
 * Documentation
+https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-sources-eldoc
 #+begin_src emacs-lisp
 (use-package eldoc
   :ensure nil
@@ -144,9 +143,22 @@ Slightly edited from Doom Emacs as I don't use it's '+lsp-optmizations-mode`."
 #+end_src
 ** Rust
 #+begin_src emacs-lisp
-(use-package rust-mode
-  :init
-  (setq rust-mode-treesitter-derive t))
+  (use-package rust-mode
+    :init
+    (setq rust-mode-treesitter-derive t))
+  (add-hook 'rust-mode-hook 'eglot-ensure)
+
+  (use-package rustic
+    :custom
+    (rustic-analyzer-command '("rustup" "run" "stable" "rust-analyzer")))
+
+  (setq rustic-lsp-client 'eglot)
+
+  (defun rustic-mode-auto-save-hook ()
+    "Enable auto-saving in rustic-mode buffers."
+    (when buffer-file-name
+      (setq-local compilation-ask-about-save nil)))
+  (add-hook 'rustic-mode-hook 'rustic-mode-auto-save-hook)
 #+end_src
 * Completion
 #+begin_src emacs-lisp
