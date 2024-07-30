@@ -227,7 +227,8 @@
   ;; projectile-command-map already has a ton of bindings 
   ;; set for us, so no need to specify each individually.
   (em/leader-keys
-    "p" '(projectile-command-map :wk "Projectile"))
+    "p" '(projectile-command-map :wk "Projectile")
+    "p A" '(projectile-add-known-project :wk "Add new Project"))
   
   (em/leader-keys
     "s" '(:ignore t :wk "Search")
