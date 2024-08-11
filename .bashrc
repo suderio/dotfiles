@@ -96,7 +96,7 @@ fi
 if [ -f $HOME/.jbang/bin/jbang ]; then
   alias j!=jbang
   export PATH="$HOME/.jbang/bin:$HOME/.jbang/currentjdk/bin:$PATH"
-  export JAVA_HOME=$HOME/.jbang/currentjdk
+  eval $(jbang jdk java-env)
 fi
 
 export NVM_DIR="$HOME/.nvm"
@@ -128,3 +128,7 @@ fi
 if [ -d "$HOME/bin/custom" ] ; then
   source $HOME/bin/custom
 fi
+
+# Add JBang to environment
+alias j!=jbang
+export PATH="$HOME/.jbang/bin:$PATH"
