@@ -1,3 +1,10 @@
+-- My nvim config
+--
+-- Some inspiration was taken from:
+-- https://github.com/ThePrimeagen/init.lua
+-- https://github.com/nvim-lua/kickstart.nvim (start here!)
+-- https://github.com/folke/dot
+
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
@@ -955,6 +962,32 @@ require("lazy").setup({
 		opts = {},
 		style = "night",
 	},
+
+	{
+		"nvim-neorg/neorg",
+		lazy = false,
+		version = "*",
+		config = function()
+			require("neorg").setup({
+				load = {
+					["core.defaults"] = {},
+					["core.concealer"] = {},
+					["core.dirman"] = {
+						config = {
+							workspaces = {
+								notes = "~/Org",
+							},
+							default_workspace = "notes",
+						},
+					},
+				},
+			})
+
+			vim.wo.foldlevel = 99
+			vim.wo.conceallevel = 2
+		end,
+	},
+
 	require("plugins.debug"),
 	require("plugins.indent_line"),
 	require("plugins.lint"),
