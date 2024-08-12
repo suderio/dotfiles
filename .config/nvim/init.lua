@@ -84,6 +84,7 @@ vim.g.netrw_winsize = 25
 
 -- Color column
 vim.opt.colorcolumn = "120"
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -574,8 +575,10 @@ require("lazy").setup({
 							completion = {
 								callSnippet = "Replace",
 							},
-							-- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-							-- diagnostics = { disable = { 'missing-fields' } },
+							diagnostics = {
+								-- Get the language server to recognize the `vim` global
+								globals = { "vim" },
+							},
 						},
 					},
 				},
@@ -920,7 +923,7 @@ require("lazy").setup({
 			vim.keymap.set("n", "<leader>zz", function()
 				require("zen-mode").setup({
 					window = {
-						width = 90,
+						width = 120,
 						options = {},
 					},
 				})
@@ -928,13 +931,12 @@ require("lazy").setup({
 				vim.wo.wrap = false
 				vim.wo.number = true
 				vim.wo.rnu = true
-				ColorMyPencils()
 			end)
 
 			vim.keymap.set("n", "<leader>zZ", function()
 				require("zen-mode").setup({
 					window = {
-						width = 80,
+						width = 120,
 						options = {},
 					},
 				})
@@ -943,33 +945,23 @@ require("lazy").setup({
 				vim.wo.number = false
 				vim.wo.rnu = false
 				vim.opt.colorcolumn = "0"
-				ColorMyPencils()
 			end)
 		end,
 	},
-
-	-- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
-	-- init.lua. If you want these files, they are in the repository, so you can just download them and
-	-- place them in the correct locations.
-
-	-- NOTE: Next step on your Neovim journey: Add/Configure additional plugins for Kickstart
-	--
-	--  Here are some example plugins that I've included in the Kickstart repository.
-	--  Uncomment any of the lines below to enable them (you will need to restart nvim).
-	--
-	require("kickstart.plugins.debug"),
-	require("kickstart.plugins.indent_line"),
-	require("kickstart.plugins.lint"),
-	require("kickstart.plugins.autopairs"),
-	require("kickstart.plugins.neo-tree"),
-	require("kickstart.plugins.gitsigns"), -- adds gitsigns recommend keymaps
-
-	-- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
-	--    This is the easiest way to modularize your config.
-	--
-	--  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-	--    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
-	-- { import = 'custom.plugins' },
+	{
+		"folke/tokyonight.nvim",
+		lazy = false,
+		priority = 1000,
+		opts = {},
+		style = "night",
+	},
+	require("plugins.debug"),
+	require("plugins.indent_line"),
+	require("plugins.lint"),
+	require("plugins.autopairs"),
+	require("plugins.neo-tree"),
+	require("plugins.gitsigns"), -- adds gitsigns recommend keymaps
+	{ import = "plugins" },
 }, {
 	ui = {
 		-- If you are using a Nerd Font: set icons to an empty table which will use the
@@ -992,5 +984,6 @@ require("lazy").setup({
 	},
 })
 
+vim.cmd.colorscheme("tokyonight-night")
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
