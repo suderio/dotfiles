@@ -92,6 +92,10 @@ vim.g.netrw_winsize = 25
 -- Color column
 vim.opt.colorcolumn = "120"
 
+-- Stop checking these on checkhealth
+vim.g.loaded_ruby_provider = 0
+vim.g.loaded_perl_provider = 0
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -962,32 +966,6 @@ require("lazy").setup({
 		opts = {},
 		style = "night",
 	},
-
-	{
-		"nvim-neorg/neorg",
-		lazy = false,
-		version = "*",
-		config = function()
-			require("neorg").setup({
-				load = {
-					["core.defaults"] = {},
-					["core.concealer"] = {},
-					["core.dirman"] = {
-						config = {
-							workspaces = {
-								notes = "~/Org",
-							},
-							default_workspace = "notes",
-						},
-					},
-				},
-			})
-
-			vim.wo.foldlevel = 99
-			vim.wo.conceallevel = 2
-		end,
-	},
-
 	require("plugins.debug"),
 	require("plugins.indent_line"),
 	require("plugins.lint"),

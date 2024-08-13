@@ -132,3 +132,19 @@ fi
 # Add JBang to environment
 alias j!=jbang
 export PATH="$HOME/.jbang/bin:$PATH"
+. "$HOME/.cargo/env"
+
+# >>> juliaup initialize >>>
+
+# !! Contents within this block are managed by juliaup !!
+
+case ":$PATH:" in
+    *:/home/paulo/.juliaup/bin:*)
+        ;;
+
+    *)
+        export PATH=/home/paulo/.juliaup/bin${PATH:+:${PATH}}
+        ;;
+esac
+
+# <<< juliaup initialize <<<
