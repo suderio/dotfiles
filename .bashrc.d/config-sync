@@ -7,10 +7,8 @@ alias config='/usr/bin/git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME
 # config config --local status.showUntrackedFiles no
 # config checkout
 configsync () {
-  configpath="${1:-$HOME}"
   config pull --all 
-  config add -u "$configpath"
-  config commit -m "config autocommit: $configpath" 
+  config commit -m "config autocommit: $(uname -nmro)" 
   config push
 }
 

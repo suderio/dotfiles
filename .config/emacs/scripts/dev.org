@@ -14,6 +14,7 @@
 - [[#eglot][Eglot]]
 - [[#documentation][Documentation]]
 - [[#agressively-indent][Agressively Indent]]
+- [[#snippets][Snippets]]
 - [[#languages][Languages]]
   - [[#bash][Bash]]
   - [[#java][Java]]
@@ -123,6 +124,14 @@ https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-s
   (global-aggressive-indent-mode 1)
   (add-to-list 'aggressive-indent-excluded-modes 'html-mode))
 #+end_src
+* Snippets
+#+begin_src emacs-lisp
+(use-package yasnippet)
+(use-package yasnippet-snippets)
+; (yas-reload-all)
+(add-hook 'prog-mode-hook #'yas-minor-mode)
+
+#+end_src
 * Languages
 ** Bash
 #+begin_src emacs-lisp
@@ -132,9 +141,31 @@ https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-s
 #+end_src
 ** Java
 #+begin_src emacs-lisp
-(use-package eglot-java)
-(add-hook 'java-mode-hook 'eglot-java-mode)
-(add-hook 'java-ts-mode-hook 'eglot-java-mode)
+     (use-package eglot-java)
+     (add-hook 'java-mode-hook 'eglot-java-mode)
+     (add-hook 'java-ts-mode-hook 'eglot-java-mode)
+
+(defun insert-java-getter-setter ()
+  "Generate and insert Java getter and setter for the field at point, using the previous word as the type."
+  (interactive)
+  (let* ((field-name (thing-at-point 'word t))
+         (field-type (save-excursion
+                       (backward-word 1)
+                       (thing-at-point 'word t)))
+         (camel-case-name (capitalize field-name)))
+    (when (and field-name field-type)
+      (let ((getter (format "public %s get%s() {\n    return this.%s;\n}"
+                            field-type camel-case-name field-name))
+            (setter (format "public void set%s(%s %s) {\n    this.%s = %s;\n}"
+                            camel-case-name field-type field-name field-name field-name)))
+        (save-excursion
+          (end-of-line)
+          (newline)
+          (insert (concat getter "\n\n" setter "\n")))))))
+
+(defun capitalize (str)
+  "Capitalize the first letter of STR."
+  (concat (upcase (substring str 0 1)) (substring str 1)))
 
 #+end_src
 ** Kotlin
