@@ -5,7 +5,7 @@
 #+OPTIONS: toc:2
 
 * TABLE OF CONTENTS :toc:
-- [[#important-things-to-do-first][IMPORTANT THINGS TO DO FIRST]]
+- [[#introduction][Introduction]]
   - [[#what-should-be-installed-in-your-os][What should be installed in your OS]]
   - [[#non-versioned-local-files][Non-versioned, local files]]
   - [[#adding-the-scripts-directory-to-path][Adding the scripts directory to path]]
@@ -13,13 +13,12 @@
   - [[#no-littering][No littering]]
   - [[#backup][Backup]]
   - [[#loading-the-scripts][Loading the scripts]]
-  - [[#sane-defaults][Sane defaults]]
-  - [[#minibuffercompletion][Minibuffer/completion]]
-  - [[#interface-enhancementsdefaults][Interface enhancements/defaults]]
-  - [[#tab-bar][Tab-bar]]
+- [[#sane-defaults][Sane defaults]]
+- [[#minibuffercompletion][Minibuffer/completion]]
+- [[#interface-enhancementsdefaults][Interface enhancements/defaults]]
+- [[#tab-bar][Tab-bar]]
 
-* IMPORTANT THINGS TO DO FIRST
-These are the bare minimum.
+* Introduction
 
 This configuration was heavily influenced by:
 - https://github.com/iocanel/emacs.d
@@ -101,6 +100,10 @@ By default, Emacs creates automatic backups of files in their original directori
 (setq backup-directory-alist '((".*" . "~/.local/share/Trash/files")))
 
 #+end_src
+
+
+
+
 ** Loading the scripts
 #+begin_src emacs-lisp
 (dolist (script '(
@@ -118,7 +121,7 @@ By default, Emacs creates automatic backups of files in their original directori
 )
 #+end_src
 
-** Sane defaults
+* Sane defaults
 The following settings are simple modes that are enabled (or disabled) so that Emacs functions more like you would expect a proper editor/IDE to function.
 
 #+begin_src emacs-lisp 
@@ -170,7 +173,7 @@ The following settings are simple modes that are enabled (or disabled) so that E
 
 #+end_src
 
-** Minibuffer/completion
+* Minibuffer/completion
 For help, see: https://www.masteringemacs.org/article/understanding-minibuffer-completion
 #+begin_src emacs-lisp
 (setopt enable-recursive-minibuffers t)                ; Use the minibuffer whilst in the minibuffer
@@ -190,7 +193,7 @@ For help, see: https://www.masteringemacs.org/article/understanding-minibuffer-c
 (keymap-set minibuffer-mode-map "TAB" 'minibuffer-complete) ; TAB acts more like how it does in the shell
 #+end_src
 
-** Interface enhancements/defaults
+* Interface enhancements/defaults
 
 #+begin_src emacs-lisp
 ;; Mode line information
@@ -231,7 +234,7 @@ For help, see: https://www.masteringemacs.org/article/understanding-minibuffer-c
   (mapc (lambda (hook) (add-hook hook 'hl-line-mode)) hl-line-hooks))
 #+end_src
 
-** Tab-bar
+* Tab-bar
 #+begin_src emacs-lisp
 ;; Show the tab-bar as soon as tab-bar functions are invoked
 (setopt tab-bar-show 1)
