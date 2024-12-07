@@ -25,7 +25,7 @@ if [ -z "${chroot_ps1:-}" ] && [ -r /etc/chroot_ps1 ]; then
 fi
 
 case "$TERM" in
-  xterm-color|*-256color) color_prompt=yes;;
+xterm-color | *-256color) color_prompt=yes ;;
 esac
 
 force_color_prompt=yes
@@ -83,8 +83,7 @@ if [ -f /usr/bin/alacritty ]; then
 fi
 
 if [ -d $HOME/.bashrc.d ]; then
-  for f in "$HOME"/.bashrc.d/*
-  do
+  for f in "$HOME"/.bashrc.d/*; do
     source $f
   done
 fi
@@ -100,51 +99,51 @@ if [ -f $HOME/.jbang/bin/jbang ]; then
 fi
 
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 
-[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+if [ -f "$HOME/.cargo/env" ]; then
+  source "$HOME/.cargo/env"
+fi
 
 # set PATH to include cargo
-if [ -d "$HOME/.cargo/bin" ] ; then
+if [ -d "$HOME/.cargo/bin" ]; then
   PATH="$HOME/.cargo/bin:$PATH"
 fi
 
 # set PATH to include go
-if [ -d "$HOME/go/bin" ] ; then
+if [ -d "$HOME/go/bin" ]; then
   PATH="$HOME/go/bin:$PATH"
 fi
 # set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/bin" ] ; then
+if [ -d "$HOME/bin" ]; then
   PATH="$HOME/bin:$PATH"
 fi
 
 # set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/.local/bin" ] ; then
+if [ -d "$HOME/.local/bin" ]; then
   PATH="$HOME/.local/bin:$PATH"
 fi
 
 # add some custom or local configs
-if [ -d "$HOME/bin/custom" ] ; then
+if [ -d "$HOME/bin/custom" ]; then
   source $HOME/bin/custom
 fi
 
 # Add JBang to environment
 alias j!=jbang
 export PATH="$HOME/.jbang/bin:$PATH"
-. "$HOME/.cargo/env"
 
 # >>> juliaup initialize >>>
 
 # !! Contents within this block are managed by juliaup !!
 
 case ":$PATH:" in
-    *:/home/paulo/.juliaup/bin:*)
-        ;;
+*:/home/paulo/.juliaup/bin:*) ;;
 
-    *)
-        export PATH=/home/paulo/.juliaup/bin${PATH:+:${PATH}}
-        ;;
+*)
+  export PATH=/home/paulo/.juliaup/bin${PATH:+:${PATH}}
+  ;;
 esac
 
 # <<< juliaup initialize <<<
