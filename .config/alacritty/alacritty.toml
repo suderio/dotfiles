@@ -1,55 +1,7 @@
 live_config_reload = true
-#save_to_clipboard = true
-#theme = "Catppuccin"
-#"window.dynamic_title" = true
 
 [colors]
 draw_bold_text_with_bright_colors = true
-#semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
-
-[colors.bright]
-black = "#666666"
-blue = "#7aa6da"
-cyan = "#54ced6"
-green = "#9ec400"
-magenta = "#b77ee0"
-red = "#ff3334"
-white = "#ffffff"
-yellow = "#e7c547"
-
-[colors.cursor]
-cursor = "#ffffff"
-text = "#000000"
-
-[colors.dim]
-black = "#000000"
-blue = "#506d8f"
-cyan = "#497e7a"
-green = "#7a8530"
-magenta = "#80638e"
-red = "#8c3336"
-white = "#9a9a9a"
-yellow = "#97822e"
-
-[colors.normal]
-black = "#000000"
-blue = "#7aa6da"
-cyan = "#70c0ba"
-green = "#b9ca4a"
-magenta = "#c397d8"
-red = "#d54e53"
-white = "#eaeaea"
-yellow = "#e6c547"
-
-[colors.primary]
-background = "#000000"
-bright_foreground = "#ffffff"
-dim_foreground = "#9a9a9a"
-foreground = "#eaeaea"
-
-[colors.selection]
-background = "#404040"
-text = "#eaeaea"
 
 [cursor]
 style = "Block"
@@ -60,62 +12,21 @@ TERM = "xterm-256color"
 [font]
 size = 9
 
+[font]
+size = 11.0
+
 [font.bold]
-family = "DejaVu Sans Mono"
-style = "Bold"
+family = "Fira Code Bold Nerd Font Complete"
 
 [font.bold_italic]
-family = "DejaVu Sans Mono"
-#size = 9.0
-style = "Bold Italic"
+family = "FiraCode Nerd Font Mono Bold Italic"
 
 [font.italic]
-family = "DejaVu Sans Mono"
+family = "FiraCode Nerd Font Mono Medium Italic"
 style = "Italic"
 
 [font.normal]
-family = "DejaVu Sans Mono"
-style = "Regular"
-
-[[keyboard.bindings]]
-action = "Paste"
-key = "V"
-mods = "Control|Shift"
-
-[[keyboard.bindings]]
-action = "Copy"
-key = "C"
-mods = "Control|Shift"
-
-[[keyboard.bindings]]
-action = "PasteSelection"
-key = "Insert"
-mods = "Shift"
-
-[[keyboard.bindings]]
-action = "ResetFontSize"
-key = "Key0"
-mods = "Control"
-
-[[keyboard.bindings]]
-action = "IncreaseFontSize"
-key = "Equals"
-mods = "Control"
-
-[[keyboard.bindings]]
-action = "IncreaseFontSize"
-key = "Plus"
-mods = "Control"
-
-[[keyboard.bindings]]
-action = "DecreaseFontSize"
-key = "Minus"
-mods = "Control"
-
-[[keyboard.bindings]]
-action = "DecreaseFontSize"
-key = "Minus"
-mods = "Control"
+family = "FiraCode Nerd Font Mono"
 
 [mouse]
 hide_when_typing = true
