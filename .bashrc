@@ -56,17 +56,6 @@ export LESS_TERMCAP_se=$'\E[0m'        # reset reverse video
 export LESS_TERMCAP_us=$'\E[1;32m'     # begin underline
 export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 
-if [ -x /usr/bin/dircolors ]; then
-  test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-  alias ls='ls --color=auto'
-  alias dir='dir --color=auto'
-  alias vdir='vdir --color=auto'
-
-  alias grep='grep --color=auto'
-  alias fgrep='fgrep --color=auto'
-  alias egrep='egrep --color=auto'
-fi
-
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 if ! shopt -oq posix; then
@@ -126,24 +115,6 @@ if [ -d "$HOME/.local/bin" ]; then
 fi
 
 # add some custom or local configs
-if [ -d "$HOME/bin/custom" ]; then
-  source $HOME/bin/custom
+if [ -d "$HOME/.local/bin/custom" ]; then
+  source $HOME/.local/bin/custom
 fi
-
-# Add JBang to environment
-alias j!=jbang
-export PATH="$HOME/.jbang/bin:$PATH"
-
-# >>> juliaup initialize >>>
-
-# !! Contents within this block are managed by juliaup !!
-
-case ":$PATH:" in
-*:/home/paulo/.juliaup/bin:*) ;;
-
-*)
-  export PATH=/home/paulo/.juliaup/bin${PATH:+:${PATH}}
-  ;;
-esac
-
-# <<< juliaup initialize <<<

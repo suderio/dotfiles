@@ -55,16 +55,16 @@
       - pass
       - procs
       # - qemu
-
-      - ranger
-      - shfmt
-      - tealdeer
+      # - ranger
+      # - shfmt
+      # - tealdeer
       # - tmux
       # - tmuxinator
       # - tokei
       # - weechat
       # - wezterm
       # - zoxide
+      - zellij
     state: latest
   become: true
 
