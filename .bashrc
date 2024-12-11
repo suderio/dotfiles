@@ -100,6 +100,14 @@ if [ -d "$HOME/.cargo/bin" ]; then
   PATH="$HOME/.cargo/bin:$PATH"
 fi
 
+# set path to ruby gems - TODO improve this shit
+if [ -d /usr/bin/ruby/gems/3.3.0 ]; then
+  PATH="/usr/bin/ruby/gems/3.3.0:$PATH"
+fi
+if [ -d "$HOME/.local/share/gem/ruby/3.3.0" ]; then
+  PATH="$HOME/.local/share/gem/ruby/3.3.0:$PATH"
+fi
+
 # set PATH to include go
 if [ -d "$HOME/go/bin" ]; then
   PATH="$HOME/go/bin:$PATH"

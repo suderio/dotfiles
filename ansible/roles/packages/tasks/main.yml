@@ -18,6 +18,7 @@
       - file
       - neovim
       - python-pynvim
+      - xclip
     state: latest
   become: true
 
@@ -37,7 +38,6 @@
       - direnv
       - fzf
       - fzy
-      - git
       - git-lfs
       # - glow
       - gnupg
@@ -58,6 +58,7 @@
       # - ranger
       # - shfmt
       # - tealdeer
+      - tree-sitter-cli
       # - tmux
       # - tmuxinator
       # - tokei
@@ -74,5 +75,26 @@
       - luarocks
       - rubygems
       - npm
+      - composer
+      - jdk-openjdk
+      - python-pipenv
+      - julia
+      - cpanminus
     state: latest
   become: true
+
+- name: Install "neovim" node.js package globally.
+  community.general.npm:
+    name: neovim
+    global: true
+  become: true
+
+- name: Install latest available version of neovim gem
+  community.general.gem:
+    name: neovim
+    state: latest
+
+- name: Install Neovim perl package
+  community.general.cpanm:
+    name: Neovim::Ext
+    notest: true
