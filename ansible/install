@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+# install ansible
+command -v ansible &>/dev/null || pacman -S ansible
+
+# Run Ansible
+
+ansible-playbook -i ./hosts.yml ./linux.yml --ask-become-pass

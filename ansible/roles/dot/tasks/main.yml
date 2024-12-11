@@ -1,0 +1,6 @@
+- name: Clone dotfiles
+  ansible.builtin.git:
+    repo: 'git@github.com:suderio/dotfiles'
+    dest: $HOME/.local/dotfiles
+    bare: true
+    separate_git_dir: $HOME

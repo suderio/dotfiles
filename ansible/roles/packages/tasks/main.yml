@@ -1,0 +1,78 @@
+- name: Install the bare minimum
+  ansible.builtin.package:
+    name:
+      - openssh
+      - base-devel
+      - cmake
+      - mpv
+      - sxiv
+      - jq
+      - zip
+      - unzip
+      - git
+      - less
+      - curl
+      - wget
+      - ripgrep
+      - shellcheck
+      - file
+      - neovim
+      - python-pynvim
+    state: latest
+  become: true
+
+- name: Install the cli tools
+  ansible.builtin.package:
+    name:
+      - github-cli
+      - aria2
+      - aspell
+      - bat
+      #- bandwhich
+      #- bottom
+      - ctop
+      - git-delta
+      - exa
+      - fd
+      - direnv
+      - fzf
+      - fzy
+      - git
+      - git-lfs
+      # - glow
+      - gnupg
+      - gnuplot
+      - htop
+      # - httpie
+      # - hub
+      # - hyperfine
+      # - languagetool
+      # - lazydocker
+      - lazygit
+      - nnn
+      - ncdu
+      # - osmium-tool
+      - pass
+      - procs
+      # - qemu
+
+      - ranger
+      - shfmt
+      - tealdeer
+      # - tmux
+      # - tmuxinator
+      # - tokei
+      # - weechat
+      # - wezterm
+      # - zoxide
+    state: latest
+  become: true
+
+- name: Install languages
+  ansible.builtin.package:
+    name:
+      - luarocks
+      - rubygems
+      - npm
+    state: latest
+  become: true
