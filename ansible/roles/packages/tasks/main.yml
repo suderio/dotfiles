@@ -59,6 +59,7 @@
       # - qemu
       # - ranger
       # - shfmt
+      - sshfs
       # - tealdeer
       - tree-sitter-cli
       # - tmux
