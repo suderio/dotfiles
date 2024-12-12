@@ -290,4 +290,25 @@ return {
       },
     },
   },
+  {
+    "stevearc/conform.nvim",
+    optional = true,
+    opts = {
+      formatters = {
+        injected = { options = { ignore_errors = true } },
+      },
+      formatters_by_ft = {
+        -- Conform will run multiple formatters sequentially
+        python = { "isort", "black" },
+        -- You can customize some of the format options for the filetype (:help conform.format)
+        rust = { "rustfmt", lsp_format = "fallback" },
+        -- Conform will run the first available formatter
+        javascript = { "prettierd", "prettier", stop_after_first = true },
+        java = { "google-java-format" },
+        kotlin = { "ktlint" },
+        http = { "kulala-fmt" },
+        go = { "gofmt", "goimports" },
+      },
+    },
+  },
 }
