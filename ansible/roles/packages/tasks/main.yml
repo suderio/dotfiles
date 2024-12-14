@@ -1,8 +1,6 @@
 - name: Install the bare minimum
   ansible.builtin.package:
     name:
-      - openssh
-      - base-devel
       - cmake
       - mpv
       - sxiv
@@ -17,72 +15,73 @@
       - shellcheck
       - file
       - neovim
-      - python-pynvim
       - xclip
-    state: latest
-  become: true
-
-- name: Install the cli tools
-  ansible.builtin.package:
-    name:
-      - github-cli
       - aria2
       - aspell
       - bat
       - biber
-      #- bandwhich
-      #- bottom
-      - ctop
       - git-delta
-      - exa
-      - fd
       - direnv
       - fzf
       - fzy
       - git-lfs
-      # - glow
       - gnupg
       - gnuplot
       - htop
-      # - httpie
-      # - hub
-      # - hyperfine
-      # - languagetool
-      # - lazydocker
-      - lazygit
       - nnn
       - ncdu
-      # - osmium-tool
       - pass
+      - sshfs
+      - tree-sitter-cli
+      - viu
+      - chafa
+      - ueberzugpp
+      - texlive
+      - texlive-langenglish
+      - texlive-langportuguese
+      - python-pylatexenc
+      - pandoc
+    state: present
+  become: true
+
+- name: Install the bare minimum (package dependent)
+  ansible.builtin.package:
+    name:
+      - openssh
+      - base-devel
+#      - openssh-client
+#      - build-essential
+      - python-pynvim
+#      - python3-pynvim
+#      - ruby-neovim
+      - github-cli
+#      - gh
+      - ctop
+#      # - ctop
+      - exa
+      - fd
+#        # - exa
+#        # - fd
+      - lazygit
+#      # - lazygit
       - prettier
       - procs
-      # - qemu
-      # - ranger
-      # - shfmt
-      - sshfs
-      # - tealdeer
-      - tree-sitter-cli
-      # - tmux
-      # - tmuxinator
-      # - tokei
-      # - weechat
-      # - wezterm
-      # - zoxide
+#        # - prettier
+#        #- procs
       - zellij
-    state: latest
+#      # - zellij
+    state: present
   become: true
 
 - name: Install the gui tools
   ansible.builtin.package:
     name:
       - zathura
-      # zathura-djvu: DjVu support
-      # zathura-pdf-poppler: PDF support using Poppler
-      # zathura-pdf-mupdf: PDF support using MuPDF
-      # zathura-ps: PostScript support
-      # zathura-cb: Comic book support
+      - zathura-djvu
+      - zathura-ps
+      - zathura-cb
       - xdotool
-    state: latest
+    state: present
   become: true
 - name: Install languages
   ansible.builtin.package:
@@ -94,8 +93,11 @@
       - jdk-openjdk
       - python-pipenv
       - julia
+#      - default-jdk
+#      - pipenv
+#        #- julia
       - cpanminus
-    state: latest
+    state: present
   become: true
 
 - name: Install "neovim" node.js package globally.
@@ -104,10 +106,10 @@
     global: true
   become: true
 
-- name: Install latest available version of neovim gem
+- name: Install present available version of neovim gem
   community.general.gem:
     name: neovim
-    state: latest
+    state: present
 
 - name: Install Neovim perl package
   community.general.cpanm:

@@ -2,8 +2,24 @@
 
 set -e
 
+function install_ansible {
+  DIST=$(cat /etc/*release | grep -e "^ID=" | cut -d= -f2)
+  case "$DIST" in
+  arch)
+    sudo pacman -S ansible
+    ;;
+
+  ubuntu)
+    sudo apt install -y ansible
+    ;;
+
+  debian)
+    sudo apt-get install -y ansible
+    ;;
+  esac
+}
 # install ansible
-command -v ansible &>/dev/null || pacman -S ansible
+command -v ansible &>/dev/null || install_ansible
 
 # Run Ansible
 

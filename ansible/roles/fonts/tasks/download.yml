@@ -1,15 +1,17 @@
-- name: Create {{item}} directory
-  file:
-    path: ~/.local/share/fonts/{{item}}
+- name: Create directory {{ item }}
+  ansible.builtin.file:
+    path: ~/.local/share/fonts/{{ item }}
+    mode: "u=rwx,g=r,o=r"
     state: directory
-- name: Installing {{item}}
+- name: Installing {{ item }}
   ansible.builtin.unarchive:
-    src: https://github.com/ryanoasis/nerd-fonts/releases/latest/download/{{item}}.zip
-    dest: ~/.local/share/fonts/{{item}}
-    creates: ~/.local/share/fonts/{{item}}/done
+    src: https://github.com/ryanoasis/nerd-fonts/releases/latest/download/{{ item }}.zip
+    dest: ~/.local/share/fonts/{{ item }}
+    creates: ~/.local/share/fonts/{{ item }}/done
     remote_src: true
   notify: update font cache
-- name: Installed {{item}}
-  copy:
-    dest: ~/.local/share/fonts/{{item}}/done
+- name: Installed {{ item }}
+  ansible.builtin.copy:
+    dest: ~/.local/share/fonts/{{ item }}/done
+    mode: "u=rwx,g=r,o=r"
     content: ""
