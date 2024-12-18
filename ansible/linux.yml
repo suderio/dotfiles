@@ -3,4 +3,5 @@
   roles:
     - packages
     - fonts
+    - hardening
     # - dot

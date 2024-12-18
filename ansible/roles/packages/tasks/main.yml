@@ -41,6 +41,7 @@
       - texlive-langportuguese
       - python-pylatexenc
       - pandoc
+      - lynis
     state: present
   become: true
 

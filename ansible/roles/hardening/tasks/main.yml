@@ -1,0 +1,22 @@
+- name: Understand and configure core dumps on Linux - https://linux-audit.com/software/understand-and-configure-core-dumps-work-on-linux/#disable-core-dumps
+  ansible.builtin.copy:
+    content: 'ulimit -c 0'
+    dest: /etc/profile.d/disable-coredumps.sh
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+- name: Linux password security hashing rounds - https://linux-audit.com/authentication/configure-the-minimum-password-length-on-linux-systems/
+  ansible.builtin.package:
+    name:
+      - libpwquality
+    state: present
+  become: true
+- name: Set default file permissions on Linux with umask - https://linux-audit.com/filesystems/file-permissions/set-default-file-permissions-with-umask/
+  ansible.builtin.copy:
+    content: 'session optional pam_umask.so umask=027'
+    dest: /etc/pam.d/common-session
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
