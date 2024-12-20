@@ -3,6 +3,8 @@
 import argparse
 from googletrans import Translator
 
+
+
 def translate(text, src_lng=None, dest_lng=None):
     translator = Translator()
     if src_lng and dest_lng:

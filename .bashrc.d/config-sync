@@ -1,17 +1,17 @@
 #!/bin/bash
 # manage dotfiles with git, see https://www.atlassian.com/git/tutorials/dotfiles
-alias config='/usr/bin/git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
+alias config='git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
 
 # Config in new machine
 # git clone --bare git@github.com:suderio/dotfiles $HOME/.local/dotfiles
 # config config --local status.showUntrackedFiles no
 # config checkout
-configsync () {
-  config pull --all 
-  config commit -m "config autocommit: $(uname -nmro)" 
+configsync() {
+  config pull --all
+  config commit -m "config autocommit: $(uname -nmro)"
   config push
 }
 
-configstatus () {
+configstatus() {
   config status -s
 }
