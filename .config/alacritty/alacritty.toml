@@ -1,10 +1,5 @@
-#save_to_clipboard = true
-#theme = "Catppuccin"
-#"window.dynamic_title" = true
-
 [colors]
 draw_bold_text_with_bright_colors = true
-#semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
 
 [colors.bright]
 black = "#666666"
@@ -60,17 +55,20 @@ TERM = "xterm-256color"
 size = 11.0
 
 [font.bold]
-family = "Fira Code Bold Nerd Font Complete"
+family = "FiraCode Nerd Font Mono"
+style = "Bold"
 
 [font.bold_italic]
-family = "FiraCode Nerd Font Mono Bold Italic"
+family = "FiraCode Nerd Font Mono"
+style = "SemiBold"
 
 [font.italic]
-family = "FiraCode Nerd Font Mono Medium Italic"
-style = "Italic"
+family = "FiraCode Nerd Font Mono Med"
+style = "Medium"
 
 [font.normal]
-family = "FiraCode Nerd Font Mono"
+family = "FiraCode Nerd Font Mono Ret"
+style = "Retina"
 
 [mouse]
 hide_when_typing = true
@@ -101,5 +99,3 @@ lines = 30
 
 [general]
 live_config_reload = true
-
-[terminal]

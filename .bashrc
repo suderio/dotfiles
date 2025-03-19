@@ -129,4 +129,4 @@ fi
 
 eval "$(ssh-agent -s)" && ssh-add $HOME/.ssh/id_ed25519
 
-type starship >/dev/null && eval -- "$(/c/Users/paulo/scoop/shims/starship.exe init bash --print-full-init)"
+type starship >/dev/null && eval -- "$(starship init bash --print-full-init)"
