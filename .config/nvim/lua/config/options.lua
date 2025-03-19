@@ -3,7 +3,7 @@
 -- Add any additional options here
 
 if vim.g.neovide then
-	vim.o.guifont = "Hack:h10:i:#e-subpixelantialias:#h-none"
+	vim.o.guifont = "FiraCode Nerd Font Mono,NotoSansM Nerd Font Mono:h10:#e-subpixelantialias:#h-none"
 	vim.g.neovide_text_gamma = 0.0
 	vim.g.neovide_text_contrast = 0.5
 	vim.g.neovide_padding_top = 0
@@ -16,6 +16,5 @@ if vim.g.neovide then
 	vim.g.neovide_floating_z_height = 10
 	vim.g.neovide_light_angle_degrees = 45
 	vim.g.neovide_light_radius = 5
-
 	vim.g.neovide_floating_corner_radius = 0.0
 end
