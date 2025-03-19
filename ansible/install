@@ -9,6 +9,10 @@ function install_ansible {
     sudo pacman -S ansible
     ;;
 
+  garuda)
+    sudo pacman -S ansible
+    ;;
+
   ubuntu)
     sudo apt install -y ansible
     ;;
