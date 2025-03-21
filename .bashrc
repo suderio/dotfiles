@@ -127,6 +127,6 @@ if [ -d "$HOME/.local/bin/custom" ]; then
   source $HOME/.local/bin/custom
 fi
 
-eval "$(ssh-agent -s)" && ssh-add $HOME/.ssh/id_ed25519
+eval "$(ssh-agent -s)" > /dev/null 2>&1 && ssh-add $HOME/.ssh/id_ed25519 > /dev/null 2>&1
 
-type starship >/dev/null && eval -- "$(starship init bash --print-full-init)"
+type starship > /dev/null 2>&1 && eval -- "$(starship init bash --print-full-init)"
