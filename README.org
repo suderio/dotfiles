@@ -985,8 +985,10 @@ alias config='/usr/bin/git --git-dir=$HOME/.local/dotfiles/ --work-tree=$HOME'
 alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" '
 alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree -r "$in"; done'
 #+end_src
+
 ## Useful aliases (see if they can be used first)
 
+#+begin_src shell 
 # Replace ls with exa
 alias ls='exa -al --color=always --group-directories-first --icons'     # preferred listing
 alias la='exa -a --color=always --group-directories-first --icons'      # all files and dirs
@@ -1045,6 +1047,7 @@ alias jctl="journalctl -p 3 -xb"
 
 # Recent installed packages
 alias rip="expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort | tail -200 | nl"
+#+end_src
 
 * Git
 ** gitconfig
