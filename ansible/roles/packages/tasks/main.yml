@@ -42,6 +42,7 @@
       - python-pylatexenc
       - pandoc
       - lynis
+      - clamav
     state: present
   become: true
 
