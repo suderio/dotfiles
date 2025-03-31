@@ -71,11 +71,11 @@
   tool = nvimdiff
   guitool = meld
   ff = false
- 	conflictStyle = zdiff3
+  conflictStyle = zdiff3
 [mergetool]
-    prompt = true
+  prompt = true
 [mergetool "nvimdiff"]
-    cmd = "nvim -d \"$LOCAL\" \"$REMOTE\" \"$MERGED\""
+  cmd = "nvim -d \"$LOCAL\" \"$REMOTE\" \"$MERGED\""
 [mergetool "meld"]
   cmd = meld $LOCAL $BASE $REMOTE --output=$MERGED
   trustExitCode = false
@@ -111,4 +111,3 @@
      dlc = diff --cached HEAD^                                                                                      
      # Find a file path in codebase                                                                                 
      find = "!git ls-files | grep -i"                                                                               
-
