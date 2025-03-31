@@ -98,6 +98,7 @@ fi
 # set PATH to include cargo
 if [ -d "$HOME/.cargo/bin" ]; then
   PATH="$HOME/.cargo/bin:$PATH"
+  . "$HOME/.cargo/env"
 fi
 
 # set path to ruby gems - TODO improve this shit
