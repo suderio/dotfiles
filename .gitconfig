@@ -9,6 +9,7 @@
 	autocrlf = input
 	safecrlf = warn
 	filemode = false
+	pager = delta
 
 [filter "lfs"]
 	clean = git-lfs clean -- %f
@@ -18,62 +19,68 @@
 
 [gc]
 	auto = 7000
-
 [grep]
 	lineNumber = true
-
 [status]
 	showUntrackedFiles = all
-
 [web]
 	browser = google-chrome
-
 [pull]
 	rebase = true
-
+[safe]
+  directory = *
+[init]
+	defaultBranch = main
+[http]
+	sslVerify = false
+[interactive]
+	diffFilter = delta --color-only
 [rebase]
 	autoStash = true
-
 [push]
 	default = matching
 
 [color]
 	ui = auto
-
 [color "branch"]
 	current = yellow bold
 	local = green bold
 	remote = cyan bold
-
 [color "diff"]
 	meta = yellow bold
 	frag = magenta bold
 	old = red bold
 	new = green bold
 	whitespace = red reverse
-
 [color "status"]
 	added = green bold
 	changed = yellow bold
 	untracked = red bold
 
-[merge]
-        tool = vimdiff
-        guitool = meld
-        ff = false
-
-[mergetool "meld"]
-        cmd = meld $LOCAL $BASE $REMOTE --output=$MERGED
-        trustExitCode = false
-
 [diff]
-        tool = vimdiff
-        guitool = meld
-        algorithm = histogram
-
+  tool = nvimdiff
+  guitool = meld
+  algorithm = histogram
+  prompt = false
 [difftool "meld"]
-        cmd = meld $LOCAL $REMOTE
-        trustExitCode = false
+  cmd = meld $LOCAL $REMOTE
+  trustExitCode = false
+[difftool "nvimdiff"]
+    cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
+[merge]
+  tool = nvimdiff
+  guitool = meld
+  ff = false
+ 	conflictStyle = zdiff3
+[mergetool]
+    prompt = true
+[mergetool "nvimdiff"]
+    cmd = "nvim -d \"$LOCAL\" \"$REMOTE\" \"$MERGED\""
+[mergetool "meld"]
+  cmd = meld $LOCAL $BASE $REMOTE --output=$MERGED
+  trustExitCode = false
+[delta]
+	navigate = true
 
 [gitflow "prefix"]
 	feature = feature-
@@ -105,11 +112,3 @@
      # Find a file path in codebase                                                                                 
      find = "!git ls-files | grep -i"                                                                               
 
-[safe]
-  directory = *
-[init]
-	defaultBranch = main
-#[http]
-#	sslBackend = schannel
-[http]
-	sslVerify = false
