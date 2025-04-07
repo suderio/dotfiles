@@ -104,8 +104,8 @@ fi
 if [ -d /usr/bin/ruby/gems/3.3.0 ]; then
   PATH="/usr/bin/ruby/gems/3.3.0:$PATH"
 fi
-if [ -d "$HOME/.local/share/gem/ruby/3.3.0" ]; then
-  PATH="$HOME/.local/share/gem/ruby/3.3.0:$PATH"
+if [ -d "$HOME/.local/share/gem/ruby/3.3.0/bin" ]; then
+  PATH="$HOME/.local/share/gem/ruby/3.3.0/bin:$PATH"
 fi
 
 # set PATH to include go
