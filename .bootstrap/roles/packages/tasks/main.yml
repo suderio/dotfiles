@@ -92,6 +92,12 @@
   ansible.builtin.package:
     name:
       - emacs
+      - lua51
+      - rustup
+      - kitty
+      - ghostty
+      - imagemagick
+
     state: present
   become: true
   tags: new
@@ -111,3 +117,15 @@
   community.general.cpanm:
     name: Neovim::Ext
     notest: true
+
+- name: Install "mermaid" node.js package globally.
+  community.general.npm:
+    name: "@mermaid-js/mermaid-cli"
+    global: true
+  become: true
+  tags: new
+
+- name: Install "ast-grep" Rust package
+  community.general.cargo:
+    name: ast-grep
+  tags: new
