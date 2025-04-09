@@ -1,0 +1,4 @@
+- name: Setup Linux Workstation
+  hosts: local
+  roles:
+    - clean
