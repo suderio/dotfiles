@@ -112,6 +112,12 @@ fi
 if [ -d "$HOME/go/bin" ]; then
   PATH="$HOME/go/bin:$PATH"
 fi
+
+# set PATH to include doom bin
+if [ -d "$HOME/.config/emacs/bin" ]; then
+  PATH="$HOME/.config/emacs/bin:$PATH"
+fi
+
 # set PATH so it includes user's private bin if it exists
 if [ -d "$HOME/bin" ]; then
   PATH="$HOME/bin:$PATH"
