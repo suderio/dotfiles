@@ -51,27 +51,15 @@
     name:
       - openssh
       - base-devel
-#      - openssh-client
-#      - build-essential
       - python-pynvim
-#      - python3-pynvim
-#      - ruby-neovim
       - github-cli
-#      - gh
       - ctop
-#      # - ctop
       - exa
       - fd
-#        # - exa
-#        # - fd
       - lazygit
-#      # - lazygit
       - prettier
       - procs
-#        # - prettier
-#        #- procs
       - zellij
-#      # - zellij
     state: present
   become: true
 
@@ -85,6 +73,7 @@
       - xdotool
     state: present
   become: true
+
 - name: Install languages
   ansible.builtin.package:
     name:
@@ -95,12 +84,17 @@
       - jdk-openjdk
       - python-pipenv
       - julia
-#      - default-jdk
-#      - pipenv
-#        #- julia
       - cpanminus
     state: present
   become: true
+
+- name: Install other tools
+  ansible.builtin.package:
+    name:
+      - emacs
+    state: present
+  become: true
+  tags: new
 
 - name: Install "neovim" node.js package globally.
   community.general.npm:
