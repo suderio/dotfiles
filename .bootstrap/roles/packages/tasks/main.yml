@@ -97,7 +97,17 @@
       - kitty
       - ghostty
       - imagemagick
-
+      - sbcl
+      - gopls
+      - python-isort
+      - python-nose
+      - python-nose2
+      - python-pytest
+      - python-setuptools
+      - zig
+      - kotlin
+      - ktlint
+      
     state: present
   become: true
   tags: new
@@ -129,3 +139,8 @@
   community.general.cargo:
     name: ast-grep
   tags: new
+
+# TODO 
+  # go install github.com/fatih/gomodifytags@latest
+  # go install github.com/cweill/gotests/gotests@latest
+  # go install github.com/x-motemen/gore/cmd/gore@latest
