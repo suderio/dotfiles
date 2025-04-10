@@ -1,0 +1,75 @@
+# Lista de linguagens/pacotes desejados
+LANGUAGE_PACKAGES := "luarocks rubygems npm composer jdk-openjdk python-pipenv julia cpanminus"
+
+# Task principal
+install-languages:
+    @just _check-os-and-install "{{LANGUAGE_PACKAGES}}"
+
+# Prévia dos pacotes faltantes
+preview-languages:
+    #! /bin/bash
+    for pkg in {{LANGUAGE_PACKAGES}}; do
+      if ! pacman -Qi "$pkg" &>/dev/null; then
+        echo "$pkg está ausente e será instalado."
+      fi
+    done
+
+# Detecta o sistema operacional e chama a task de instalação correta
+_check-os-and-install pkgs:
+    #! /bin/bash
+    os=$(uname -s)
+    if [ "$os" != "Linux" ]; then
+      echo "⚠️ Sistema operacional '$os' ainda não implementado."
+      exit 1
+    fi
+
+    if [ -f /etc/os-release ]; then
+      . /etc/os-release
+      distro=$ID
+    else
+      echo "⚠️ Não foi possível detectar a distribuição Linux."
+      exit 1
+    fi
+
+    case "$distro" in
+      arch|manjaro|garuda)
+        just _install-if-missing "{{pkgs}}"
+        ;;
+      *)
+        echo "⚠️ Distribuição '$distro' ainda não implementada."
+        exit 1
+        ;;
+    esac
+
+# Instala pacotes ausentes, usando pacman ou AUR
+_install-if-missing pkgs:
+    #! /bin/bash
+    missing=()
+    for pkg in {{pkgs}}; do
+      if ! pacman -Qi "$pkg" &>/dev/null; then
+        missing+=("$pkg")
+      fi
+    done
+
+    if [ "${#missing[@]}" -eq 0 ]; then
+      echo "✅ Todos os pacotes já estão instalados."
+      exit 0
+    fi
+
+    echo "📦 Instalando pacotes ausentes: ${missing[*]}"
+    for pkg in "${missing[@]}"; do
+      echo "→ Verificando: $pkg"
+      if pacman -Si "$pkg" &>/dev/null; then
+        echo "  → Instalando com pacman"
+        sudo pacman -S --noconfirm --needed "$pkg"
+      elif command -v paru &>/dev/null; then
+        echo "  → Instalando com paru (AUR)"
+        paru -S --noconfirm --needed "$pkg"
+      elif command -v yay &>/dev/null; then
+        echo "  → Instalando com yay (AUR)"
+        yay -S --noconfirm --needed "$pkg"
+      else
+        echo "  ✗ Nenhum helper AUR (paru/yay) encontrado para instalar '$pkg'."
+        exit 1
+      fi
+    done

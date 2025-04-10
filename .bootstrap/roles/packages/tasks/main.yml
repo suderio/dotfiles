@@ -114,6 +114,8 @@
       - tidy
       - stylelint
       - zls
+      - eza
+      - just
     state: present
   become: true
   tags: new
