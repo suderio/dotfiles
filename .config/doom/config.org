@@ -51,6 +51,14 @@ Obs.: diff-refine-hunk may be slow
 (after! magit
   (setq magit-diff-refine-hunk 'all))
 #+end_src
+
+** Just
+#+begin_src emacs-lisp
+(use-package! justl
+  :config
+  (map! :n "e" 'justl-exec-recipe))
+#+end_src
+
 ** TODO biblio config
  (setq org-cite-csl-styles-dir "~/Zotero/styles")
  (setq! citar-bibliography '("/path/to/references.bib"))
