@@ -17,8 +17,8 @@ alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" '
 
 # This is too hard to remember
 alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree -r "$in"; done'
-alias ll='ls -l'
-alias la='ls -A'
+alias ll='eza -l 2>/dev/null || ls -l'
+alias la='eza -A 2>/dev/null || ls -A'
 alias l='ls -CF'
 alias lsd="ls -alF | grep /$"
 alias lcd=changeDirectory
