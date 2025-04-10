@@ -43,6 +43,7 @@
       - pandoc
       - lynis
       - clamav
+      - emacs
     state: present
   become: true
 
@@ -91,7 +92,6 @@
 - name: Install other tools
   ansible.builtin.package:
     name:
-      - emacs
       - lua51
       - rustup
       - kitty
@@ -107,7 +107,13 @@
       - zig
       - kotlin
       - ktlint
-      
+      - markdownlint
+      - bash-language-server
+      - zshdb
+      - shfmt
+      - tidy
+      - stylelint
+      - zls
     state: present
   become: true
   tags: new
@@ -135,6 +141,13 @@
   become: true
   tags: new
 
+- name: Install "js-beautify" node.js package globally.
+  community.general.npm:
+    name: "js-beautify"
+    global: true
+  become: true
+  tags: new
+
 - name: Install "ast-grep" Rust package
   community.general.cargo:
     name: ast-grep
@@ -144,3 +157,5 @@
   # go install github.com/fatih/gomodifytags@latest
   # go install github.com/cweill/gotests/gotests@latest
   # go install github.com/x-motemen/gore/cmd/gore@latest
+  # rustup component add rust-analyzer
+  # paru -S bashdb
