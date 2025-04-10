@@ -65,7 +65,6 @@
   tool = nvimdiff
   guitool = meld
   ff = false
-  conflictStyle = zdiff3
 [mergetool]
   prompt = true
 [mergetool "nvimdiff"]
