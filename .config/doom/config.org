@@ -61,7 +61,7 @@ Obs.: diff-refine-hunk may be slow
 ** TODO configurar latex
  (setq reftex-default-bibliography "/your/bib/file.bib")
 
-
+https://github.com/james-stoup/emacs-org-mode-tutorial
 
 ** Remember
 Doom exposes five (optional) variables for controlling fonts in Doom:
