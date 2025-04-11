@@ -14,15 +14,11 @@ shopt -s histappend
 
 shopt -s checkwinsize
 
-if shopt -q globstar 2>/dev/null; then
-  shopt -s globstar
-fi
+shopt -q globstar 2>/dev/null && shopt -s globstar
 
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
-if [ -z "${chroot_ps1:-}" ] && [ -r /etc/chroot_ps1 ]; then
-  chroot_ps1=$(cat /etc/chroot_ps1)
-fi
+[ -z "${chroot_ps1:-}" ] && [ -r /etc/chroot_ps1 ] && chroot_ps1=$(cat /etc/chroot_ps1)
 
 case "$TERM" in
 xterm-color | *-256color) color_prompt=yes ;;
@@ -77,8 +73,6 @@ if [ -d $HOME/.bashrc.d ]; then
   done
 fi
 
-[ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
-
 export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
@@ -97,6 +91,8 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
 
 [ -s "$HOME/.local/bin/custom" ] && source "$HOME/.local/bin/custom"
+
+[ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
 
 eval "$(ssh-agent -s)" > /dev/null 2>&1 && ssh-add "$HOME/.ssh/id_ed25519" > /dev/null 2>&1
 
