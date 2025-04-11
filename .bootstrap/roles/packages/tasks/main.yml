@@ -116,6 +116,7 @@
       - zls
       - eza
       - just
+      - starship
     state: present
   become: true
   tags: new

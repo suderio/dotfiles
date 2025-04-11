@@ -2,27 +2,36 @@
 
 # Lista de linguagens/pacotes desejados
 OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils"
-RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find"
+RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs zellij"
 PYTHON_PACKAGES := ""
-GO_PACKAGES := "github.com/jesseduffield/lazygit@latest"
-PACKAGES_UNINSTALL := "lazygit nodejs npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint"
+GO_PACKAGES := "github.com/jesseduffield/lazygit@latest github.com/fatih/gomodifytags@latest github.com/cweill/gotests/gotests@latest github.com/x-motemen/gore/cmd/gore@latest"
+PACKAGES_UNINSTALL := "lazygit npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint nodejs bat eza ripgrep git-delta zenith dust tree-sitter-cli viu fd procs rustup"
 NPM_PACKAGES := "prettier bash-language-server node-gyp prettier semver stylelint"
-OTHER_PACKAGES := "neovim texlive texlive-langenglish texlive-langportuguese pandoc lynis clamav emacs-wayland github-cli ctop pipx"
+OTHER_PACKAGES := "neovim texlive texlive-langenglish texlive-langportuguese pandoc lynis clamav emacs-wayland github-cli ctop zellij "
 DUNO := "xclip aria2 aspell biber direnv fzf fzy git-lfs gnuplot htop nnn ncdu pass sshfs chafa ueberzugpp python-pylatexenc python-pynvim"
 
 # Task principal - instala todos os pacotes
 install-packages:
-  install-package-managers
-  install-os-packages
-  install-rust-packages
-  install-go-packages
+  #!/usr/bin/env bash
+  cat <<- END 
+    Don't. Really don't. Call each task. This is the best order:
+    install-package-managers
+    install-os-packages
+    install-rust-packages
+    install-go-packages
+    install-npm-packages
+  END
 
 # Instala gerenciadores de pacotes
 install-package-managers:
   #!/usr/bin/env bash
   set -euxo pipefail
+  mkdir -p "$NVM_DIR"
   [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash'
-  # TODO bash -c 'nvm install node'
+  source "$NVM_DIR/nvm.sh"
+  nvm install node
+  command -v cargo >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  sudo pacman -S python-pipx
   pipx ensurepath
   pipx completions
 
@@ -56,7 +65,7 @@ install-go-packages:
   done
 
 # Instala pacotes npm
-install-nvm-packages:
+install-npm-packages:
   #!/usr/bin/env bash
   set -euxo pipefail
   for pkg in {{NPM_PACKAGES}}; do
@@ -85,12 +94,6 @@ preview-os-packages:
 cleanup:
   #!/usr/bin/env bash
   set -euxo pipefail
-  for pkg in {{RUST_PACKAGES}}; do
-    if pacman -Qq "$pkg" >/dev/null 2>&1; then
-      sudo pacman --noconfirm -R "$pkg"
-    fi
-  done
-
   for pkg in {{PACKAGES_UNINSTALL}}; do
     if pacman -Qq "$pkg" >/dev/null 2>&1; then
       sudo pacman --noconfirm -R "$pkg"
