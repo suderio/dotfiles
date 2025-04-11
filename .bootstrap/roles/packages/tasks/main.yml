@@ -43,7 +43,7 @@
       - pandoc
       - lynis
       - clamav
-      - emacs
+      - emacs-wayland
     state: present
   become: true
 

@@ -24,7 +24,3 @@
   (setq magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")))
 (after! magit
   (setq magit-diff-refine-hunk 'all))
-
-(use-package! justl
-  :config
-  (map! :n "e" 'justl-exec-recipe))

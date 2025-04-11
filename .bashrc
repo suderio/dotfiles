@@ -66,73 +66,40 @@ if ! shopt -oq posix; then
   fi
 fi
 
-if [ -f /usr/bin/alacritty ]; then
+if command -v alacritty >/dev/null 2>&1; then
   export TERMINAL=/usr/bin/alacritty
   export LC_ALL=pt_BR.UTF-8
 fi
 
 if [ -d $HOME/.bashrc.d ]; then
   for f in "$HOME"/.bashrc.d/*; do
-    source $f
+    source "$f"
   done
 fi
 
-if [ -f ~/.bashrc.d/aliases ]; then
-  . ~/.bashrc.d/aliases
-fi
+[ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
 
-if [ -f $HOME/.jbang/bin/jbang ]; then
-  alias j!=jbang
-  export PATH="$HOME/.jbang/bin:$HOME/.jbang/currentjdk/bin:$PATH"
-  eval $(jbang jdk java-env)
-fi
-
-export NVM_DIR="$HOME/.nvm"
+export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 
-if [ -f "$HOME/.cargo/env" ]; then
-  source "$HOME/.cargo/env"
-fi
 
-# set PATH to include cargo
-if [ -d "$HOME/.cargo/bin" ]; then
-  PATH="$HOME/.cargo/bin:$PATH"
-fi
+[ -s "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+[ -d "$HOME/.cargo/bin" ] && PATH="$HOME/.cargo/bin:$PATH"
 
-# set path to ruby gems - TODO improve this shit
-if [ -d /usr/bin/ruby/gems/3.3.0 ]; then
-  PATH="/usr/bin/ruby/gems/3.3.0:$PATH"
-fi
-if [ -d "$HOME/.local/share/gem/ruby/3.3.0/bin" ]; then
-  PATH="$HOME/.local/share/gem/ruby/3.3.0/bin:$PATH"
-fi
+[ -d /usr/bin/ruby/gems/3.3.0 ] && PATH="/usr/bin/ruby/gems/3.3.0:$PATH"
+[ -d "$HOME/.local/share/gem/ruby/3.3.0/bin" ] && PATH="$HOME/.local/share/gem/ruby/3.3.0/bin:$PATH"
 
-# set PATH to include go
-if [ -d "$HOME/go/bin" ]; then
-  PATH="$HOME/go/bin:$PATH"
-fi
+[ -d "$HOME/go/bin" ] && PATH="$HOME/go/bin:$PATH"
 
-# set PATH to include doom bin
-if [ -d "$HOME/.config/emacs/bin" ]; then
-  PATH="$HOME/.config/emacs/bin:$PATH"
-fi
+[ -d "$HOME/.config/emacs/bin" ] && PATH="$HOME/.config/emacs/bin:$PATH"
 
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/bin" ]; then
-  PATH="$HOME/bin:$PATH"
-fi
+[ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
 
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/.local/bin" ]; then
-  PATH="$HOME/.local/bin:$PATH"
-fi
+[ -s "$HOME/.local/bin/custom" ] && source "$HOME/.local/bin/custom"
 
-# add some custom or local configs
-if [ -d "$HOME/.local/bin/custom" ]; then
-  source $HOME/.local/bin/custom
-fi
+eval "$(ssh-agent -s)" > /dev/null 2>&1 && ssh-add "$HOME/.ssh/id_ed25519" > /dev/null 2>&1
 
-eval "$(ssh-agent -s)" > /dev/null 2>&1 && ssh-add $HOME/.ssh/id_ed25519 > /dev/null 2>&1
+command -v starship >/dev/null 2>&1 && eval -- "$(starship init bash --print-full-init)"
 
-type starship > /dev/null 2>&1 && eval -- "$(starship init bash --print-full-init)"
+command -v pipx >/dev/null 2>&1 && eval "$(register-python-argcomplete pipx)"

@@ -1,22 +1,103 @@
-# Lista de linguagens/pacotes desejados
-LANGUAGE_PACKAGES := "luarocks rubygems npm composer jdk-openjdk python-pipenv julia cpanminus"
+#!/usr/bin/env just --justfile
 
-# Task principal
-install-languages:
-    @just _check-os-and-install "{{LANGUAGE_PACKAGES}}"
+# Lista de linguagens/pacotes desejados
+OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils"
+RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find"
+PYTHON_PACKAGES := ""
+GO_PACKAGES := "github.com/jesseduffield/lazygit@latest"
+PACKAGES_UNINSTALL := "lazygit nodejs npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint"
+NPM_PACKAGES := "prettier bash-language-server node-gyp prettier semver stylelint"
+OTHER_PACKAGES := "neovim texlive texlive-langenglish texlive-langportuguese pandoc lynis clamav emacs-wayland github-cli ctop pipx"
+DUNO := "xclip aria2 aspell biber direnv fzf fzy git-lfs gnuplot htop nnn ncdu pass sshfs chafa ueberzugpp python-pylatexenc python-pynvim"
+
+# Task principal - instala todos os pacotes
+install-packages:
+    install-package-managers
+    install-os-packages
+    install-rust-packages
+    install-go-packages
+
+# Instala gerenciadores de pacotes
+install-package-managers:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash'
+    # TODO bash -c 'nvm install node'
+    pipx ensurepath
+    pipx completions
+
+# Instala pacotes do SO
+install-os-packages:
+    @just _check-os-and-install "{{OS_PACKAGES}}"
+
+# Instala pacotes Rust
+install-rust-packages:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    for pkg in {{RUST_PACKAGES}}; do
+      case "$pkg" in 
+        *.git) cargo install --git "http://github.com/$pkg"
+        ;;
+
+        *) cargo install "$pkg"
+        ;;
+      esac
+    done     
+
+# Instala pacotes Go
+install-go-packages:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    for pkg in {{GO_PACKAGES}}; do
+      go install "$pkg"
+    done
+
+# Instala pacotes npm
+install-nvm-packages:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  for pkg in {{NPM_PACKAGES}}; do
+    npm install --global "$pkg"
+  done
+
+# Instala pacotes python
+install-python-packages:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  for pkg in {{PYTHON_PACKAGES}}; do
+    pipx install "$pkg"
+  done
 
 # Prévia dos pacotes faltantes
-preview-languages:
-    #! /bin/bash
-    for pkg in {{LANGUAGE_PACKAGES}}; do
+preview-os-packages:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    for pkg in {{OS_PACKAGES}}; do
       if ! pacman -Qi "$pkg" &>/dev/null; then
         echo "$pkg está ausente e será instalado."
       fi
     done
 
+# Limpa o que tinha sido instalado anteriormente
+cleanup:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    for pkg in {{RUST_PACKAGES}}; do
+      if pacman -Qq "$pkg" >/dev/null 2>&1; then
+        sudo pacman --noconfirm -R "$pkg"
+      fi
+    done
+
+    for pkg in {{PACKAGES_UNINSTALL}}; do
+      if pacman -Qq "$pkg" >/dev/null 2>&1; then
+        sudo pacman --noconfirm -R "$pkg"
+      fi
+    done
+
 # Detecta o sistema operacional e chama a task de instalação correta
 _check-os-and-install pkgs:
-    #! /bin/bash
+    #!/usr/bin/env bash
+    set -euxo pipefail
     os=$(uname -s)
     if [ "$os" != "Linux" ]; then
       echo "⚠️ Sistema operacional '$os' ainda não implementado."
@@ -43,7 +124,8 @@ _check-os-and-install pkgs:
 
 # Instala pacotes ausentes, usando pacman ou AUR
 _install-if-missing pkgs:
-    #! /bin/bash
+    #!/usr/bin/env bash
+    set -euxo pipefail
     missing=()
     for pkg in {{pkgs}}; do
       if ! pacman -Qi "$pkg" &>/dev/null; then
