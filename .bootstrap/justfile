@@ -12,45 +12,48 @@ DUNO := "xclip aria2 aspell biber direnv fzf fzy git-lfs gnuplot htop nnn ncdu p
 
 # Task principal - instala todos os pacotes
 install-packages:
-    install-package-managers
-    install-os-packages
-    install-rust-packages
-    install-go-packages
+  install-package-managers
+  install-os-packages
+  install-rust-packages
+  install-go-packages
 
 # Instala gerenciadores de pacotes
 install-package-managers:
-    #!/usr/bin/env bash
-    set -euxo pipefail
-    [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash'
-    # TODO bash -c 'nvm install node'
-    pipx ensurepath
-    pipx completions
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash'
+  # TODO bash -c 'nvm install node'
+  pipx ensurepath
+  pipx completions
 
 # Instala pacotes do SO
 install-os-packages:
-    @just _check-os-and-install "{{OS_PACKAGES}}"
+  @just _check-os-and-install "{{OS_PACKAGES}}"
 
 # Instala pacotes Rust
 install-rust-packages:
-    #!/usr/bin/env bash
-    set -euxo pipefail
-    for pkg in {{RUST_PACKAGES}}; do
-      case "$pkg" in 
-        *.git) cargo install --git "http://github.com/$pkg"
-        ;;
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  for pkg in {{RUST_PACKAGES}}; do
+    case "$pkg" in 
+      *.git) cargo install --git "http://github.com/$pkg"
+      ;;
+ 
+      ripgrep) cargo install --features 'pcre2' "$pkg"
+      ;;
 
-        *) cargo install "$pkg"
-        ;;
-      esac
-    done     
+      *) cargo install "$pkg"
+      ;;
+    esac
+  done     
 
 # Instala pacotes Go
 install-go-packages:
-    #!/usr/bin/env bash
-    set -euxo pipefail
-    for pkg in {{GO_PACKAGES}}; do
-      go install "$pkg"
-    done
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  for pkg in {{GO_PACKAGES}}; do
+    go install "$pkg"
+  done
 
 # Instala pacotes npm
 install-nvm-packages:
@@ -70,29 +73,29 @@ install-python-packages:
 
 # Prévia dos pacotes faltantes
 preview-os-packages:
-    #!/usr/bin/env bash
-    set -euxo pipefail
-    for pkg in {{OS_PACKAGES}}; do
-      if ! pacman -Qi "$pkg" &>/dev/null; then
-        echo "$pkg está ausente e será instalado."
-      fi
-    done
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  for pkg in {{OS_PACKAGES}}; do
+    if ! pacman -Qi "$pkg" &>/dev/null; then
+      echo "$pkg está ausente e será instalado."
+    fi
+  done
 
 # Limpa o que tinha sido instalado anteriormente
 cleanup:
-    #!/usr/bin/env bash
-    set -euxo pipefail
-    for pkg in {{RUST_PACKAGES}}; do
-      if pacman -Qq "$pkg" >/dev/null 2>&1; then
-        sudo pacman --noconfirm -R "$pkg"
-      fi
-    done
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  for pkg in {{RUST_PACKAGES}}; do
+    if pacman -Qq "$pkg" >/dev/null 2>&1; then
+      sudo pacman --noconfirm -R "$pkg"
+    fi
+  done
 
-    for pkg in {{PACKAGES_UNINSTALL}}; do
-      if pacman -Qq "$pkg" >/dev/null 2>&1; then
-        sudo pacman --noconfirm -R "$pkg"
-      fi
-    done
+  for pkg in {{PACKAGES_UNINSTALL}}; do
+    if pacman -Qq "$pkg" >/dev/null 2>&1; then
+      sudo pacman --noconfirm -R "$pkg"
+    fi
+  done
 
 # Detecta o sistema operacional e chama a task de instalação correta
 _check-os-and-install pkgs:
