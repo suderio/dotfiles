@@ -8,33 +8,60 @@ RUBY_PACKAGES := "markdownlint ruby-chef-utils ruby-concurrent ruby-kramdown rub
 GO_PACKAGES := "github.com/jesseduffield/lazygit@latest github.com/fatih/gomodifytags@latest github.com/cweill/gotests/gotests@latest github.com/x-motemen/gore/cmd/gore@latest golang.org/x/tools/gopls@latest"
 PACKAGES_UNINSTALL := "markdownlint ruby-mixlib-shellout ruby-chef-utils ruby-concurrent ruby-kramdown-parser-gfm ruby-kramdown ruby-mixlib-cli ruby-mixlib-config ruby-rexml ruby-tomlrb lazygit npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint nodejs bat eza ripgrep git-delta zenith dust tree-sitter-cli viu fd procs rustup ruby composer jdk-openjdk kotlin ktlint cpanminus julia gopls python-pipx"
 NPM_PACKAGES := "prettier bash-language-server node-gyp semver stylelint neovim @mermaid-js/mermaid-cli js-beautify markdownlint"
+PERL_PACKAGES := "Neovim::Ext"
 OTHER_PACKAGES := "neovim pynvim setuptools texlive texlive-langenglish texlive-langportuguese pandoc lynis clamav emacs-wayland github-cli ctop zathura zathura-djvu zathura-ps zathura-cb xdotool luarocks lua51 php kitty ghostty imagemagick sbcl"
 DUNO := "xclip aria2 aspell biber direnv fzf fzy git-lfs gnuplot htop nnn ncdu pass sshfs chafa ueberzugpp zig markdownlint zshdb shfmt tidy stylelint zls bashdb"
+FONTS := "FiraCode DejaVuSansMono JetBrainsMono SourceCodePro Hack"
 
+NERD_FONTS_URL := "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/"
+NVM_INSTALL_URL := "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh"
+KTLINT_INSTALL_URL := "https://github.com/pinterest/ktlint/releases/download/1.5.0/ktlint"
 alias iop := install-os-packages
 alias igp := install-go-packages
 alias inp := install-npm-packages
 alias irp := install-rust-packages
 alias ipp := install-python-packages
+alias ipl := install-perl-packages
+alias if := install-fonts
+alias h := hardening
+alias c := cleanup
 
 # Task principal - instala todos os pacotes
-install-packages:
+install:
   #!/usr/bin/env bash
-  cat <<- END 
-    Don't. Really don't. Call each task. This is the best order:
-    install-package-managers
-    install-os-packages
-    install-rust-packages
-    install-go-packages
-    install-npm-packages
+  cat <<- END
+    As tarefas que estão prontas para serem executadas são as que têm alias.
+    As demais funcionam, mas estão faltando alguma parte ou têm alguma interatividade.
   END
 
+hardening:
+  #!/usr/bin/env bash
+  # Understand and configure core dumps on Linux - https://linux-audit.com/software/understand-and-configure-core-dumps-work-on-linux/#disable-core-dumps
+  echo 'ulimit -c 0' | sudo tee /etc/profile.d/disable-coredumps.sh >/dev/null
+  sudo chown root:root /etc/profile.d/disable-coredumps.sh
+  sudo chmod 0644 /etc/profile.d/disable-coredumps.sh
+  # Linux password security hashing rounds - https://linux-audit.com/authentication/configure-the-minimum-password-length-on-linux-systems/
+  sudo pacman --noconfirm -S libpwquality
+  # Set default file permissions on Linux with umask - https://linux-audit.com/filesystems/file-permissions/set-default-file-permissions-with-umask/
+  echo 'session optional pam_umask.so umask=027' | sudo tee /etc/pam.d/common-session >/dev/null
+  sudo chown root:root /etc/pam.d/common-session
+  sudo chmod 0644 /etc/pam.d/common-session
+
+install-fonts:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  for font in {{FONTS}}; do
+    mkdir -p "$XDG_DATA_HOME/fonts/$font"
+    curl -sL "{{NERD_FONTS_URL}}$font.tar.xz" | unxz | tar -xvf - -C "$XDG_DATA_HOME/fonts/$font"
+    chmod -R "u=rwx,g=r,o=r" "$XDG_DATA_HOME/fonts/$font"
+  done
+  fc-cache -v
 
 install-nvm:
   #!/usr/bin/env bash
   set -euxo pipefail
   mkdir -p "$NVM_DIR"
-  [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash'
+  [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- {{NVM_INSTALL_URL}} | bash'
   source "$NVM_DIR/nvm.sh"
   nvm install node
 
@@ -80,7 +107,7 @@ install-sdkman:
   curl -s "https://get.sdkman.io" | bash
   sdk install java
   sdk install kotlin
-  curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.5.0/ktlint && chmod a+x ktlint && mv ktlint "$HOME/.local/bin/"
+  curl -sSLO {{KTLINT_INSTALL_URL}} && chmod a+x ktlint && mv ktlint "$HOME/.local/bin/"
 
 install-julia:
   curl -fsSL https://install.julialang.org | sh
@@ -89,7 +116,6 @@ install-cpan:
   #!/usr/bin/env bash
   cpan
   wget -O- http://cpanmin.us | perl - -l ~/perl5 App::cpanminus local::lib
-  cpanm Neovim::Ext
 
 install-starship:
   curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir="$HOME/.local/bin"
@@ -98,6 +124,12 @@ install-starship:
 # Instala pacotes do SO
 install-os-packages:
   @just _check-os-and-install "{{OS_PACKAGES}}"
+
+# Instala pacotes Perl
+install-perl-packages:
+  for pkg in {{PERL_PACKAGES}}; do
+    cpanm "$pkg"
+  done
 
 # Instala pacotes Rust
 install-rust-packages:
@@ -138,16 +170,6 @@ install-python-packages:
   set -euxo pipefail
   for pkg in {{PYTHON_PACKAGES}}; do
     uv tool install "$pkg"
-  done
-
-# Prévia dos pacotes faltantes
-preview-os-packages:
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  for pkg in {{OS_PACKAGES}}; do
-    if ! pacman -Qi "$pkg" &>/dev/null; then
-      echo "$pkg está ausente e será instalado."
-    fi
   done
 
 # Limpa o que tinha sido instalado anteriormente

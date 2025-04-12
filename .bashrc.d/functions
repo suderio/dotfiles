@@ -408,7 +408,7 @@ destructure() {
       varList=${varList%,*}
 }
 
-...() {
+s...() {
   # Spread a bunch of string inside an array
   # for example:-
   # str=bash
