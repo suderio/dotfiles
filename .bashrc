@@ -25,22 +25,13 @@ xterm-color | *-256color) color_prompt=yes ;;
 esac
 
 force_color_prompt=yes
-if [ -n "$force_color_prompt" ]; then
-  if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-    # We have color support; assume it's compliant with Ecma-48
-    # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-    # a case would tend to support setf rather than setaf.)
-    color_prompt=yes
-  else
-    color_prompt=
-  fi
-fi
-
-if [ "$color_prompt" = yes ]; then
-  PS1='${chroot_ps1:+($chroot_ps1)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-else
+# We have color support; assume it's compliant with Ecma-48
+# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+# a case would tend to support setf rather than setaf.)
+[ -n "$force_color_prompt" ] && [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null && color_prompt=yes || color_prompt=
+[ "$color_prompt" = yes ] && \
+  PS1='${chroot_ps1:+($chroot_ps1)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ ' || \
   PS1='${chroot_ps1:+($chroot_ps1)}\u@\h:\w\$ '
-fi
 unset color_prompt force_color_prompt
 
 export LESS=-R
@@ -62,40 +53,20 @@ if ! shopt -oq posix; then
   fi
 fi
 
-if command -v alacritty >/dev/null 2>&1; then
-  export TERMINAL=/usr/bin/alacritty
-  export LC_ALL=pt_BR.UTF-8
-fi
+[ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do source "$f"; done
 
-if [ -d $HOME/.bashrc.d ]; then
-  for f in "$HOME"/.bashrc.d/*; do
-    source "$f"
-  done
-fi
-
-export NVM_DIR="$HOME/.config/nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-
-
-[ -s "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
-[ -d "$HOME/.cargo/bin" ] && PATH="$HOME/.cargo/bin:$PATH"
-
-[ -d /usr/bin/ruby/gems/3.3.0 ] && PATH="/usr/bin/ruby/gems/3.3.0:$PATH"
-[ -d "$HOME/.local/share/gem/ruby/3.3.0/bin" ] && PATH="$HOME/.local/share/gem/ruby/3.3.0/bin:$PATH"
-
-[ -d "$HOME/go/bin" ] && PATH="$HOME/go/bin:$PATH"
-
-[ -d "$HOME/.config/emacs/bin" ] && PATH="$HOME/.config/emacs/bin:$PATH"
-
-[ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
-
-[ -s "$HOME/.local/bin/custom" ] && source "$HOME/.local/bin/custom"
-
-[ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
-
-eval "$(ssh-agent -s)" > /dev/null 2>&1 && ssh-add "$HOME/.ssh/id_ed25519" > /dev/null 2>&1
+eval "$(ssh-agent -s)" >/dev/null 2>&1 && ssh-add "$HOME/.ssh/id_ed25519" > /dev/null 2>&1
 
 command -v starship >/dev/null 2>&1 && eval -- "$(starship init bash --print-full-init)"
 
 command -v pipx >/dev/null 2>&1 && eval "$(register-python-argcomplete pipx)"
+
+eval "$($HOME/.rbenv/bin/rbenv init - --no-rehash bash)"
+
+eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)"
+
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+[ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
+[ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"

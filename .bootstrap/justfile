@@ -1,14 +1,21 @@
 #!/usr/bin/env just --justfile
 
 # Lista de linguagens/pacotes desejados
-OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils"
-RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs zellij"
-PYTHON_PACKAGES := ""
-GO_PACKAGES := "github.com/jesseduffield/lazygit@latest github.com/fatih/gomodifytags@latest github.com/cweill/gotests/gotests@latest github.com/x-motemen/gore/cmd/gore@latest"
-PACKAGES_UNINSTALL := "lazygit npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint nodejs bat eza ripgrep git-delta zenith dust tree-sitter-cli viu fd procs rustup"
-NPM_PACKAGES := "prettier bash-language-server node-gyp prettier semver stylelint"
-OTHER_PACKAGES := "neovim texlive texlive-langenglish texlive-langportuguese pandoc lynis clamav emacs-wayland github-cli ctop zellij "
-DUNO := "xclip aria2 aspell biber direnv fzf fzy git-lfs gnuplot htop nnn ncdu pass sshfs chafa ueberzugpp python-pylatexenc python-pynvim"
+OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils "
+RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs zellij ast-grep"
+PYTHON_PACKAGES := "isort pipenv nose nose2 pytest pylatexenc "
+RUBY_PACKAGES := "markdownlint ruby-chef-utils ruby-concurrent ruby-kramdown ruby-kramdown-parser-gfm ruby-mixlib-cli ruby-mixlib-config ruby-mixlib-shellout ruby-rexml ruby-tomlrb neovim"
+GO_PACKAGES := "github.com/jesseduffield/lazygit@latest github.com/fatih/gomodifytags@latest github.com/cweill/gotests/gotests@latest github.com/x-motemen/gore/cmd/gore@latest golang.org/x/tools/gopls@latest"
+PACKAGES_UNINSTALL := "markdownlint ruby-mixlib-shellout ruby-chef-utils ruby-concurrent ruby-kramdown-parser-gfm ruby-kramdown ruby-mixlib-cli ruby-mixlib-config ruby-rexml ruby-tomlrb lazygit npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint nodejs bat eza ripgrep git-delta zenith dust tree-sitter-cli viu fd procs rustup ruby composer jdk-openjdk kotlin ktlint cpanminus julia gopls python-pipx"
+NPM_PACKAGES := "prettier bash-language-server node-gyp semver stylelint neovim @mermaid-js/mermaid-cli js-beautify markdownlint"
+OTHER_PACKAGES := "neovim pynvim setuptools texlive texlive-langenglish texlive-langportuguese pandoc lynis clamav emacs-wayland github-cli ctop zathura zathura-djvu zathura-ps zathura-cb xdotool luarocks lua51 php kitty ghostty imagemagick sbcl"
+DUNO := "xclip aria2 aspell biber direnv fzf fzy git-lfs gnuplot htop nnn ncdu pass sshfs chafa ueberzugpp zig markdownlint zshdb shfmt tidy stylelint zls bashdb"
+
+alias iop := install-os-packages
+alias igp := install-go-packages
+alias inp := install-npm-packages
+alias irp := install-rust-packages
+alias ipp := install-python-packages
 
 # Task principal - instala todos os pacotes
 install-packages:
@@ -22,18 +29,71 @@ install-packages:
     install-npm-packages
   END
 
-# Instala gerenciadores de pacotes
-install-package-managers:
+
+install-nvm:
   #!/usr/bin/env bash
   set -euxo pipefail
   mkdir -p "$NVM_DIR"
   [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash'
   source "$NVM_DIR/nvm.sh"
   nvm install node
+
+install-rustup:
+  #!/usr/bin/env bash
+  # rustup TODO rust cargo
   command -v cargo >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  sudo pacman -S python-pipx
-  pipx ensurepath
-  pipx completions
+
+install-python:
+  #!/usr/bin/env bash
+  cargo install --git https://github.com/astral-sh/uv uv
+  uv python install
+
+install-rbenv:
+  #!/usr/bin/env bash
+  # ruby rubygems
+  curl -fsSL https://rbenv.org/install.sh | bash
+  # TODO
+  # rbenv install -l
+  # rbenv install 3.4.2
+  # rbenv global 3.4.2
+
+install-composer:
+  #!/usr/bin/env bash
+  # composer TODO PHP
+  EXPECTED_CHECKSUM="$(php -r 'copy("https://composer.github.io/installer.sig", "php://stdout");')"
+  php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+  ACTUAL_CHECKSUM="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
+
+  if [ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]
+  then
+      >&2 echo 'ERROR: Invalid installer checksum'
+      rm composer-setup.php
+      exit 1
+  fi
+
+  php composer-setup.php --quiet --install-dir="$HOME/.local/bin" --filename=composer
+  RESULT=$?
+  rm composer-setup.php
+
+install-sdkman:
+  #!/usr/bin/env bash
+  curl -s "https://get.sdkman.io" | bash
+  sdk install java
+  sdk install kotlin
+  curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.5.0/ktlint && chmod a+x ktlint && mv ktlint "$HOME/.local/bin/"
+
+install-julia:
+  curl -fsSL https://install.julialang.org | sh
+
+install-cpan:
+  #!/usr/bin/env bash
+  cpan
+  wget -O- http://cpanmin.us | perl - -l ~/perl5 App::cpanminus local::lib
+  cpanm Neovim::Ext
+
+install-starship:
+  curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir="$HOME/.local/bin"
+
 
 # Instala pacotes do SO
 install-os-packages:
@@ -77,7 +137,7 @@ install-python-packages:
   #!/usr/bin/env bash
   set -euxo pipefail
   for pkg in {{PYTHON_PACKAGES}}; do
-    pipx install "$pkg"
+    uv tool install "$pkg"
   done
 
 # Prévia dos pacotes faltantes
@@ -96,7 +156,13 @@ cleanup:
   set -euxo pipefail
   for pkg in {{PACKAGES_UNINSTALL}}; do
     if pacman -Qq "$pkg" >/dev/null 2>&1; then
-      sudo pacman --noconfirm -R "$pkg"
+      case "$pkg" in
+        ruby) sudo pacman --noconfirm -R ruby rubygems
+        ;;
+
+        *) sudo pacman --noconfirm -R "$pkg"
+        ;;
+      esac
     fi
   done
 
