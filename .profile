@@ -20,6 +20,7 @@ export SDKMAN_DIR="$HOME/.sdkman"
 [ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
 [ -d "$HOME/.juliaup/bin" ] && PATH="$HOME/.juliaup/bin:$PATH"
 [ -d "$HOME/perl5/bin" ] && PATH="$HOME/perl5/bin:${PATH}"
+[ -d "$HOME/.local/lua/bin" ] && PATH="$HOME/.local/lua/bin:$PATH"
 
 export PERL5LIB="$HOME/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"
 export PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
