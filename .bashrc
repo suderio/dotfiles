@@ -70,3 +70,5 @@ eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)"
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
 [ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
