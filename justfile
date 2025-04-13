@@ -1,5 +1,6 @@
 #!/usr/bin/env just --justfile
 
+set working-directory := "$HOME/tmp"
 # Lista de linguagens/pacotes desejados
 OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils php bash-completion"
 RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs zellij ast-grep"
@@ -7,14 +8,13 @@ PYTHON_PACKAGES := "isort pipenv nose nose2 pytest pylatexenc "
 RUBY_PACKAGES := "neovim"
 RUBY_PACKAGES_NOT_USED := "chef-utils concurrent kramdown kramdown-parser-gfm mixlib-cli mixlib-config mixlib-shellout rexml ruby-tomlrb"
 GO_PACKAGES := "github.com/jesseduffield/lazygit@latest github.com/fatih/gomodifytags@latest github.com/cweill/gotests/gotests@latest github.com/x-motemen/gore/cmd/gore@latest golang.org/x/tools/gopls@latest"
-PACKAGES_UNINSTALL := "markdownlint ruby-mixlib-shellout ruby-chef-utils ruby-concurrent ruby-kramdown-parser-gfm ruby-kramdown ruby-mixlib-cli ruby-mixlib-config ruby-rexml ruby-tomlrb lazygit npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint nodejs bat eza ripgrep git-delta zenith dust tree-sitter-cli viu fd procs rustup ruby composer jdk-openjdk kotlin ktlint cpanminus julia gopls python-pipx python-isort python-nose python-nose2 python-pipenv python-pylatexenc python-pytest"
-
 NPM_PACKAGES := "prettier bash-language-server node-gyp semver stylelint neovim @mermaid-js/mermaid-cli js-beautify markdownlint"
 PERL_PACKAGES := "Neovim::Ext"
-OTHER_PACKAGES := "pynvim setuptools texlive texlive-langenglish texlive-langportuguese pandoc lynis clamav emacs-wayland github-cli zathura zathura-djvu zathura-ps zathura-cb xdotool lua51 kitty ghostty imagemagick sbcl"
-DUNO := "xclip aria2 aspell biber direnv git-lfs gnuplot pass sshfs chafa ueberzugpp zig zshdb shfmt tidy zls bashdb"
-MAKE_PACKAGES := "fzf neovim go lua luarocks"
+MAKE_PACKAGES := "fzf neovim go lua luarocks texlive pandoc"
 FONTS := "FiraCode DejaVuSansMono JetBrainsMono SourceCodePro Hack NerdFontsSymbolsOnly"
+OTHER_PACKAGES := "pynvim setuptools lynis clamav emacs-wayland github-cli zathura zathura-djvu zathura-ps zathura-cb xdotool lua51 kitty ghostty imagemagick sbcl"
+DUNO := "xclip aria2 aspell biber direnv git-lfs gnuplot pass sshfs chafa ueberzugpp zig zshdb shfmt tidy zls bashdb"
+PACKAGES_UNINSTALL := "texlive pandoc markdownlint ruby-mixlib-shellout ruby-chef-utils ruby-concurrent ruby-kramdown-parser-gfm ruby-kramdown ruby-mixlib-cli ruby-mixlib-config ruby-rexml ruby-tomlrb lazygit npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint nodejs bat eza ripgrep git-delta zenith dust tree-sitter-cli viu fd procs rustup ruby composer jdk-openjdk kotlin ktlint cpanminus julia gopls python-pipx python-isort python-nose python-nose2 python-pipenv python-pylatexenc python-pytest"
 
 NERD_FONTS_URL := "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/"
 NVM_INSTALL_URL := "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh"
@@ -32,8 +32,9 @@ alias hard := hardening
 alias clean := cleanup
 alias t := test
 # Task principal - instala todos os pacotes
-install:
+install shit:
   #!/usr/bin/env bash
+  echo {{shit}}
   cat <<- END
     As tarefas que estão prontas para serem executadas são as que têm alias.
     As demais funcionam, mas estão faltando alguma parte ou têm alguma interatividade.
@@ -97,7 +98,11 @@ install-rustup:
 install-python:
   #!/usr/bin/env bash
   cargo install --git https://github.com/astral-sh/uv uv
-  uv python install
+  uv python install --preview
+
+install-pynvim: install-python install-neovim
+  uv venv "$HOME/.local/share/nvim/venv"
+  uv pip install pynvim -p "$HOME/.local/share/nvim/venv"
 
 install-rbenv:
   #!/usr/bin/env bash
@@ -169,9 +174,27 @@ install-fzf:
   #!/usr/bin/env bash
   git clone https://github.com/junegunn/fzf.git
   cd fzf
-  ./install
+  ./install --bin
 
 install-neovim:
+  #!/usr/bin/env bash
+  curl -RL -o nvim.tar.gz https://github.com/neovim/neovim/releases/download/v0.11.0/nvim-linux-x86_64.tar.gz
+  tar zxf nvim.tar.gz
+  cp -R nvim/* "$HOME/.local/"
+
+install-texlive:
+  #!/usr/bin/env bash
+  # see https://www.tug.org/texlive/quickinstall.html
+  curl -L -o install-tl-unx.tar.gz https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
+  zcat < install-tl-unx.tar.gz | tar xf -
+  cd install-tl-2*
+  perl ./install-tl
+
+install-pandoc:
+  #!/usr/bin/env bash
+  curl -RL -o pandoc.tar.gz https://github.com/jgm/pandoc/releases/download/3.6.4/pandoc-3.6.4-linux-amd64.tar.gz
+  tar zxf pandoc.tar.gz
+  cp -R pandoc-*/* "$HOME/.local/"
 
 # Instala pacotes do SO
 install-os-packages:
