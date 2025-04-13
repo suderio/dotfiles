@@ -159,6 +159,12 @@ install-lua:
   make
   make install
 
+install-go:
+  curl -LRO https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
+  tar -xvf https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
+  mv go "$HOME/.local/"
+
+
 install-fzf:
   #!/usr/bin/env bash
   git clone https://github.com/junegunn/fzf.git

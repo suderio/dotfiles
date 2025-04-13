@@ -16,6 +16,7 @@ export SDKMAN_DIR="$HOME/.sdkman"
 
 [ -d "$HOME/.cargo/bin" ] && PATH="$HOME/.cargo/bin:$PATH"
 [ -d "$HOME/go/bin" ] && PATH="$HOME/go/bin:$PATH"
+[ -d "$HOME/.local/go/bin" ] && PATH="$HOME/.local/go/bin:$PATH"
 [ -d "$HOME/.config/emacs/bin" ] && PATH="$HOME/.config/emacs/bin:$PATH"
 [ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
 [ -d "$HOME/.juliaup/bin" ] && PATH="$HOME/.juliaup/bin:$PATH"
