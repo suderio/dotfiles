@@ -1,7 +1,7 @@
 #!/usr/bin/env just --justfile
 
 # Lista de linguagens/pacotes desejados
-OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils "
+OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils php"
 RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs zellij ast-grep"
 PYTHON_PACKAGES := "isort pipenv nose nose2 pytest pylatexenc "
 RUBY_PACKAGES := "neovim"
@@ -11,8 +11,9 @@ PACKAGES_UNINSTALL := "markdownlint ruby-mixlib-shellout ruby-chef-utils ruby-co
 
 NPM_PACKAGES := "prettier bash-language-server node-gyp semver stylelint neovim @mermaid-js/mermaid-cli js-beautify markdownlint"
 PERL_PACKAGES := "Neovim::Ext"
-OTHER_PACKAGES := "fzf neovim pynvim setuptools texlive texlive-langenglish texlive-langportuguese pandoc lynis clamav emacs-wayland github-cli zathura zathura-djvu zathura-ps zathura-cb xdotool luarocks lua51 php kitty ghostty imagemagick sbcl"
+OTHER_PACKAGES := "pynvim setuptools texlive texlive-langenglish texlive-langportuguese pandoc lynis clamav emacs-wayland github-cli zathura zathura-djvu zathura-ps zathura-cb xdotool luarocks lua51 kitty ghostty imagemagick sbcl"
 DUNO := "xclip aria2 aspell biber direnv git-lfs gnuplot pass sshfs chafa ueberzugpp zig zshdb shfmt tidy zls bashdb"
+MAKE_PACKAGES := "fzf neovim go"
 FONTS := "FiraCode DejaVuSansMono JetBrainsMono SourceCodePro Hack NerdFontsSymbolsOnly"
 
 NERD_FONTS_URL := "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/"
