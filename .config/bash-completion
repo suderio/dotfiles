@@ -1,0 +1,5 @@
+#! /bin/bash
+
+for bcfile in "$XDG_DATA_HOME/bash_completion/"* ; do
+  [ -f "$bcfile" ] && . "$bcfile"
+done

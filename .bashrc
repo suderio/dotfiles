@@ -61,14 +61,14 @@ command -v starship >/dev/null 2>&1 && eval -- "$(starship init bash --print-ful
 
 command -v pipx >/dev/null 2>&1 && eval "$(register-python-argcomplete pipx)"
 
-eval "$($HOME/.rbenv/bin/rbenv init - --no-rehash bash)"
+[ -x "$HOME/.rbenv/bin/rbenv" ] && eval "$(~/.rbenv/bin/rbenv init - --no-rehash bash)"
 
-eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)"
+command -v perl >/dev/null 2>&1 && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)"
+
+command -v fzf >/dev/null 2>&1 && eval "$(fzf --bash)"
 
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
 [ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
-
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
