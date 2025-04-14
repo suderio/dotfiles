@@ -3,7 +3,7 @@
 
 * Config
 
-Repositório [dotfiles](http://github.com/suderio/dotfiles.git)
+Repositório [[dotfiles][http://github.com/suderio/dotfiles.git]
 
 Manage dot file with git, see https://www.atlassian.com/git/tutorials/dotfiles
 
