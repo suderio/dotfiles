@@ -1,6 +1,7 @@
 #!/usr/bin/env just --justfile
 
-set working-directory := "$HOME/tmp"
+set working-directory := 'tmp'
+
 # Lista de linguagens/pacotes desejados
 OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils php bash-completion"
 RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs zellij ast-grep"
@@ -10,11 +11,11 @@ RUBY_PACKAGES_NOT_USED := "chef-utils concurrent kramdown kramdown-parser-gfm mi
 GO_PACKAGES := "github.com/jesseduffield/lazygit@latest github.com/fatih/gomodifytags@latest github.com/cweill/gotests/gotests@latest github.com/x-motemen/gore/cmd/gore@latest golang.org/x/tools/gopls@latest"
 NPM_PACKAGES := "prettier bash-language-server node-gyp semver stylelint neovim @mermaid-js/mermaid-cli js-beautify markdownlint"
 PERL_PACKAGES := "Neovim::Ext"
-MAKE_PACKAGES := "fzf neovim go lua luarocks texlive pandoc"
+MAKE_PACKAGES := "fzf neovim go lua luarocks texlive pandoc pynvim"
 FONTS := "FiraCode DejaVuSansMono JetBrainsMono SourceCodePro Hack NerdFontsSymbolsOnly"
-OTHER_PACKAGES := "pynvim setuptools lynis clamav emacs-wayland github-cli zathura zathura-djvu zathura-ps zathura-cb xdotool lua51 kitty ghostty imagemagick sbcl"
+OTHER_PACKAGES := "setuptools lynis clamav emacs-wayland github-cli zathura zathura-djvu zathura-ps zathura-cb xdotool lua51 kitty ghostty imagemagick sbcl"
 DUNO := "xclip aria2 aspell biber direnv git-lfs gnuplot pass sshfs chafa ueberzugpp zig zshdb shfmt tidy zls bashdb"
-PACKAGES_UNINSTALL := "texlive pandoc markdownlint ruby-mixlib-shellout ruby-chef-utils ruby-concurrent ruby-kramdown-parser-gfm ruby-kramdown ruby-mixlib-cli ruby-mixlib-config ruby-rexml ruby-tomlrb lazygit npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint nodejs bat eza ripgrep git-delta zenith dust tree-sitter-cli viu fd procs rustup ruby composer jdk-openjdk kotlin ktlint cpanminus julia gopls python-pipx python-isort python-nose python-nose2 python-pipenv python-pylatexenc python-pytest"
+PACKAGES_UNINSTALL := "python-pynvim texlive pandoc markdownlint ruby-mixlib-shellout ruby-chef-utils ruby-concurrent ruby-kramdown-parser-gfm ruby-kramdown ruby-mixlib-cli ruby-mixlib-config ruby-rexml ruby-tomlrb lazygit npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint nodejs bat eza ripgrep git-delta zenith dust tree-sitter-cli viu fd procs rustup ruby composer jdk-openjdk kotlin ktlint cpanminus julia gopls python-pipx python-isort python-nose python-nose2 python-pipenv python-pylatexenc python-pytest"
 
 NERD_FONTS_URL := "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/"
 NVM_INSTALL_URL := "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh"
@@ -28,18 +29,32 @@ alias ipython := install-python-packages
 alias iperl := install-perl-packages
 alias igem := install-gem-packages
 alias ifonts := install-fonts
-alias hard := hardening
-alias clean := cleanup
+alias ros := remove-os-packages
+alias i := install
 alias t := test
-# Task principal - instala todos os pacotes
-install shit:
-  #!/usr/bin/env bash
-  echo {{shit}}
-  cat <<- END
-    As tarefas que estão prontas para serem executadas são as que têm alias.
-    As demais funcionam, mas estão faltando alguma parte ou têm alguma interatividade.
-  END
+alias c := clean
+alias h := hardening
 
+# Task principal - instala todos os pacotes
+[linux]
+[group('main')]
+install:
+  pwd
+  echo {{ cache_directory() }}
+  echo {{ config_directory() }}
+  echo {{ config_local_directory() }}
+  echo {{ data_directory() }}
+  echo {{ data_local_directory() }}
+  echo {{ executable_directory() }}
+  echo {{ home_directory() }}
+
+[linux]
+[group('main')]
+clean:
+  ls {{ join(home_dir(), 'tmp') }}
+
+[linux]
+[group('main')]
 test:
   #!/usr/bin/env bash
   for pkg in {{OS_PACKAGES}} {{RUST_PACKAGES}} {{PYTHON_PACKAGES}} {{NPM_PACKAGES}}; do
@@ -58,6 +73,8 @@ test:
   done
 
 # Hardening usando lynis
+[linux]
+[group('main')]
 hardening:
   #!/usr/bin/env bash
   # Understand and configure core dumps on Linux - https://linux-audit.com/software/understand-and-configure-core-dumps-work-on-linux/#disable-core-dumps
@@ -73,30 +90,27 @@ hardening:
 
 # Instala algumas Nerd Fonts
 install-fonts:
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  for font in {{FONTS}}; do
-    mkdir -p "$XDG_DATA_HOME/fonts/$font"
-    curl -sL "{{NERD_FONTS_URL}}$font.tar.xz" | unxz | tar -xvf - -C "$XDG_DATA_HOME/fonts/$font"
-    chmod -R "u=rwx,g=r,o=r" "$XDG_DATA_HOME/fonts/$font"
+  for font in {{FONTS}}; do \
+    just install-font $font; \
   done
   fc-cache -v
 
+install-font font:
+    mkdir -p "$XDG_DATA_HOME/fonts/{{font}}"
+    curl -sL "{{NERD_FONTS_URL}}{{font}}.tar.xz" | unxz | tar -xvf - -C "$XDG_DATA_HOME/fonts/{{font}}"
+    chmod -R "u=rwx,g=r,o=r" "$XDG_DATA_HOME/fonts/{{font}}"
+
 install-nvm:
-  #!/usr/bin/env bash
-  set -euxo pipefail
   mkdir -p "$NVM_DIR"
   [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- {{NVM_INSTALL_URL}} | bash'
   source "$NVM_DIR/nvm.sh"
   nvm install node
 
 install-rustup:
-  #!/usr/bin/env bash
   # rustup TODO rust cargo
   command -v cargo >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 install-python:
-  #!/usr/bin/env bash
   cargo install --git https://github.com/astral-sh/uv uv
   uv python install --preview
 
@@ -105,7 +119,6 @@ install-pynvim: install-python install-neovim
   uv pip install pynvim -p "$HOME/.local/share/nvim/venv"
 
 install-rbenv:
-  #!/usr/bin/env bash
   # ruby rubygems
   curl -fsSL https://rbenv.org/install.sh | bash
   # TODO
@@ -132,7 +145,6 @@ install-composer:
   rm composer-setup.php
 
 install-sdkman:
-  #!/usr/bin/env bash
   curl -s "https://get.sdkman.io" | bash
   sdk install java
   sdk install kotlin
@@ -142,7 +154,6 @@ install-julia:
   curl -fsSL https://install.julialang.org | sh
 
 install-cpan:
-  #!/usr/bin/env bash
   cpan
   wget -O- http://cpanmin.us | perl - -l ~/perl5 App::cpanminus local::lib
 
@@ -150,13 +161,11 @@ install-starship:
   curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir="$HOME/.local/bin"
 
 install-lua:
-  #!/usr/bin/env bash
   curl -L -R -O https://www.lua.org/ftp/lua-5.4.7.tar.gz
   tar zxf lua-5.4.7.tar.gz
   cd lua-5.4.7
   make all test
   make install INSTALL_TOP="$HOME/.local"
-  cd ..
   curl -L -R -O https://luarocks.github.io/luarocks/releases/luarocks-3.11.1.tar.gz
   tar zxf luarocks-3.11.1.tar.gz
   cd luarocks-3.11.1
@@ -171,19 +180,16 @@ install-go:
 
 
 install-fzf:
-  #!/usr/bin/env bash
   git clone https://github.com/junegunn/fzf.git
   cd fzf
   ./install --bin
 
 install-neovim:
-  #!/usr/bin/env bash
   curl -RL -o nvim.tar.gz https://github.com/neovim/neovim/releases/download/v0.11.0/nvim-linux-x86_64.tar.gz
   tar zxf nvim.tar.gz
   cp -R nvim/* "$HOME/.local/"
 
 install-texlive:
-  #!/usr/bin/env bash
   # see https://www.tug.org/texlive/quickinstall.html
   curl -L -o install-tl-unx.tar.gz https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
   zcat < install-tl-unx.tar.gz | tar xf -
@@ -191,14 +197,9 @@ install-texlive:
   perl ./install-tl
 
 install-pandoc:
-  #!/usr/bin/env bash
   curl -RL -o pandoc.tar.gz https://github.com/jgm/pandoc/releases/download/3.6.4/pandoc-3.6.4-linux-amd64.tar.gz
   tar zxf pandoc.tar.gz
   cp -R pandoc-*/* "$HOME/.local/"
-
-# Instala pacotes do SO
-install-os-packages:
-  @just _check-os-and-install "{{OS_PACKAGES}}"
 
 # Instala pacotes gem (o único necessário até agora é o neovim)
 install-gem-packages:
@@ -256,20 +257,15 @@ install-python-packages:
   done
 
 # Limpa o que tinha sido instalado anteriormente
-cleanup:
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  for pkg in {{PACKAGES_UNINSTALL}}; do
-    if pacman -Qq "$pkg" >/dev/null 2>&1; then
-      case "$pkg" in
-        ruby) sudo pacman --noconfirm -R ruby rubygems
-        ;;
+remove-os-packages:
+  @just remove-os-package {{PACKAGES_UNINSTALL}}
 
-        *) sudo pacman --noconfirm -R "$pkg"
-        ;;
-      esac
-    fi
-  done
+remove-os-package +pkg:
+  sudo pacman --noconfirm -R {{pkg}}
+
+# Instala pacotes do SO
+install-os-packages:
+  @just _check-os-and-install "{{OS_PACKAGES}}"
 
 # Detecta o sistema operacional e chama a task de instalação correta
 _check-os-and-install pkgs:
@@ -332,3 +328,18 @@ _install-if-missing pkgs:
         exit 1
       fi
     done
+
+_old_remove-os-packages:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  for pkg in {{PACKAGES_UNINSTALL}}; do
+    if pacman -Qq "$pkg" >/dev/null 2>&1; then
+      case "$pkg" in
+        ruby) sudo pacman --noconfirm -R ruby rubygems
+        ;;
+
+        *) sudo pacman --noconfirm -R "$pkg"
+        ;;
+      esac
+    fi
+  done
