@@ -198,6 +198,13 @@ Obs.: diff-refine-hunk may be slow
 (after! magit
   (setq magit-diff-refine-hunk 'all))
 #+end_src
+** Languages
+*** Julia
+#+begin_src emacs-lisp
+(setq lsp-julia-package-dir nil)
+(after! lsp-julia
+  (setq lsp-julia-default-environment "~/.julia/environments/v1.11"))
+#+end_src
 ** TODO biblio config
  (setq org-cite-csl-styles-dir "~/Zotero/styles")
  (setq! citar-bibliography '("/path/to/references.bib"))
