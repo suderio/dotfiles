@@ -3,7 +3,7 @@
 
 * Config
 
-Repositório [dotfiles](http://github.com/suderio/dotfiles.git)
+Repositório [[dotfiles][http://github.com/suderio/dotfiles.git]]
 
 Manage dot file with git, see https://www.atlassian.com/git/tutorials/dotfiles
 
@@ -16,15 +16,16 @@ alias config='/usr/bin/git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME
 * Config in a new machine
 
 #+begin_src shell
-  git clone --bare git@github.com:suderio/dotfiles $HOME/.local/dotfiles
-  config config --local status.showUntrackedFiles no
-  config checkout
+git clone --bare git@github.com:suderio/dotfiles $HOME/.local/dotfiles
+config config --local status.showUntrackedFiles no
+config checkout
 #+end_src
 
 * These are used to automate some common tasks
 
   (Also used inside emacs configuration)
-#+begin_src
+#+begin_src shell
+
 configsync () {
   configpath="${1:-$HOME}"
   config pull --all 
