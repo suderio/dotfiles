@@ -4,7 +4,7 @@ set working-directory := 'tmp'
 
 # Lista de linguagens/pacotes desejados
 OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils php bash-completion"
-RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs zellij ast-grep"
+RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs ast-grep" # zellij
 PYTHON_PACKAGES := "isort pipenv nose nose2 pytest pylatexenc "
 RUBY_PACKAGES := "neovim"
 RUBY_PACKAGES_NOT_USED := "chef-utils concurrent kramdown kramdown-parser-gfm mixlib-cli mixlib-config mixlib-shellout rexml ruby-tomlrb"
@@ -103,11 +103,9 @@ install-font font:
 install-nvm:
   mkdir -p "$NVM_DIR"
   [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- {{NVM_INSTALL_URL}} | bash'
-  source "$NVM_DIR/nvm.sh"
-  nvm install node
+  source "$NVM_DIR/nvm.sh" && nvm install node
 
 install-rustup:
-  # rustup TODO rust cargo
   command -v cargo >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 install-python:
@@ -163,38 +161,34 @@ install-starship:
 install-lua:
   curl -L -R -O https://www.lua.org/ftp/lua-5.4.7.tar.gz
   tar zxf lua-5.4.7.tar.gz
-  cd lua-5.4.7
-  make all test
-  make install INSTALL_TOP="$HOME/.local"
+  cd lua-5.4.7 && make all test
+  cd lua-5.4.7 && make install INSTALL_TOP="$HOME/.local"
   curl -L -R -O https://luarocks.github.io/luarocks/releases/luarocks-3.11.1.tar.gz
   tar zxf luarocks-3.11.1.tar.gz
-  cd luarocks-3.11.1
-  ./configure --prefix="$HOME/.local" --with-lua="$HOME/.local"
-  make
-  make install
+  cd luarocks-3.11.1 && ./configure --prefix="$HOME/.local" --with-lua="$HOME/.local"
+  cd luarocks-3.11.1 && make
+  cd luarocks-3.11.1 && make install
 
 install-go:
   curl -LRO https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
-  tar -xvf https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
+  tar -xvf go1.24.2.linux-amd64.tar.gz
   mv go "$HOME/.local/"
 
 
 install-fzf:
   git clone https://github.com/junegunn/fzf.git
-  cd fzf
-  ./install --bin
+  cd fzf && ./install --bin
 
 install-neovim:
   curl -RL -o nvim.tar.gz https://github.com/neovim/neovim/releases/download/v0.11.0/nvim-linux-x86_64.tar.gz
   tar zxf nvim.tar.gz
-  cp -R nvim/* "$HOME/.local/"
+  cp -R nvim-linux-x86_64/* "$HOME/.local/"
 
 install-texlive:
   # see https://www.tug.org/texlive/quickinstall.html
   curl -L -o install-tl-unx.tar.gz https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
   zcat < install-tl-unx.tar.gz | tar xf -
-  cd install-tl-2*
-  perl ./install-tl
+  cd install-tl-2* && perl ./install-tl
 
 install-pandoc:
   curl -RL -o pandoc.tar.gz https://github.com/jgm/pandoc/releases/download/3.6.4/pandoc-3.6.4-linux-amd64.tar.gz
