@@ -27,6 +27,20 @@ This determines the style of line numbers in effect. If set to `nil', line numbe
       which-key-max-description-length 55
       which-key-separator " → " )
 #+end_src
+*** Spell
+#+begin_src emacs-lisp
+  (setenv "LANG" "pt_BR,en_US")
+  (setq-default ispell-program-name "hunspell")
+  (with-eval-after-load "ispell"
+    (setq ispell-really-hunspell t)
+    (setq ispell-program-name "hunspell")
+    (setq ispell-dictionary "pt_BR,en_US")
+    ;; ispell-set-spellchecker-params has to be called
+    ;; before ispell-hunspell-add-multi-dic will work
+    (ispell-set-spellchecker-params)
+    (ispell-hunspell-add-multi-dic "pt_BR,en_US"))
+
+#+end_src
 ** UI
 *** Theme
 #+begin_src emacs-lisp
@@ -34,7 +48,7 @@ This determines the style of line numbers in effect. If set to `nil', line numbe
 (add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
 #+end_src
 *** Bell
-Disables anoying bell
+Disables annoying bell
 #+begin_src emacs-lisp
 (setq visible-bell nil)
 (setq ring-bell-function 'ignore)

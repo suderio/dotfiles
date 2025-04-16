@@ -14,6 +14,17 @@
       which-key-max-description-length 55
       which-key-separator " → " )
 
+(setenv "LANG" "pt_BR,en_US")
+(setq-default ispell-program-name "hunspell")
+(with-eval-after-load "ispell"
+  (setq ispell-really-hunspell t)
+  (setq ispell-program-name "hunspell")
+  (setq ispell-dictionary "pt_BR,en_US")
+  ;; ispell-set-spellchecker-params has to be called
+  ;; before ispell-hunspell-add-multi-dic will work
+  (ispell-set-spellchecker-params)
+  (ispell-hunspell-add-multi-dic "pt_BR,en_US"))
+
 (setq doom-theme 'doom-vibrant)
 (add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
 

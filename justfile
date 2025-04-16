@@ -89,33 +89,39 @@ hardening:
   sudo chmod 0644 /etc/pam.d/common-session
 
 # Instala algumas Nerd Fonts
+[linux]
+[group('base')]
 install-fonts:
   for font in {{FONTS}}; do \
     just install-font $font; \
   done
   fc-cache -v
 
+[linux]
+[group('aux')]
 install-font font:
     mkdir -p "$XDG_DATA_HOME/fonts/{{font}}"
     curl -sL "{{NERD_FONTS_URL}}{{font}}.tar.xz" | unxz | tar -xvf - -C "$XDG_DATA_HOME/fonts/{{font}}"
     chmod -R "u=rwx,g=r,o=r" "$XDG_DATA_HOME/fonts/{{font}}"
 
+[linux]
+[group('base')]
 install-nvm:
   mkdir -p "$NVM_DIR"
   [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- {{NVM_INSTALL_URL}} | bash'
   source "$NVM_DIR/nvm.sh" && nvm install node
 
+[linux]
+[group('base')]
 install-rustup:
   command -v cargo >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
+[group('base')]
 install-python:
   cargo install --git https://github.com/astral-sh/uv uv
   uv python install --preview
 
-install-pynvim: install-python install-neovim
-  uv venv "$HOME/.local/share/nvim/venv"
-  uv pip install pynvim -p "$HOME/.local/share/nvim/venv"
-
+[group('base')]
 install-rbenv:
   # ruby rubygems
   curl -fsSL https://rbenv.org/install.sh | bash
@@ -124,6 +130,7 @@ install-rbenv:
   # rbenv install 3.4.2
   # rbenv global 3.4.2
 
+[group('base')]
 install-composer:
   #!/usr/bin/env bash
   # composer TODO PHP
@@ -142,22 +149,23 @@ install-composer:
   RESULT=$?
   rm composer-setup.php
 
+[group('base')]
 install-sdkman:
   curl -s "https://get.sdkman.io" | bash
   sdk install java
   sdk install kotlin
   curl -sSLO {{KTLINT_INSTALL_URL}} && chmod a+x ktlint && mv ktlint "$HOME/.local/bin/"
 
+[group('base')]
 install-julia:
   curl -fsSL https://install.julialang.org | sh
 
+[group('base')]
 install-cpan:
   cpan
   wget -O- http://cpanmin.us | perl - -l ~/perl5 App::cpanminus local::lib
 
-install-starship:
-  curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir="$HOME/.local/bin"
-
+[group('base')]
 install-lua:
   curl -L -R -O https://www.lua.org/ftp/lua-5.4.7.tar.gz
   tar zxf lua-5.4.7.tar.gz
@@ -169,33 +177,66 @@ install-lua:
   cd luarocks-3.11.1 && make
   cd luarocks-3.11.1 && make install
 
+[group('base')]
 install-go:
   curl -LRO https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
   tar -xvf go1.24.2.linux-amd64.tar.gz
   mv go "$HOME/.local/"
 
-
+[group('base')]
 install-fzf:
   git clone https://github.com/junegunn/fzf.git
   cd fzf && ./install --bin
 
+[group('app')]
+install-pynvim:
+  uv venv "$HOME/.local/share/nvim/venv"
+  uv pip install pynvim -p "$HOME/.local/share/nvim/venv"
+
+[group('app')]
+install-starship:
+  curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir="$HOME/.local/bin"
+
+[group('app')]
 install-neovim:
   curl -RL -o nvim.tar.gz https://github.com/neovim/neovim/releases/download/v0.11.0/nvim-linux-x86_64.tar.gz
   tar zxf nvim.tar.gz
   cp -R nvim-linux-x86_64/* "$HOME/.local/"
 
+[group('app')]
 install-texlive:
   # see https://www.tug.org/texlive/quickinstall.html
   curl -L -o install-tl-unx.tar.gz https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
   zcat < install-tl-unx.tar.gz | tar xf -
   cd install-tl-2* && perl ./install-tl
 
+[group('app')]
 install-pandoc:
   curl -RL -o pandoc.tar.gz https://github.com/jgm/pandoc/releases/download/3.6.4/pandoc-3.6.4-linux-amd64.tar.gz
   tar zxf pandoc.tar.gz
   cp -R pandoc-*/* "$HOME/.local/"
 
+[linux]
+[group('app')]
+install-hunspell:
+  #!/usr/bin/env bash
+  git clone https://github.com/hunspell/hunspell.git
+  cd hunspell
+  autoreconf -vfi
+  ./configure --prefix=$HOME/.local
+  make
+  make install
+  sudo ldconfig
+  # TODO baixar esses dicionários e colocar em $HOME/.local/share/hunspell
+  # https://hunspell.memoq.com/de.zip
+  # https://hunspell.memoq.com/en.zip
+  # https://hunspell.memoq.com/es.zip
+  # https://hunspell.memoq.com/fr_FR.zip
+  # https://hunspell.memoq.com/it_IT.zip
+  # https://hunspell.memoq.com/pt_BR.zip
+  #
 # Instala pacotes gem (o único necessário até agora é o neovim)
+[group('packages')]
 install-gem-packages:
   #!/usr/bin/env bash
   for pkg in {{RUBY_PACKAGES}}; do
@@ -203,6 +244,7 @@ install-gem-packages:
   done
 
 # Instala pacotes Perl
+[group('packages')]
 install-perl-packages:
   #!/usr/bin/env bash
   for pkg in {{PERL_PACKAGES}}; do
@@ -210,6 +252,7 @@ install-perl-packages:
   done
 
 # Instala pacotes Rust
+[group('packages')]
 install-rust-packages:
   #!/usr/bin/env bash
   set -euxo pipefail
@@ -227,6 +270,7 @@ install-rust-packages:
   done     
 
 # Instala pacotes Go
+[group('packages')]
 install-go-packages:
   #!/usr/bin/env bash
   set -euxo pipefail
@@ -235,6 +279,7 @@ install-go-packages:
   done
 
 # Instala pacotes npm
+[group('packages')]
 install-npm-packages:
   #!/usr/bin/env bash
   set -euxo pipefail
@@ -243,6 +288,7 @@ install-npm-packages:
   done
 
 # Instala pacotes python
+[group('packages')]
 install-python-packages:
   #!/usr/bin/env bash
   set -euxo pipefail
@@ -251,26 +297,25 @@ install-python-packages:
   done
 
 # Limpa o que tinha sido instalado anteriormente
+[group('achtung!')]
+[linux]
 remove-os-packages:
   @just remove-os-package {{PACKAGES_UNINSTALL}}
 
+[group('aux')]
+[linux]
 remove-os-package +pkg:
   sudo pacman --noconfirm -R {{pkg}}
 
 # Instala pacotes do SO
+[group('base')]
+[linux]
 install-os-packages:
   @just _check-os-and-install "{{OS_PACKAGES}}"
 
 # Detecta o sistema operacional e chama a task de instalação correta
 _check-os-and-install pkgs:
     #!/usr/bin/env bash
-    set -euxo pipefail
-    os=$(uname -s)
-    if [ "$os" != "Linux" ]; then
-      echo "⚠️ Sistema operacional '$os' ainda não implementado."
-      exit 1
-    fi
-
     if [ -f /etc/os-release ]; then
       . /etc/os-release
       distro=$ID
@@ -322,18 +367,3 @@ _install-if-missing pkgs:
         exit 1
       fi
     done
-
-_old_remove-os-packages:
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  for pkg in {{PACKAGES_UNINSTALL}}; do
-    if pacman -Qq "$pkg" >/dev/null 2>&1; then
-      case "$pkg" in
-        ruby) sudo pacman --noconfirm -R ruby rubygems
-        ;;
-
-        *) sudo pacman --noconfirm -R "$pkg"
-        ;;
-      esac
-    fi
-  done

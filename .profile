@@ -21,6 +21,7 @@ export PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"
 MANPATH="$HOME/perl5/man:$MANPATH"
 export MANPATH="$HOME/.local/texlive/2025/texmf-dist/doc/man:$MANPATH"
 export INFOPATH="$HOME/.local/texlive/2025/texmf-dist/doc/info:$INFOPATH"
+export DICPATH="$HOME/.local/share/hunspell"
 
 [ -d "$HOME/.cargo/bin" ] && PATH="$HOME/.cargo/bin:$PATH"
 [ -d "$HOME/go/bin" ] && PATH="$HOME/go/bin:$PATH"
