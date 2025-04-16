@@ -18,7 +18,7 @@ if (!$git_encontrado) {
     die "\x{26A0} O comando 'git' não foi encontrado. Instale o Git ou ajuste o PATH.\n";
 }
 
-# 2. Ler o arquivo .env no diretório do script para obter GIT_DIR
+# 2. Ler o arquivo .env no diretório do script para obter GIT_REPOS
 my $env_file = "$Bin/.env";
 my $git_dir_value = undef;
 if (-e $env_file) {
@@ -29,8 +29,8 @@ if (-e $env_file) {
         s/\r$//;                             # remove carriage return (se houver, para Windows)
         next if /^\s*#/;                     # ignora linhas de comentário
         next if /^\s*$/;                     # ignora linhas em branco
-        if (/^\s*GIT_DIR\s*=\s*(.+)$/) {
-            # Captura o valor após "GIT_DIR=" incluindo quaisquer caracteres
+        if (/^\s*GIT_REPOS\s*=\s*(.+)$/) {
+            # Captura o valor após "GIT_REPOS=" incluindo quaisquer caracteres
             my $val = $1;
             $val =~ s/\s+#.*$//;             # remove comentários embutidos após o valor (se existirem)
             $val =~ s/^["'](.*)["']$/$1/;    # remove aspas envolventes, se presentes
@@ -43,12 +43,12 @@ if (-e $env_file) {
     close $envfh;
 }
 
-# Se não definiu GIT_DIR (nenhum valor encontrado)
+# Se não definiu GIT_REPOS (nenhum valor encontrado)
 if (!defined($git_dir_value) || $git_dir_value eq '') {
     die "\x{26A0} Nenhum repositório git configurado.\n";
 }
 
-# 3. Expandir os diretórios listados em GIT_DIR
+# 3. Expandir os diretórios listados em GIT_REPOS
 my @dir_patterns = split /\s+/, $git_dir_value;
 my @directories_to_check;
 foreach my $pattern (@dir_patterns) {
