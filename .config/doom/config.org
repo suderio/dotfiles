@@ -219,11 +219,14 @@ Obs.: diff-refine-hunk may be slow
 (after! lsp-julia
   (setq lsp-julia-default-environment "~/.julia/environments/v1.11"))
 #+end_src
-** TODO biblio config
- (setq org-cite-csl-styles-dir "~/Zotero/styles")
- (setq! citar-bibliography '("/path/to/references.bib"))
- (setq! citar-library-paths '("/path/to/library/files/")
-       citar-notes-paths '("/path/to/your/notes/"))
+** TODO Biblio
+#+begin_src emacs-lisp
+ (setq! org-cite-csl-styles-dir "~/org/biblio")
+
+ (setq! citar-bibliography '("~/org/biblio/global.bib"))
+
+#+end_src
+
 ** TODO see lsp-mode configuration
 
 (https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/)

@@ -145,3 +145,7 @@
 (setq lsp-julia-package-dir nil)
 (after! lsp-julia
   (setq lsp-julia-default-environment "~/.julia/environments/v1.11"))
+
+(setq! org-cite-csl-styles-dir "~/org/biblio")
+
+(setq! citar-bibliography '("~/org/biblio/global.bib"))
