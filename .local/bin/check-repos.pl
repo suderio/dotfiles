@@ -2,7 +2,8 @@
 use strict;
 use warnings;
 use FindBin qw($Bin);
-
+use utf8;
+binmode STDOUT, ":utf8";
 # 1. Verificar se o comando `git` está disponível no PATH
 my $git_encontrado = 0;
 if ($ENV{PATH}) {
@@ -14,7 +15,7 @@ if ($ENV{PATH}) {
     }
 }
 if (!$git_encontrado) {
-    die "Erro: o comando 'git' não foi encontrado. Instale o Git ou ajuste o PATH.\n";
+    die "\x{26A0} O comando 'git' não foi encontrado. Instale o Git ou ajuste o PATH.\n";
 }
 
 # 2. Ler o arquivo .env no diretório do script para obter GIT_DIR
@@ -22,7 +23,7 @@ my $env_file = "$Bin/.env";
 my $git_dir_value = undef;
 if (-e $env_file) {
     open my $envfh, '<', $env_file 
-        or die "Erro: não foi possível ler o arquivo .env: $!\n";
+        or die "\x{26A0} Não foi possível ler o arquivo .env: $!\n";
     while (<$envfh>) {
         chomp;
         s/\r$//;                             # remove carriage return (se houver, para Windows)
@@ -44,7 +45,7 @@ if (-e $env_file) {
 
 # Se não definiu GIT_DIR (nenhum valor encontrado)
 if (!defined($git_dir_value) || $git_dir_value eq '') {
-    die "Erro: Nenhum diretório configurado em GIT_DIR (arquivo .env).\n";
+    die "\x{26A0} Nenhum repositório git configurado.\n";
 }
 
 # 3. Expandir os diretórios listados em GIT_DIR
@@ -58,14 +59,14 @@ foreach my $pattern (@dir_patterns) {
     # Usa glob para expandir ~ e curingas (*)
     my @matches = glob($pattern);
     if (!@matches) {
-        warn "Aviso: O padrão '$pattern' não corresponde a nenhum diretório.\n";
+        warn "\x{2757} O padrão '$pattern' não corresponde a nenhum diretório.\n";
     }
     foreach my $dirpath (@matches) {
         # Apenas adiciona se for diretório existente
         if (-d $dirpath) {
             push @directories_to_check, $dirpath;
         } else {
-            warn "Aviso: '$dirpath' não é um diretório válido, será ignorado.\n";
+            warn "\x{2757} '$dirpath' não é um diretório válido, será ignorado.\n";
         }
     }
 }
@@ -78,28 +79,28 @@ my %seen;
 
 # 4. Iterar sobre cada diretório e verificar o status do repositório Git
 foreach my $repo_dir (@directories_to_check) {
-    print ">>> Verificando repositório: $repo_dir\n";
+    print "\x{21E8} Verificando repositório: $repo_dir\n";
     # Verifica se contém .git
     unless (-e "$repo_dir/.git") {
-        print "    [Ignorado] '$repo_dir' não é um repositório Git válido (diretório .git não encontrado).\n";
+        print "    \x{2757} '$repo_dir' não é um repositório Git válido (diretório .git não encontrado).\n";
         next;
     }
     # Obtém o nome do branch atual
     chomp(my $branch = `git -C "$repo_dir" branch --show-current 2>&1`);
     if ($? != 0) {
         # Se o comando falhou, emite erro e passa para o próximo
-        print "    [Erro] Falha ao obter o branch atual em $repo_dir.\n";
+        print "    \x{26A0} Falha ao obter o branch atual em $repo_dir.\n";
         next;
     }
     if (!$branch) {
         # Branch vazio indica HEAD destacada (detached HEAD)
-        print "    [Aviso] O repositório está com HEAD destacado (sem branch ativo) - não é possível verificar commits remotos.\n";
+        print "    \x{2757} O repositório está com HEAD destacado (sem branch ativo) - não é possível verificar commits remotos.\n";
         next;
     }
     # Fetch no repositório (atualiza informações de origin)
     my $fetch_status = system("git", "-C", "$repo_dir", "fetch", "--quiet");
     if ($fetch_status != 0) {
-        print "    [Erro] Falha ao executar 'git fetch' em $repo_dir (branch $branch).\n";
+        print "    \x{26A0} Falha ao executar 'git fetch' em $repo_dir (branch $branch).\n";
         next;
     }
     # Verifica commits novos no origin/branch
@@ -107,7 +108,7 @@ foreach my $repo_dir (@directories_to_check) {
     open my $logfh, "-|", "git", "-C", "$repo_dir", 
                      "log", "--oneline", "--no-merges", "HEAD..origin/$branch"
         or do {
-            print "    [Erro] Não foi possível executar git log em $repo_dir.\n";
+            print "    \x{26A0} Não foi possível executar git log em $repo_dir.\n";
             next;
         };
     my @log_lines = <$logfh>;
@@ -117,17 +118,17 @@ foreach my $repo_dir (@directories_to_check) {
     chomp @log_lines;
     if ($log_exit != 0) {
         # Caso git log tenha retornado erro (por ex, branch remoto não existe)
-        print "    [Erro] Não foi possível obter diferenças para 'origin/$branch'. Verifique se o branch remoto existe.\n";
+        print "    \x{26A0} Não foi possível obter diferenças para 'origin/$branch'. Verifique se o branch remoto existe.\n";
         next;
     }
     if (@log_lines && @log_lines > 0) {
         my $count = scalar @log_lines;
-        print "    -> Branch '$branch' tem $count novo(s) commit(s) no remoto 'origin':\n";
+        print "    \x{21E8} Branch '$branch' tem $count novo(s) commit(s) no remoto 'origin':\n";
         foreach my $line (@log_lines) {
             print "       - $line\n";
         }
     } else {
-        print "    -> Branch '$branch' está atualizado em relação a 'origin'. Nenhum novo commit encontrado.\n";
+        print "    \x{21E8} Branch '$branch' está atualizado em relação a 'origin'. Nenhum novo commit encontrado.\n";
     }
 }
 
