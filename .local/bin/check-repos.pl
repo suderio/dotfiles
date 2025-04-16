@@ -2,133 +2,114 @@
 use strict;
 use warnings;
 use FindBin qw($Bin);
+use Cwd qw(realpath);
+use File::Glob qw(bsd_glob);
+use File::Spec;
 use utf8;
 binmode STDOUT, ":utf8";
-# 1. Verificar se o comando `git` está disponível no PATH
-my $git_encontrado = 0;
-if ($ENV{PATH}) {
-    for my $dir (split /:/, $ENV{PATH}) {
-        if (-x "$dir/git") {  # verifica se existe um executável 'git' no dir
-            $git_encontrado = 1;
-            last;
-        }
+
+# 1. Verificar se git está disponível
+my $git_found = 0;
+foreach my $dir (split /:/, $ENV{PATH}) {
+    if (-x "$dir/git") {
+        $git_found = 1;
+        last;
     }
 }
-if (!$git_encontrado) {
-    die "\x{26A0} O comando 'git' não foi encontrado. Instale o Git ou ajuste o PATH.\n";
-}
+die "\x{26A0} git não encontrado no PATH.\n" unless $git_found;
 
-# 2. Ler o arquivo .env no diretório do script para obter GIT_REPOS
+# 2. Ler .env do diretório do script
 my $env_file = "$Bin/.env";
-my $git_dir_value = undef;
-if (-e $env_file) {
-    open my $envfh, '<', $env_file 
-        or die "\x{26A0} Não foi possível ler o arquivo .env: $!\n";
-    while (<$envfh>) {
+my $git_dirs = '';
+my $git_bare_repos = '';
+if (-f $env_file) {
+    open my $fh, '<', $env_file or die "\x{26A0} Erro ao abrir .env: $!";
+    while (<$fh>) {
         chomp;
-        s/\r$//;                             # remove carriage return (se houver, para Windows)
-        next if /^\s*#/;                     # ignora linhas de comentário
-        next if /^\s*$/;                     # ignora linhas em branco
-        if (/^\s*GIT_REPOS\s*=\s*(.+)$/) {
-            # Captura o valor após "GIT_REPOS=" incluindo quaisquer caracteres
-            my $val = $1;
-            $val =~ s/\s+#.*$//;             # remove comentários embutidos após o valor (se existirem)
-            $val =~ s/^["'](.*)["']$/$1/;    # remove aspas envolventes, se presentes
-            $val =~ s/\s+$//;               # remove espaços em branco à direita
-            $val =~ s/^\s+//;               # remove espaços em branco à esquerda
-            $git_dir_value = $val;
-            last;
-        }
+        s/#.*//;  # remove comentários
+        s/^\s+|\s+$//g;
+        $git_dirs = $1 if /^GIT_REPOS\s*=\s*["']?(.+?)["']?$/;
+        $git_bare_repos = $1 if /^GIT_BARE_REPOS\s*=\s*["']?(.+?)["']?$/;
     }
-    close $envfh;
+    close $fh;
 }
 
-# Se não definiu GIT_REPOS (nenhum valor encontrado)
-if (!defined($git_dir_value) || $git_dir_value eq '') {
-    die "\x{26A0} Nenhum repositório git configurado.\n";
+# 3. Expandir GIT_REPOS
+my @repos;
+foreach my $pattern (split /\s+/, $git_dirs) {
+    $pattern = "$Bin/$pattern" if $pattern !~ m{^[/~]};
+    push @repos, grep { -d $_ } bsd_glob($pattern);
 }
 
-# 3. Expandir os diretórios listados em GIT_REPOS
-my @dir_patterns = split /\s+/, $git_dir_value;
-my @directories_to_check;
-foreach my $pattern (@dir_patterns) {
-    # Se o caminho for relativo (não começa com '~' ou '/'), torna-o relativo ao diretório do script
-    if ($pattern !~ m{^[/~]}) {
-        $pattern = "$Bin/$pattern";
-    }
-    # Usa glob para expandir ~ e curingas (*)
-    my @matches = glob($pattern);
-    if (!@matches) {
-        warn "\x{2757} O padrão '$pattern' não corresponde a nenhum diretório.\n";
-    }
-    foreach my $dirpath (@matches) {
-        # Apenas adiciona se for diretório existente
-        if (-d $dirpath) {
-            push @directories_to_check, $dirpath;
-        } else {
-            warn "\x{2757} '$dirpath' não é um diretório válido, será ignorado.\n";
+# 4. Expandir GIT_BARE_REPOS
+my @bare_repos;
+foreach my $entry (split /\s+/, $git_bare_repos) {
+    if ($entry =~ /^([^:]+):(.+)$/) {
+        my ($bare, $worktree) = ($1, $2);
+        $bare = "$Bin/$bare" if $bare !~ m{^[/~]};
+        $worktree = "$Bin/$worktree" if $worktree !~ m{^[/~]};
+        foreach my $bare_exp (bsd_glob($bare)) {
+            foreach my $wt_exp (bsd_glob($worktree)) {
+                push @bare_repos, [$bare_exp, $wt_exp] if -d $bare_exp && -d $wt_exp;
+            }
         }
     }
 }
 
-# Remove duplicatas da lista (caso algum padrão gere o mesmo caminho duas vezes)
-# e ordena os diretórios para uma saída consistente (opcional)
-my %seen;
-@directories_to_check = grep { !$seen{$_}++ } @directories_to_check;
-@directories_to_check = sort @directories_to_check;
+# 5. Função para verificar repositórios normais
+sub check_repo {
+    my ($dir) = @_;
+    print "\x{21E8} Verificando repositório: $dir\n";
+    return print "    \x{2757} Não é repositório Git.\n" unless -d "$dir/.git";
 
-# 4. Iterar sobre cada diretório e verificar o status do repositório Git
-foreach my $repo_dir (@directories_to_check) {
-    print "\x{21E8} Verificando repositório: $repo_dir\n";
-    # Verifica se contém .git
-    unless (-e "$repo_dir/.git") {
-        print "    \x{2757} '$repo_dir' não é um repositório Git válido (diretório .git não encontrado).\n";
-        next;
-    }
-    # Obtém o nome do branch atual
-    chomp(my $branch = `git -C "$repo_dir" branch --show-current 2>&1`);
+    my $branch = `git -C "$dir" branch --show-current 2>/dev/null`;
+    chomp $branch;
+    return print "    \x{2757} HEAD destacado ou branch indefinido.\n" unless $branch;
+
+    system("git", "-C", $dir, "fetch", "--quiet") == 0
+        or return print "    \x{26A0} git fetch falhou.\n";
+
+    my @log = `git -C "$dir" log --oneline --no-merges HEAD..origin/$branch 2>/dev/null`;
     if ($? != 0) {
-        # Se o comando falhou, emite erro e passa para o próximo
-        print "    \x{26A0} Falha ao obter o branch atual em $repo_dir.\n";
-        next;
+        return print "    \x{26A0} git log falhou ou branch remoto inexistente.\n";
     }
-    if (!$branch) {
-        # Branch vazio indica HEAD destacada (detached HEAD)
-        print "    \x{2757} O repositório está com HEAD destacado (sem branch ativo) - não é possível verificar commits remotos.\n";
-        next;
-    }
-    # Fetch no repositório (atualiza informações de origin)
-    my $fetch_status = system("git", "-C", "$repo_dir", "fetch", "--quiet");
-    if ($fetch_status != 0) {
-        print "    \x{26A0} Falha ao executar 'git fetch' em $repo_dir (branch $branch).\n";
-        next;
-    }
-    # Verifica commits novos no origin/branch
-    # Captura saída do git log (commits em origin/branch que não estão no HEAD local)
-    open my $logfh, "-|", "git", "-C", "$repo_dir", 
-                     "log", "--oneline", "--no-merges", "HEAD..origin/$branch"
-        or do {
-            print "    \x{26A0} Não foi possível executar git log em $repo_dir.\n";
-            next;
-        };
-    my @log_lines = <$logfh>;
-    close $logfh;
-    my $log_exit = $?;  # status de saída do git log
-    # Remove quebras de linha dos commits
-    chomp @log_lines;
-    if ($log_exit != 0) {
-        # Caso git log tenha retornado erro (por ex, branch remoto não existe)
-        print "    \x{26A0} Não foi possível obter diferenças para 'origin/$branch'. Verifique se o branch remoto existe.\n";
-        next;
-    }
-    if (@log_lines && @log_lines > 0) {
-        my $count = scalar @log_lines;
-        print "    \x{21E8} Branch '$branch' tem $count novo(s) commit(s) no remoto 'origin':\n";
-        foreach my $line (@log_lines) {
-            print "       - $line\n";
-        }
+
+    if (@log) {
+        print "    \x{21E8} $branch está atrás de origin/$branch: ", scalar(@log), " commits\n";
+        print map { "       - $_" } @log;
     } else {
-        print "    \x{21E8} Branch '$branch' está atualizado em relação a 'origin'. Nenhum novo commit encontrado.\n";
+        print "    \x{21E8} $branch está atualizado com origin/$branch.\n";
     }
 }
+
+# 6. Função para verificar repositórios bare com work-tree
+sub check_bare_repo {
+    my ($git_dir, $worktree) = @_;
+    print "\x{21E8} Verificando repositório bare: $git_dir (work-tree: $worktree)\n";
+    return print "    \x{2757} $git_dir não é bare.\n"
+        unless `git --git-dir="$git_dir" rev-parse --is-bare-repository 2>/dev/null` =~ /true/;
+
+    my $branch = `git --git-dir="$git_dir" --work-tree="$worktree" branch --show-current 2>/dev/null`;
+    chomp $branch;
+    return print "    \x{2757} HEAD destacado ou branch indefinido.\n" unless $branch;
+
+    system("git", "--git-dir=$git_dir", "--work-tree=$worktree", "fetch", "--quiet") == 0
+        or return print "    \x{26A0} git fetch falhou.\n";
+
+    my @log = `git --git-dir="$git_dir" --work-tree="$worktree" log --oneline --no-merges -- HEAD..origin/$branch 2>/dev/null`;
+    if ($? != 0) {
+        return print "    \x{26A0} git log falhou ou branch remoto inexistente.\n";
+    }
+
+    if (@log) {
+        print "    \x{21E8} $branch está atrás de origin/$branch: ", scalar(@log), " commits\n";
+        print map { "       - $_" } @log;
+    } else {
+        print "    \x{21E8} $branch está atualizado com origin/$branch.\n";
+    }
+}
+
+# 7. Executar verificações
+check_repo($_) for @repos;
+check_bare_repo(@$_) for @bare_repos;
 
