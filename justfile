@@ -4,7 +4,7 @@ set working-directory := 'tmp'
 
 # Lista de linguagens/pacotes desejados
 OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils php bash-completion"
-RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs ast-grep starship zellij"
+RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs ast-grep starship zellij nu"
 PYTHON_PACKAGES := "isort pipenv nose nose2 pytest pylatexenc "
 RUBY_PACKAGES := "neovim"
 RUBY_PACKAGES_NOT_USED := "chef-utils concurrent kramdown kramdown-parser-gfm mixlib-cli mixlib-config mixlib-shellout rexml ruby-tomlrb"
@@ -258,6 +258,9 @@ install-rust-packages:
       ;;
  
       ripgrep) cargo install --features 'pcre2' "$pkg"
+      ;;
+
+      nu) cargo install --features "default static-link-openssl system-clipboard" --locked
       ;;
 
       *) cargo install "$pkg"
