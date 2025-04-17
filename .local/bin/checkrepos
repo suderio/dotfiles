@@ -6,6 +6,7 @@ use Cwd qw(realpath);
 use File::Glob qw(bsd_glob);
 use File::Spec;
 use utf8;
+use Time::Piece;
 binmode STDOUT, ":utf8";
 
 my $mode = shift @ARGV // '';
@@ -35,7 +36,7 @@ die "${RED}\x{26A0} Erro:${RESET} git não encontrado no PATH.\n" unless $git_fo
 
 # Ler .env
 my $env_file = "$Bin/.env";
-my ($git_dirs, $git_bare_repos, $git_sync_repos) = ('', '', '');
+my ($git_dirs, $git_bare_repos, $git_sync_repos, $git_last_check) = ('', '', '');
 if (-f $env_file) {
     open my $fh, '<', $env_file or die "${RED}\x{26A0} Erro:${RESET} ao abrir .env: $!\n";
     while (<$fh>) {
@@ -45,9 +46,14 @@ if (-f $env_file) {
         $git_dirs = $1 if /^GIT_REPOS\s*=\s*"?(.+?)"?$/;
         $git_bare_repos = $1 if /^GIT_BARE_REPOS\s*=\s*"?(.+?)"?$/;
         $git_sync_repos = $1 if /^GIT_SYNC_REPOS\s*=\s*"?(.+?)"?$/;
+        $git_last_check = $1 if /^GIT_LAST_CHECK\s*=\s*"?(.+?)"?$/;
     }
     close $fh;
 }
+
+exit 0 unless should_run($git_last_check);
+
+update_git_last_check("$Bin/.env");
 
 # Montar lista de repositórios permitidos para sync
 my %sync_allowed;
@@ -76,21 +82,58 @@ foreach my $entry (split /\s+/, $git_bare_repos) {
         foreach my $bare_exp (bsd_glob($bare)) {
             foreach my $wt_exp (bsd_glob($worktree)) {
                  push @bare_repos, [$bare_exp, $wt_exp] if -d $bare_exp && -d $wt_exp;
-
-#                if (-d $bare_exp && -d $wt_exp) {
-#                    my $actual_worktree = `git --git-dir=$bare_exp config --get core.worktree 2>/dev/null`;
-#                    chomp $actual_worktree;
-#                    my $resolved_worktree = realpath($wt_exp);
-#                    my $resolved_actual = realpath($actual_worktree);
-#                    if (defined $resolved_worktree && defined $resolved_actual && $resolved_worktree eq $resolved_actual) {
-#                        push @bare_repos, [$bare_exp, $wt_exp];
-#                    } else {
-#                        print "${YELLOW}\x{2757} Aviso:${RESET} Ignorando $bare_exp: core.worktree não corresponde a $wt_exp\n";
-#                    }
-#                }
             }
         }
     }
+}
+
+sub should_run {
+    my ($datestr) = @_;
+    return 1 if !defined($datestr) || $datestr eq '';
+    # Verifica se está no formato esperado
+    unless ($datestr =~ /^\d{8}$/) {
+        return 1;
+    }
+    # Tenta interpretar como data
+    my $input_date = eval { Time::Piece->strptime($datestr, "%Y%m%d") };
+    if ($@) {
+        return 1;  # string no formato, mas data inválida (ex: 20230230)
+    }
+    # Data atual no mesmo formato
+    my $today = Time::Piece->new->strftime("%Y%m%d");
+    return $datestr lt $today ? 1 : 0;
+}
+
+sub update_git_last_check {
+    my ($env_path) = @_;
+    return unless -f $env_path;
+
+    my $today = localtime->strftime('%Y%m%d');
+    my $found = 0;
+    my @lines;
+
+    # Lê o conteúdo atual do .env
+    open my $in, '<', $env_path or die "Não foi possível ler $env_path: $!";
+    while (my $line = <$in>) {
+        chomp $line;
+        if ($line =~ /^GIT_LAST_CHECK\s*=/) {
+            push @lines, qq{GIT_LAST_CHECK="$today"};
+            $found = 1;
+        } else {
+            push @lines, $line;
+        }
+    }
+    close $in;
+
+    # Adiciona a variável se não existia
+    push @lines, qq{GIT_LAST_CHECK="$today"} unless $found;
+
+    # Escreve de volta
+    open my $out, '>', $env_path or die "Não foi possível escrever $env_path: $!";
+    foreach my $l (@lines) {
+        print $out "$l\n";
+    }
+    close $out;
 }
 
 sub handle_repo {

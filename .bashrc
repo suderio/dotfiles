@@ -73,4 +73,4 @@ command -v fzf >/dev/null 2>&1 && eval "$(fzf --bash)"
 [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
 [ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
 
-check-repos.pl
+checkrepos
