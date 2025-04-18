@@ -45,5 +45,9 @@ Works well in arch distros, less so in others.
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 cargo install just
 #+end_src
+*** Create a tmp directory in ~
+#+begin_src bash
+mkdir -p "$HOME/tmp"
+#+end_src
 
 
