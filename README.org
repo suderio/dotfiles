@@ -30,6 +30,7 @@ Works well in arch distros, less so in others.
 - base
 - base-devel
 - clang
+- cmake
 - fontconfig
 - git
 - less
