@@ -11,21 +11,21 @@ Manage dot file with git, see https://www.atlassian.com/git/tutorials/dotfiles
 
 Use this alias to manage all configuration
 
-#+begin_src shell
+#+begin_src bash
 alias config='/usr/bin/git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
 #+end_src
 
 ** Config in a new machine
 
-#+begin_src shell
+#+begin_src bash
 git clone --bare git@github.com:suderio/dotfiles $HOME/.local/dotfiles
 config config --local status.showUntrackedFiles no
 config checkout
 #+end_src
 
-* Justfile
+** Justfile
 Works well in arch distros, less so in others.
-** Minimum requirements
+*** Minimum requirements
 - ansible
 - base
 - base-devel
@@ -40,4 +40,10 @@ Works well in arch distros, less so in others.
 - unzip
 - vim
 - zip
+*** Install rustup and just
+#+begin_src bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+cargo install just
+#+end_src
+
 
