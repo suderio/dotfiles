@@ -67,35 +67,12 @@ install:
   @just install-neovim
   @just install-texlive
   @just install-pandoc
-
-[linux]
-i2:
-  @just install-hunspell # TODO
-
+  @just install-hunspell
 
 [linux]
 [group('main')]
 clean:
   ls {{ join(home_dir(), 'tmp') }}
-
-[linux]
-[group('main')]
-test:
-  #!/usr/bin/env bash
-  for pkg in {{OS_PACKAGES}} {{RUST_PACKAGES}} {{PYTHON_PACKAGES}} {{NPM_PACKAGES}}; do
-    case "$pkg" in
-      pylatexenc) command -v latex2text
-      ;;
-      *mermaid-cli) command -v mmdc
-      ;;
-      markdownlint) true
-      ;;
-      neovim) command -v neovim-node-host; command -v nvim
-      ;;
-      *) command -v "$pkg"
-      ;;
-    esac
-  done
 
 # Hardening usando lynis
 [linux]
@@ -249,17 +226,20 @@ install-hunspell:
   make
   make install
   sudo ldconfig
-  # TODO baixar esses dicionários e colocar em $HOME/.local/share/hunspell
-  # https://hunspell.memoq.com/de.zip
-  # https://hunspell.memoq.com/en.zip
-  # https://hunspell.memoq.com/es.zip
-  # https://hunspell.memoq.com/fr_FR.zip
-  # https://hunspell.memoq.com/it_IT.zip
-  # https://hunspell.memoq.com/pt_BR.zip
-  # unzip -p myarchive.zip path/to/zipped/file.txt >file.txt
-  # ou
-  # unzip -j "myarchive.zip" "in/archive/file.txt" -d "/path/to/unzip/to"
-  
+  curl -O https://hunspell.memoq.com/de.zip
+  unzip -j "de.zip" "de/de_DE.*" -d "$HOME/.local/share/hunspell/"
+  curl -O https://hunspell.memoq.com/fr_FR.zip
+  unzip -j "fr_FR.zip" "fr_FR/fr.*" -d "$HOME/.local/share/hunspell/"
+  curl -O https://hunspell.memoq.com/it_IT.zip
+  unzip -j "it_IT.zip" "it_IT/it_IT.*" -d "$HOME/.local/share/hunspell/"
+  curl -O https://hunspell.memoq.com/pt_BR.zip
+  unzip -j "pt_BR.zip" "pt_BR/pt_BR.*" -d "$HOME/.local/share/hunspell/"
+  curl -O https://hunspell.memoq.com/es.zip
+  unzip -j "es.zip" "es/es_ES.*" -d "$HOME/.local/share/hunspell/"
+  curl -O https://hunspell.memoq.com/en.zip
+  unzip -j "en.zip" "en/en_US.*" -d "$HOME/.local/share/hunspell/"
+
+
 # Instala pacotes gem (o único necessário até agora é o neovim)
 [group('packages')]
 install-gem-packages:
