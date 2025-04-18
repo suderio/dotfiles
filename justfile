@@ -39,7 +39,6 @@ alias h := hardening
 [linux]
 [group('main')]
 install:
-  pwd
   echo {{ cache_directory() }}
   echo {{ config_directory() }}
   echo {{ config_local_directory() }}
@@ -47,6 +46,32 @@ install:
   echo {{ data_local_directory() }}
   echo {{ executable_directory() }}
   echo {{ home_directory() }}
+  @just irust
+  @just ifonts
+  @just install-go
+  @just igo
+  @just install-python
+  @just ipython
+  @just install-nvm
+  @just inpm # TODO ver como fazer para rodar depois da instalação do nvm (reload .profile)
+  @just install-rbenv # TODO recuperar última versão do ruby
+  @just igem # TODO recarregar o environment 
+  @just install-composer # TODO confirmar se rodou
+  @just install-sdkman
+  @just install-julia
+  @just install-cpan # TODO recarregar o environment
+  @just iperl
+  @just install-lua
+  @just install-fzf
+  @just install-pynvim
+  @just install-neovim
+  @just install-texlive
+  @just install-pandoc
+
+[linux]
+i2:
+  @just install-hunspell # TODO
+
 
 [linux]
 [group('main')]
@@ -125,10 +150,10 @@ install-python:
 install-rbenv:
   # ruby rubygems
   curl -fsSL https://rbenv.org/install.sh | bash
-  # TODO
-  # rbenv install -l
-  # rbenv install 3.4.2
-  # rbenv global 3.4.2
+  # TODO recuperar a última versão do install -l
+  "$HOME/.rbenv/bin/rbenv" install -l
+  "$HOME/.rbenv/bin/rbenv" install 3.4.3
+  "$HOME/.rbenv/bin/rbenv" global 3.4.3
 
 [group('base')]
 install-composer:
@@ -152,8 +177,8 @@ install-composer:
 [group('base')]
 install-sdkman:
   curl -s "https://get.sdkman.io" | bash
-  sdk install java
-  sdk install kotlin
+  . "$HOME/.sdkman/bin/sdkman-init.sh" && sdk install java
+  . "$HOME/.sdkman/bin/sdkman-init.sh" && sdk install kotlin
   curl -sSLO {{KTLINT_INSTALL_URL}} && chmod a+x ktlint && mv ktlint "$HOME/.local/bin/"
 
 [group('base')]
@@ -163,7 +188,7 @@ install-julia:
 [group('base')]
 install-cpan:
   cpan
-  wget -O- http://cpanmin.us | perl - -l ~/perl5 App::cpanminus local::lib
+  curl http://cpanmin.us | perl - -l ~/perl5 App::cpanminus local::lib
 
 [group('base')]
 install-lua:
@@ -179,6 +204,7 @@ install-lua:
 
 [group('base')]
 install-go:
+  rm -rf "$HOME/.local/go"
   curl -LRO https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
   tar -xvf go1.24.2.linux-amd64.tar.gz
   mv go "$HOME/.local/"
@@ -230,7 +256,10 @@ install-hunspell:
   # https://hunspell.memoq.com/fr_FR.zip
   # https://hunspell.memoq.com/it_IT.zip
   # https://hunspell.memoq.com/pt_BR.zip
-  #
+  # unzip -p myarchive.zip path/to/zipped/file.txt >file.txt
+  # ou
+  # unzip -j "myarchive.zip" "in/archive/file.txt" -d "/path/to/unzip/to"
+  
 # Instala pacotes gem (o único necessário até agora é o neovim)
 [group('packages')]
 install-gem-packages:
@@ -243,8 +272,9 @@ install-gem-packages:
 [group('packages')]
 install-perl-packages:
   #!/usr/bin/env bash
+  perl -I ~/perl5/lib/perl5 -Mlocal::lib
   for pkg in {{PERL_PACKAGES}}; do
-    cpanm "$pkg"
+    "$HOME/perl5/bin/cpanm" "$pkg"
   done
 
 # Instala pacotes Rust
@@ -260,7 +290,7 @@ install-rust-packages:
       ripgrep) cargo install --features 'pcre2' "$pkg"
       ;;
 
-      nu) cargo install --features "default static-link-openssl system-clipboard" --locked
+      nu) cargo install nu --features "default static-link-openssl system-clipboard" --locked
       ;;
 
       *) cargo install "$pkg"
@@ -274,16 +304,15 @@ install-go-packages:
   #!/usr/bin/env bash
   set -euxo pipefail
   for pkg in {{GO_PACKAGES}}; do
-    go install "$pkg"
+    $HOME/.local/go/bin/go install "$pkg"
   done
 
 # Instala pacotes npm
 [group('packages')]
 install-npm-packages:
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  for pkg in {{NPM_PACKAGES}}; do
-    npm install --global "$pkg"
+  set -euxo pipefail; \
+  for pkg in {{NPM_PACKAGES}}; do \
+    npm install --global "$pkg"; \
   done
 
 # Instala pacotes python
