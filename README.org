@@ -1,9 +1,11 @@
 #+TITLE: Shell Config
 #+AUTHOR: Paulo Suderio
 
-* Config
+[[Dotfiles][http://github.com/suderio/dotfiles.git]]
 
-A Dotfile Repo: [[dotfiles][http://github.com/suderio/dotfiles.git]]
+* Bootstrap
+
+** Configure git to manage the dotfile bare repo
 
 Manage dot file with git, see https://www.atlassian.com/git/tutorials/dotfiles
 
@@ -13,7 +15,7 @@ Use this alias to manage all configuration
 alias config='/usr/bin/git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
 #+end_src
 
-* Config in a new machine
+** Config in a new machine
 
 #+begin_src shell
 git clone --bare git@github.com:suderio/dotfiles $HOME/.local/dotfiles
@@ -21,20 +23,21 @@ config config --local status.showUntrackedFiles no
 config checkout
 #+end_src
 
-* These are used to automate some common tasks
+* Justfile
+Works well in arch distros, less so in others.
+** Minimum requirements
+- ansible
+- base
+- base-devel
+- clang
+- fontconfig
+- git
+- less
+- openssh
+- pacman-contrib
+- php
+- sudo
+- unzip
+- vim
+- zip
 
-  (Also used inside emacs configuration)
-#+begin_src shell
-
-configsync () {
-  configpath="${1:-$HOME}"
-  config pull --all 
-  config add -u "$configpath"
-  config commit -m "config autocommit: $configpath" 
-  config push
-}
-
-configstatus () {
-  config status -s
-}
-#+end_src
