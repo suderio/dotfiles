@@ -929,7 +929,7 @@ sub bann_7126 {
 
     my @banner = (
         "╔══════════════════════════════════════════════════════╗",
-        "║        ⚠️  ACESSO RESTRITO AO SISTEMA ⚠️           ║",
+        "║        ⚠️  ACESSO RESTRITO AO SISTEMA ⚠️             ║",
         "╚══════════════════════════════════════════════════════╝",
         "",
         "Este sistema é de uso exclusivo de usuários autorizados.",
@@ -978,6 +978,974 @@ sub bann_7126 {
     }
 }
 
+# ACCT-9622: Habilita process accounting no sistema
+sub acct_9622 {
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto' } @ARGV;
+
+    print "[ACCT-9622] Verificando presença do pacote acct...\n";
+    my $installed = system("pacman -Q acct > /dev/null 2>&1") == 0;
+
+    if (!$installed) {
+        print "⚠️  O pacote 'acct' não está instalado.\n";
+        if ($dry_run) {
+            print "🔍 Modo simulação: 'acct' seria instalado com pacman.\n";
+            return;
+        }
+        if ($auto) {
+            print "⚙️  Instalando automaticamente...\n";
+            system("sudo pacman -Sy --noconfirm acct") == 0
+                or die "❌ Falha ao instalar o pacote acct.\n";
+        } else {
+            print "Deseja instalar o pacote acct agora? [s/N] ";
+            chomp(my $resp = <STDIN>);
+            if (lc($resp) eq 's') {
+                system("sudo pacman -S acct");
+            } else {
+                print "❎ Instalação abortada.\n";
+                return;
+            }
+        }
+    } else {
+        print "✔️  Pacote acct já está instalado.\n";
+    }
+
+    if ($dry_run) {
+        print "🔍 Modo simulação: o serviço de accounting seria ativado.\n";
+        return;
+    }
+
+    print "📂 Ativando process accounting com accton...\n";
+
+    # Cria o arquivo de log padrão se não existir
+    my $log = '/var/log/pacct';
+    unless (-f $log) {
+        system("sudo touch $log && sudo chown root:root $log && sudo chmod 600 $log");
+    }
+
+    # Habilita accounting
+    system("sudo accton $log") == 0
+        ? print "✅ Process accounting ativado e registrando em $log\n"
+        : print "❌ Falha ao ativar process accounting\n";
+
+    # Verifica se está funcionando
+    if (`accton` =~ /is on/) {
+        print "📈 Accounting ativo.\n";
+    } else {
+        print "❗ Accounting ainda não está ativo. Verifique permissões ou logs.\n";
+    }
+}
+
+# ACCT-9626: Ativa coleta de contabilidade de sistema com sysstat
+sub acct_9626 {
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto' } @ARGV;
+
+    print "[ACCT-9626] Verificando presença do pacote sysstat...\n";
+    my $installed = system("pacman -Q sysstat > /dev/null 2>&1") == 0;
+
+    if (!$installed) {
+        print "⚠️  O pacote 'sysstat' não está instalado.\n";
+        if ($dry_run) {
+            print "🔍 Modo simulação: sysstat seria instalado.\n";
+            return;
+        }
+        if ($auto) {
+            system("sudo pacman -Sy --noconfirm sysstat") == 0
+                or die "❌ Falha ao instalar sysstat.\n";
+        } else {
+            print "Deseja instalar sysstat agora? [s/N] ";
+            chomp(my $resp = <STDIN>);
+            if (lc($resp) eq 's') {
+                system("sudo pacman -S sysstat");
+            } else {
+                print "❎ Instalação cancelada.\n";
+                return;
+            }
+        }
+    } else {
+        print "✔️  sysstat já está instalado.\n";
+    }
+
+    my $conf = '/etc/default/sysstat';
+    my $found = 0;
+    my $modified = 0;
+
+    if (-f $conf) {
+        open my $in, '<', $conf or die "Erro ao ler $conf: $!";
+        my @lines = <$in>;
+        close $in;
+
+        for (@lines) {
+            if (/^\\s*ENABLED=\\s*\"?false\"?/i) {
+                $_ = "ENABLED=\"true\"\n";
+                $found = 1;
+                $modified = 1;
+            }
+        }
+
+        if (!$found) {
+            push @lines, "ENABLED=\"true\"\n";
+            $modified = 1;
+        }
+
+        if ($dry_run) {
+            print "🔍 Modo simulação: sysstat seria ativado em $conf.\n";
+            return;
+        }
+
+        if ($modified) {
+            open my $out, '>', $conf or die "Erro ao escrever em $conf: $!";
+            print $out @lines;
+            close $out;
+            print "✅ sysstat ativado no arquivo $conf.\n";
+        } else {
+            print "✔️  sysstat já estava ativado em $conf.\n";
+        }
+    } else {
+        print "⚠️  Arquivo $conf não encontrado — sysstat pode estar usando configuração padrão.\n";
+    }
+
+    if ($dry_run) {
+        print "🔍 Modo simulação: sysstat.service seria habilitado e iniciado.\n";
+        return;
+    }
+
+    system("sudo systemctl enable sysstat.service");
+    system("sudo systemctl start sysstat.service");
+
+    print "✅ Serviço sysstat ativado e iniciado.\n";
+}
+
+# ACCT-9628: Ativa auditd e configura regras básicas de auditoria
+sub acct_9628 {
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto' } @ARGV;
+
+    print "[ACCT-9628] Verificando presença do pacote audit...\n";
+    my $installed = system("pacman -Q audit > /dev/null 2>&1") == 0;
+
+    if (!$installed) {
+        print "⚠️  O pacote 'audit' não está instalado.\n";
+        if ($dry_run) {
+            print "🔍 Modo simulação: pacote audit seria instalado.\n";
+            return;
+        }
+        if ($auto) {
+            print "⚙️  Instalando audit automaticamente...\n";
+            system("sudo pacman -Sy --noconfirm audit") == 0
+                or die "❌ Falha ao instalar audit.\n";
+        } else {
+            print "Deseja instalar audit agora? [s/N] ";
+            chomp(my $resp = <STDIN>);
+            if (lc($resp) eq 's') {
+                system("sudo pacman -S audit");
+            } else {
+                print "❎ Instalação cancelada.\n";
+                return;
+            }
+        }
+    } else {
+        print "✔️  Pacote audit já está instalado.\n";
+    }
+
+    if ($dry_run) {
+        print "🔍 Modo simulação: auditd seria ativado e regras seriam aplicadas.\n";
+        return;
+    }
+
+    print "🚀 Ativando e iniciando o serviço auditd...\n";
+    system("sudo systemctl enable auditd.service");
+    system("sudo systemctl start auditd.service");
+
+    my $status = `systemctl is-active auditd.service`;
+    chomp $status;
+    if ($status eq "active") {
+        print "✅ auditd está ativo.\n";
+    } else {
+        print "❌ auditd não foi iniciado corretamente. Verifique com journalctl.\n";
+        return;
+    }
+
+    # Regras básicas
+    my $rules_file = "/etc/audit/rules.d/99-hardening.rules";
+
+    print "🛡️  Escrevendo regras básicas em $rules_file...\n";
+    open my $out, '>', $rules_file or die "Erro ao escrever $rules_file: $!";
+
+    print $out <<"EOF";
+# Regras básicas de auditoria - Segurança mínima recomendada
+
+# Monitoramento de arquivos críticos
+-w /etc/passwd -p wa -k passwd_changes
+-w /etc/shadow -p wa -k shadow_changes
+-w /etc/group -p wa -k group_changes
+-w /etc/sudoers -p wa -k sudoers_changes
+
+# Uso de comandos sensíveis
+-a always,exit -F path=/usr/bin/passwd -F perm=x -k passwd_exec
+-a always,exit -F path=/usr/bin/sudo -F perm=x -k sudo_exec
+-a always,exit -F path=/usr/bin/chmod -F perm=x -k chmod_exec
+-a always,exit -F path=/usr/bin/chown -F perm=x -k chown_exec
+
+# Mudanças de atributos em arquivos
+-a always,exit -F arch=b64 -S chown,fchown,fchownat,lchown -k chown_calls
+-a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -k chmod_calls
+EOF
+
+    close $out;
+
+    # Aplica imediatamente as regras
+    system("sudo augenrules --load") == 0
+        ? print "✅ Regras de auditoria carregadas.\n"
+        : print "⚠️  Falha ao aplicar regras com augenrules.\n";
+}
+
+# TIME-3104: Ativa sincronização de tempo com NTP (systemd-timesyncd)
+sub time_3104 {
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto'     } @ARGV;
+
+    print "[TIME-3104] Verificando status da sincronização NTP...\n";
+
+    my $status = `timedatectl status 2>/dev/null`;
+    my $active = ($status =~ /NTP service: active/i);
+    my $enabled = ($status =~ /System clock synchronized: yes/i);
+
+    if ($active && $enabled) {
+        print "✅ Sincronização NTP já está ativa e funcionando.\n";
+        return;
+    }
+
+    print "⚠️  A sincronização NTP ainda não está ativa.\n";
+
+    if ($dry_run) {
+        print "🔍 Modo simulação: systemd-timesyncd seria habilitado e iniciado.\n";
+        return;
+    }
+
+    if (!$auto) {
+        print "Deseja ativar systemd-timesyncd agora? [s/N] ";
+        chomp(my $resp = <STDIN>);
+        return unless lc($resp) eq 's';
+    }
+
+    print "🔧 Habilitando systemd-timesyncd...\n";
+    system("sudo systemctl enable systemd-timesyncd.service");
+    system("sudo systemctl start systemd-timesyncd.service");
+
+    my $sync = `timedatectl status 2>/dev/null`;
+    if ($sync =~ /System clock synchronized: yes/) {
+        print "✅ Sincronização NTP ativada com sucesso.\n";
+    } else {
+        print "❌ Falha ao ativar sincronização NTP. Verifique o serviço systemd-timesyncd.\n";
+    }
+}
+
+# CRYP-7902: Verifica certificados locais que estão expirados ou prestes a expirar
+sub cryp_7902 {
+    use POSIX qw(strftime);
+    use Time::Piece;
+    use File::Find;
+
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    print "[CRYP-7902] Verificando certificados locais para expiração...\n";
+
+    my @paths = (
+        "/etc/ssl", "/etc/pki", "/usr/local/share/ca-certificates",
+        "/etc/letsencrypt/live", "/etc/letsencrypt/archive"
+    );
+
+    my @cert_files;
+    foreach my $base (@paths) {
+        next unless -d $base;
+        find(sub {
+            return unless -f $_;
+            return unless /\.(crt|pem|cer)$/i;
+            push @cert_files, $File::Find::name;
+        }, $base);
+    }
+
+    if (!@cert_files) {
+        print "ℹ️  Nenhum certificado encontrado nos diretórios padrão.\n";
+        return;
+    }
+
+    my $now = localtime;
+    my $warning_days = 30;
+    my $warn_ts = $now + (60 * 60 * 24 * $warning_days);
+
+    my $expired = 0;
+    my $expiring = 0;
+
+    foreach my $cert (@cert_files) {
+        my $output = `openssl x509 -enddate -noout -in "$cert" 2>/dev/null`;
+        next unless $output =~ /notAfter=(.*)/;
+
+        my $exp_str = $1;
+        my $exp_date = Time::Piece->strptime($exp_str, "%b %e %T %Y %Z");
+
+        if ($exp_date < $now) {
+            print "❌ [EXPIRADO] $cert → $exp_str\n";
+            $expired++;
+        } elsif ($exp_date < $warn_ts) {
+            print "⚠️  [Vencendo em breve] $cert → $exp_str\n";
+            $expiring++;
+        }
+    }
+
+    if ($expired == 0 && $expiring == 0) {
+        print "✅ Todos os certificados estão válidos por pelo menos 30 dias.\n";
+    } else {
+        print "\nResumo: $expired expirado(s), $expiring vencendo(s) em até 30 dias.\n";
+    }
+}
+
+# FINT-4350: Instala e inicializa AIDE para verificação de integridade de arquivos
+sub fint_4350 {
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto' } @ARGV;
+
+    print "[FINT-4350] Verificando presença do AIDE...\n";
+    my $installed = system("pacman -Q aide > /dev/null 2>&1") == 0;
+
+    if (!$installed) {
+        print "⚠️  O pacote 'aide' não está instalado.\n";
+        if ($dry_run) {
+            print "🔍 Modo simulação: aide seria instalado.\n";
+            return;
+        }
+        if ($auto) {
+            system("sudo pacman -Sy --noconfirm aide") == 0
+                or die "❌ Falha ao instalar aide.\n";
+        } else {
+            print "Deseja instalar aide agora? [s/N] ";
+            chomp(my $resp = <STDIN>);
+            if (lc($resp) eq 's') {
+                system("sudo pacman -S aide");
+            } else {
+                print "❎ Instalação cancelada.\n";
+                return;
+            }
+        }
+    } else {
+        print "✔️  AIDE já está instalado.\n";
+    }
+
+    if ($dry_run) {
+        print "🔍 Modo simulação: AIDE seria inicializado e configurado.\n";
+        return;
+    }
+
+    print "🛠️  Inicializando banco de dados do AIDE...\n";
+    system("sudo aide --init") == 0
+        ? print "✅ Banco inicial gerado em /var/lib/aide/aide.db.new.gz\n"
+        : die "❌ Falha ao gerar banco de dados inicial com aide.\n";
+
+    print "📂 Movendo banco de dados para o local padrão...\n";
+    system("sudo mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz") == 0
+        ? print "✅ Banco de dados de integridade pronto para uso.\n"
+        : print "⚠️  Falha ao mover banco de dados. Verifique permissões.\n";
+
+    print "✅ AIDE está instalado e pronto. Você pode executar futuras verificações com:\n";
+    print "   sudo aide --check\n";
+}
+
+# TOOL-5002: Verifica presença de ferramentas de automação no sistema
+sub tool_5002 {
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto'     } @ARGV;
+
+    print "[TOOL-5002] Verificando ferramentas de automação de gerenciamento...\n";
+
+    my %tools = (
+        'ansible'   => 'Ansible',
+        'puppet'    => 'Puppet',
+        'salt'      => 'SaltStack',
+        'chef'      => 'Chef',
+        'cf-agent'  => 'CFEngine',
+    );
+
+    my @found;
+    foreach my $bin (keys %tools) {
+        if (system("command -v $bin >/dev/null 2>&1") == 0) {
+            push @found, $tools{$bin};
+        }
+    }
+
+    if (@found) {
+        print "✅ Ferramentas de automação detectadas:\n";
+        foreach my $t (@found) {
+            print "   - $t\n";
+        }
+    } else {
+        print "⚠️  Nenhuma ferramenta de automação encontrada.\n";
+
+        if ($dry_run) {
+            print "🔍 Modo simulação: nenhuma ação será tomada.\n";
+            return;
+        }
+
+        if ($auto) {
+            print "⚙️  Instalando Ansible automaticamente...\n";
+            system("sudo pacman -Sy --noconfirm ansible") == 0
+                ? print "✅ Ansible instalado com sucesso.\n"
+                : print "❌ Falha ao instalar Ansible.\n";
+        } else {
+            print "Deseja instalar o Ansible agora? [s/N] ";
+            chomp(my $resp = <STDIN>);
+            if (lc($resp) eq 's') {
+                system("sudo pacman -S ansible");
+            } else {
+                print "ℹ️  Você pode instalar com: sudo pacman -S ansible\n";
+            }
+        }
+    }
+}
+
+# FILE-7524: Verifica e restringe permissões perigosas de arquivos
+sub file_7524 {
+    use File::Find;
+
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto'     } @ARGV;
+
+    print "[FILE-7524] Buscando arquivos com permissões perigosas...\n";
+
+    my @suspects;
+    find(sub {
+        return unless -f $_;
+        my $mode = (stat($_))[2] & 07777;
+        return unless $mode == 0777 || $mode == 0666 || $mode == 0755;
+
+        my $path = $File::Find::name;
+        my $type = 'arquivo';
+
+        if ($_ =~ /\.(conf|ini)$/i) {
+            $type = 'config';
+        } elsif ($_ =~ /\.(key|pem)$/i || $_ =~ /id_rsa/) {
+            $type = 'chave';
+        }
+
+        push @suspects, { path => $path, mode => sprintf("%04o", $mode), type => $type };
+    }, '/etc', '/var', '/home', '/opt', '/srv');
+
+    if (!@suspects) {
+        print "✅ Nenhum arquivo com permissões perigosas encontrado.\n";
+        return;
+    }
+
+    print "⚠️  Arquivos com permissões arriscadas:\n";
+    foreach my $f (@suspects) {
+        print "   [$f->{mode}] $f->{path}\n";
+    }
+
+    if ($dry_run) {
+        print "🔍 Modo simulação: sugestões de correção listadas abaixo:\n";
+        foreach my $f (@suspects) {
+            my $new_mode = $f->{type} eq 'chave' ? '600' :
+                           $f->{type} eq 'config' ? '640' :
+                           $f->{mode} eq '0777' ? '750' :
+                           $f->{mode} eq '0666' ? '640' : '755';
+            print " → chmod $new_mode $f->{path}\n";
+        }
+        return;
+    }
+
+    if (!$auto) {
+        print "Deseja corrigir as permissões automaticamente? [s/N] ";
+        chomp(my $resp = <STDIN>);
+        return unless lc($resp) eq 's';
+    }
+
+    foreach my $f (@suspects) {
+        my $new_mode = $f->{type} eq 'chave' ? 0600 :
+                       $f->{type} eq 'config' ? 0640 :
+                       $f->{mode} eq '0777' ? 0750 :
+                       $f->{mode} eq '0666' ? 0640 : 0755;
+
+        if (chmod $new_mode, $f->{path}) {
+            printf "✅ Corrigido: %s → %04o\n", $f->{path}, $new_mode;
+        } else {
+            print "❌ Falha ao corrigir $f->{path}\n";
+        }
+    }
+}
+
+# KRNL-6000: Aplica valores seguros de sysctl para segurança do kernel com backup
+sub krnl_6000 {
+    use POSIX qw(strftime);
+
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto'     } @ARGV;
+
+    print "[KRNL-6000] Verificando e aplicando hardening em parâmetros sysctl...\n";
+
+    my %sysctl_recommended = (
+        'kernel.kptr_restrict'         => 2,
+        'fs.suid_dumpable'             => 0,
+        'kernel.randomize_va_space'    => 2,
+        'net.ipv4.icmp_echo_ignore_broadcasts' => 1,
+        'net.ipv4.conf.all.accept_redirects'   => 0,
+        'net.ipv4.conf.all.send_redirects'     => 0,
+        'net.ipv4.conf.all.accept_source_route'=> 0,
+        'net.ipv4.conf.default.accept_redirects' => 0,
+        'net.ipv4.conf.default.send_redirects' => 0,
+        'net.ipv4.conf.default.accept_source_route' => 0,
+        'net.ipv4.tcp_syncookies'      => 1,
+        'net.ipv4.tcp_timestamps'      => 0,
+        'net.ipv6.conf.all.accept_redirects' => 0,
+        'net.ipv6.conf.default.accept_redirects' => 0,
+    );
+
+    my $conf_path = '/etc/sysctl.d/99-hardening.conf';
+    my $backup_dir = '/var/backups';
+    my $timestamp = strftime("%Y%m%d", localtime);
+    my $backup_path = "$backup_dir/sysctl-backup-$timestamp.conf";
+
+    my @to_apply;
+    my %current_values;
+
+    foreach my $key (keys %sysctl_recommended) {
+        my $current = `sysctl -n $key 2>/dev/null`;
+        chomp $current;
+        next if $current eq '';  # ignora valores não encontrados
+
+        $current_values{$key} = $current;
+
+        my $expected = $sysctl_recommended{$key};
+        if ($current ne "$expected") {
+            print "⚠️  $key atual: $current → recomendado: $expected\n";
+            push @to_apply, [$key, $expected];
+        } else {
+            print "✅ $key já está corretamente configurado ($current)\n";
+        }
+    }
+
+    if (!@to_apply) {
+        print "✔️  Todos os parâmetros estão corretos.\n";
+        return;
+    }
+
+    if ($dry_run) {
+        print "🔍 Modo simulação: os seguintes valores seriam aplicados:\n";
+        print "   $_->[0] = $_->[1]\n" for @to_apply;
+        return;
+    }
+
+    if (!$auto) {
+        print "Deseja aplicar os valores recomendados e salvar backup? [s/N] ";
+        chomp(my $resp = <STDIN>);
+        return unless lc($resp) eq 's';
+    }
+
+    # Cria diretório de backup se necessário
+    system("mkdir -p $backup_dir") unless -d $backup_dir;
+
+    open my $bkp, '>', $backup_path or die "Erro ao criar backup em $backup_path: $!";
+    print $bkp "# Backup automático dos parâmetros sysctl antes de hardening ($timestamp)\n";
+    for my $key (sort keys %current_values) {
+        print $bkp "$key = $current_values{$key}\n";
+    }
+    close $bkp;
+
+    print "💾 Backup salvo em $backup_path\n";
+
+    # Aplica novos valores e grava config persistente
+    open my $out, '>', $conf_path or die "Erro ao escrever em $conf_path: $!";
+    print $out "# sysctl hardening - KRNL-6000\n";
+    for my $entry (@to_apply) {
+        my ($key, $val) = @$entry;
+        print $out "$key = $val\n";
+        system("sysctl -w $key=$val");
+    }
+    close $out;
+
+    print "✅ Valores aplicados e persistidos em $conf_path\n";
+}
+
+# HRDN-7222: Verifica e restringe o uso de compiladores no sistema
+sub hrdn_7222 {
+    use File::Find;
+    use File::Basename;
+    use File::stat;
+
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto'     } @ARGV;
+
+    print "[HRDN-7222] Verificando presença e permissões de compiladores...\n";
+
+    my @compilers = qw(
+        gcc g++ clang cc c++ rustc go javac kotlinc native-image julia
+        gfortran ifort nim ghc fpc swiftc zig v nasm as
+    );
+
+    my %found;
+
+    # 1. Verificar no PATH
+    foreach my $c (@compilers) {
+        my $path = `command -v $c 2>/dev/null`;
+        chomp $path;
+        if ($path && -x $path) {
+            $found{$path} = 1;
+        }
+    }
+
+    # 2. Buscar em /usr/local, /opt, e /home/*
+    my @extra_dirs = qw(/usr/local /opt /home);
+    find(sub {
+        return unless -f $_;
+        return unless grep { $_ eq basename($_) } @compilers;
+        $found{$File::Find::name} = 1;
+    }, @extra_dirs);
+
+    if (!%found) {
+        print "✅ Nenhum compilador encontrado no sistema.\n";
+        return;
+    }
+
+    print "⚠️  Compiladores encontrados:\n";
+
+    my @violations;
+
+    foreach my $path (sort keys %found) {
+        my $st = stat($path) or next;
+        my $mode = sprintf "%04o", $st->mode & 07777;
+        my $owner = getpwuid($st->uid);
+        my $perms_ok =
+            ($owner eq 'root' && $mode =~ /^7[0-5]0$/) ||   # root-only (750, 740, etc)
+            ($path =~ m{^/home/([^/]+)} && $owner eq $1);   # dono do próprio $HOME
+
+        print " - $path [$mode, dono: $owner] ", ($perms_ok ? "✔️ OK\n" : "❌ NÃO SEGURO\n");
+
+        push @violations, { path => $path, mode => $mode, owner => $owner }
+            unless $perms_ok;
+    }
+
+    if (!@violations) {
+        print "✅ Todos os compiladores têm permissões seguras.\n";
+        return;
+    }
+
+    if ($dry_run) {
+        print "\n🔍 Modo simulação: seriam aplicadas as seguintes ações:\n";
+        foreach my $v (@violations) {
+            my $suggested_owner = ($v->{path} =~ m{^/home/([^/]+)}) ? $1 : 'root';
+            print " → chmod 750 $v->{path}; chown $suggested_owner:$suggested_owner $v->{path}\n";
+        }
+        return;
+    }
+
+    if (!$auto) {
+        print "\nDeseja corrigir permissões automaticamente? [s/N] ";
+        chomp(my $resp = <STDIN>);
+        return unless lc($resp) eq 's';
+    }
+
+    foreach my $v (@violations) {
+        my $path = $v->{path};
+        my $suggested_owner = ($path =~ m{^/home/([^/]+)}) ? $1 : 'root';
+
+        system("sudo chmod 750 '$path'");
+        system("sudo chown $suggested_owner:$suggested_owner '$path'");
+
+        print "✅ Corrigido: $path → dono: $suggested_owner, modo: 750\n";
+    }
+}
+
+# HRDN-7222: Remove compiladores órfãos ou fora da whitelist
+sub hrdn_7222_prune {
+    use File::Find;
+    use File::Basename;
+    use File::stat;
+
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto'     } @ARGV;
+
+    my @whitelist = qw(gcc g++ rustc clang go javac julia);  # ex: permitidos
+    my %allowed = map { $_ => 1 } @whitelist;
+
+    print "[HRDN-7222] Verificando compiladores não autorizados para possível remoção...\n";
+
+    my @search_dirs = qw(/usr/local /opt /home /usr/bin /usr/sbin /usr/lib /var);
+
+    my @to_remove;
+
+    find(sub {
+        return unless -f $_ && -x _;
+        my $name = basename($_);
+        return unless grep { $_ eq $name } @whitelist or $name =~ /(gcc|g\+\+|cc|clang|c\+\+|go|rustc|javac|julia|zig|v|fpc|ghc|swiftc|nim|as|nasm|kotlinc|native-image)/;
+
+        my $path = $File::Find::name;
+        my $base = basename($path);
+
+        my $st = stat($path) or return;
+        my $owner = getpwuid($st->uid) || "UNKNOWN";
+
+        my $permitted =
+            ($path =~ m{^/home/([^/]+)} && $owner eq $1) ||
+            $allowed{$base};
+
+        unless ($permitted) {
+            push @to_remove, { path => $path, owner => $owner };
+        }
+    }, @search_dirs);
+
+    if (!@to_remove) {
+        print "✅ Nenhum compilador fora da whitelist encontrado.\n";
+        return;
+    }
+
+    print "⚠️  Compiladores possivelmente indesejados:\n";
+    foreach my $c (@to_remove) {
+        print " - $c->{path} [dono: $c->{owner}]\n";
+    }
+
+    if ($dry_run) {
+        print "\n🔍 Modo simulação: os arquivos acima seriam removidos.\n";
+        return;
+    }
+
+    if (!$auto) {
+        print "\nDeseja remover automaticamente os compiladores listados? [s/N] ";
+        chomp(my $resp = <STDIN>);
+        return unless lc($resp) eq 's';
+    }
+
+    foreach my $c (@to_remove) {
+        my $path = $c->{path};
+        if (system("sudo rm -f '$path'") == 0) {
+            print "🗑️  Removido: $path\n";
+        } else {
+            print "❌ Falha ao remover: $path\n";
+        }
+    }
+}
+
+# HRDN-7230: Instala scanner de malware (rkhunter) e executa verificação inicial
+sub hrdn_7230 {
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $auto    = grep { $_ eq '--auto'     } @ARGV;
+
+    print "[HRDN-7230] Verificando presença de scanner de malware...\n";
+
+    my $has_rkhunter    = system("command -v rkhunter >/dev/null 2>&1") == 0;
+    my $has_chkrootkit  = system("command -v chkrootkit >/dev/null 2>&1") == 0;
+
+    if ($has_rkhunter || $has_chkrootkit) {
+        print "✅ Scanner detectado: " .
+            ($has_rkhunter ? "rkhunter " : "") .
+            ($has_chkrootkit ? "chkrootkit" : "") . "\n";
+    } else {
+        print "⚠️  Nenhum scanner encontrado.\n";
+
+        if ($dry_run) {
+            print "🔍 Modo simulação: rkhunter seria instalado.\n";
+            return;
+        }
+
+        if ($auto) {
+            print "⚙️  Instalando rkhunter automaticamente...\n";
+            system("sudo pacman -Sy --noconfirm rkhunter") == 0
+                or die "❌ Falha ao instalar rkhunter.\n";
+        } else {
+            print "Deseja instalar rkhunter agora? [s/N] ";
+            chomp(my $resp = <STDIN>);
+            if (lc($resp) eq 's') {
+                system("sudo pacman -S rkhunter");
+            } else {
+                print "ℹ️  Você pode instalar com: sudo pacman -S rkhunter\n";
+                return;
+            }
+        }
+    }
+
+    return if $dry_run;
+
+    print "🔄 Atualizando base de dados do rkhunter...\n";
+    system("sudo rkhunter --update");
+
+    print "🔍 Executando verificação inicial...\n";
+    system("sudo rkhunter --propupd --skip-keypress");
+    system("sudo rkhunter --check --skip-keypress");
+
+    if (!$auto) {
+        print "Deseja configurar verificação periódica com cron ou systemd? [s/N] ";
+        chomp(my $res = <STDIN>);
+        return unless lc($res) eq 's';
+    }
+
+    my $cron_path = "/etc/cron.daily/rkhunter";
+    open my $cron, '>', $cron_path or die "Erro ao criar $cron_path: $!";
+    print $cron <<"EOF";
+#!/bin/sh
+/usr/bin/rkhunter --update > /dev/null
+/usr/bin/rkhunter --check --skip-keypress | tee /var/log/rkhunter-cron.log
+EOF
+    close $cron;
+    system("chmod +x $cron_path");
+    print "✅ Cron diário criado para verificação com rkhunter.\n";
+}
+
+# Restaura os valores anteriores de sysctl a partir de um backup salvo
+sub krnl_6000_restore {
+    use File::Basename;
+    use File::Glob qw(bsd_glob);
+    use POSIX qw(strftime);
+
+    my $dry_run = grep { $_ eq '--dry-run' } @ARGV;
+    my $backup_dir = '/var/backups';
+    my @backups = sort { $b cmp $a } bsd_glob("$backup_dir/sysctl-backup-*.conf");
+
+    if (!@backups) {
+        print "❌ Nenhum backup encontrado em $backup_dir.\n";
+        return;
+    }
+
+    my $latest = $backups[0];
+    print "[KRNL-6000] Usando backup mais recente: $latest\n";
+
+    open my $in, '<', $latest or die "Erro ao abrir backup: $!";
+    my @lines = grep { /^\s*[\w\.]+\s*=\s*\S+/ } <$in>;
+    close $in;
+
+    my @restored;
+    foreach my $line (@lines) {
+        $line =~ s/^\s+|\s+$//g;
+        my ($key, $val) = split /\s*=\s*/, $line, 2;
+
+        if ($dry_run) {
+            print "🔍 sysctl -w $key=$val (simulado)\n";
+        } else {
+            my $result = system("sysctl -w $key=$val");
+            if ($result == 0) {
+                print "✅ Restaurado: $key = $val\n";
+                push @restored, [$key, $val];
+            } else {
+                print "❌ Falha ao aplicar $key = $val\n";
+            }
+        }
+    }
+
+    if (!$dry_run && @restored) {
+        print "\n✅ Restauração concluída a partir de $latest\n";
+    } elsif ($dry_run) {
+        print "\n🔍 Simulação concluída. Nenhuma alteração aplicada.\n";
+    }
+}
+
+# Configura verificação periódica do AIDE via cron ou systemd timer
+sub fint_schedule {
+    print "[FINT] Deseja configurar execução periódica do AIDE?\n";
+    print "Escolha o método:\n";
+    print "  1) Cron diário (/etc/cron.daily)\n";
+    print "  2) systemd timer (diário)\n";
+    print "Selecione [1/2]: ";
+    chomp(my $choice = <STDIN>);
+
+    if ($choice eq '1') {
+        my $cron_path = '/etc/cron.daily/aide-check';
+        print "📝 Criando tarefa de verificação diária em $cron_path...\n";
+
+        open my $out, '>', $cron_path or die "Erro ao criar $cron_path: $!";
+        print $out <<"EOF";
+#!/bin/bash
+/usr/bin/aide --check > /var/log/aide-check.log 2>&1
+EOF
+        close $out;
+        system("chmod +x $cron_path");
+        print "✅ Verificação diária via cron configurada com sucesso.\n";
+
+    } elsif ($choice eq '2') {
+        print "⚙️  Criando serviço e timer systemd...\n";
+
+        my $unit = '/etc/systemd/system/aide-check.service';
+        my $timer = '/etc/systemd/system/aide-check.timer';
+
+        open my $s, '>', $unit or die "Erro ao criar $unit: $!";
+        print $s <<"EOF";
+[Unit]
+Description=AIDE File Integrity Check
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/aide --check
+StandardOutput=append:/var/log/aide-check.log
+StandardError=append:/var/log/aide-check.log
+EOF
+        close $s;
+
+        open my $t, '>', $timer or die "Erro ao criar $timer: $!";
+        print $t <<"EOF";
+[Unit]
+Description=Daily AIDE integrity check
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+        close $t;
+
+        system("systemctl daemon-reexec");
+        system("systemctl daemon-reload");
+        system("systemctl enable --now aide-check.timer");
+
+        print "✅ Verificação diária configurada via systemd timer.\n";
+    } else {
+        print "❌ Opção inválida. Nenhuma ação realizada.\n";
+    }
+}
+
+# Exibe relatório simplificado de auditoria com base em /var/log/audit/audit.log
+sub audit_report {
+    my $log = '/var/log/audit/audit.log';
+
+    print "[AUDIT] Gerando relatório baseado em $log...\n";
+
+    unless (-f $log) {
+        print "❌ Arquivo $log não encontrado. auditd está ativado?\n";
+        return;
+    }
+
+    print "\n📌 Tipos de eventos registrados:\n";
+    system("grep '^type=' $log | cut -d ' ' -f1 | sort | uniq -c | sort -nr | head");
+
+    print "\n🔍 Últimos comandos executados (execve):\n";
+    system("grep 'execve' $log | tail -n 10");
+
+    print "\n🔐 Acessos a arquivos sensíveis (/etc/passwd, /etc/shadow, /etc/sudoers):\n";
+    system("grep -Ei '/etc/passwd|/etc/shadow|/etc/sudoers' $log | tail -n 10");
+
+    print "\n🛠️  Uso de comandos críticos (sudo, passwd, chmod, chown):\n";
+    system("grep -Ei 'sudo|passwd|chmod|chown' $log | tail -n 10");
+}
+
+# Exibe relatórios com base nos dados do process accounting
+sub acct_report {
+    my $logfile = '/var/log/pacct';
+
+    print "[ACCT] Gerando relatórios de auditoria do process accounting...\n";
+
+    unless (-f $logfile) {
+        print "❌ Arquivo $logfile não encontrado. O accounting está ativado?\n";
+        return;
+    }
+
+    print "\n📄 Comandos executados recentemente:\n";
+    system("lastcomm | head -n 20");
+
+    print "\n👤 Resumo por usuário (uso de comandos):\n";
+    system("lastcomm | awk '{print \$1}' | sort | uniq -c | sort -nr | head");
+
+    print "\n🧾 Estatísticas por comando (tempo total de CPU):\n";
+    system("sa -m | head");
+
+    print "\n📆 Estatísticas por usuário:\n";
+    system("sa -u | head");
+}
 
 # Reverte bloqueio de protocolos configurado por netw_3200
 sub unblock_net_protocols {
