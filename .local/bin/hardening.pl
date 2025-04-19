@@ -2070,3 +2070,107 @@ sub unblock_usb_storage {
     }
 }
 
+sub main {
+    my %actions = (
+        'boot_5264'         => \&boot_5264,
+        'krnl_5820'         => \&krnl_5820,
+        'auth_9230'         => \&auth_9230,
+        'auth_9262'         => \&auth_9262,
+        'auth_9282'         => \&auth_9282,
+        'auth_9286'         => \&auth_9286,
+        'auth_9328'         => \&auth_9328,
+        'file_6354'         => \&file_6354,
+        'usb_1000'          => \&usb_1000,
+        'usb_1000_restore'  => \&usb_1000_restore,
+        'strg_1846'         => \&strg_1846,
+        'name_4028'         => \&name_4028,
+        'pkgs_7312'         => \&pkgs_7312,
+        'pkgs_7320'         => \&pkgs_7320,
+        'netw_3200'         => \&netw_3200,
+        'unblock_net_protocols' => \&unblock_net_protocols,
+        'ssh_7408'          => \&ssh_7408,
+        'php_2372'          => \&php_2372,
+        'php_2376'          => \&php_2376,
+        'logg_2146'         => \&logg_2146,
+        'bann_7126'         => \&bann_7126,
+        'acct_9622'         => \&acct_9622,
+        'acct_9626'         => \&acct_9626,
+        'acct_9628'         => \&acct_9628,
+        'acct_report'       => \&acct_report,
+        'audit_report'      => \&audit_report,
+        'time_3104'         => \&time_3104,
+        'cryp_7902'         => \&cryp_7902,
+        'fint_4350'         => \&fint_4350,
+        'fint_schedule'     => \&fint_schedule,
+        'tool_5002'         => \&tool_5002,
+        'file_7524'         => \&file_7524,
+        'krnl_6000'         => \&krnl_6000,
+        'krnl_6000_restore' => \&krnl_6000_restore,
+        'hrdn_7222'         => \&hrdn_7222,
+        'hrdn_7222_prune'   => \&hrdn_7222_prune,
+        'hrdn_7230'         => \&hrdn_7230,
+    );
+
+    my %descriptions = (
+        'boot_5264'         => 'Análise de segurança dos serviços systemd',
+        'krnl_5820'         => 'Desativa core dumps via limits.conf',
+        'auth_9230'         => 'Configura hashing rounds para senhas',
+        'auth_9262'         => 'Instala módulo PAM de força de senha',
+        'auth_9282'         => 'Define data de expiração para contas',
+        'auth_9286'         => 'Configura idade mínima/máxima de senha',
+        'auth_9328'         => 'Define umask padrão mais restrito (027)',
+        'file_6354'         => 'Verifica arquivos antigos em /tmp',
+        'usb_1000'          => 'Desativa armazenamento USB',
+        'usb_1000_restore'  => 'Reativa armazenamento USB',
+        'strg_1846'         => 'Desativa suporte a FireWire',
+        'name_4028'         => 'Verifica e ajusta domínio DNS do sistema',
+        'pkgs_7312'         => 'Atualiza pacotes (rolling updates)',
+        'pkgs_7320'         => 'Instala `arch-audit` para vulnerabilidades',
+        'netw_3200'         => 'Desativa protocolos desnecessários (dccp, etc)',
+        'unblock_net_protocols' => 'Reativa protocolos desativados',
+        'ssh_7408'          => 'Aplica hardening na configuração do SSH',
+        'php_2372'          => 'Desativa expose_php no php.ini',
+        'php_2376'          => 'Desativa allow_url_fopen no php.ini',
+        'logg_2146'         => 'Configura rotação de logs em /var/log',
+        'bann_7126'         => 'Adiciona banner legal ao /etc/issue e issue.net',
+        'acct_9622'         => 'Ativa process accounting (accton)',
+        'acct_9626'         => 'Ativa coleta com sysstat (sar, iostat)',
+        'acct_9628'         => 'Ativa auditd e regras básicas',
+        'acct_report'       => 'Relatório de contabilidade de processos',
+        'audit_report'      => 'Relatório dos eventos de auditd',
+        'time_3104'         => 'Ativa sincronização com systemd-timesyncd',
+        'cryp_7902'         => 'Verifica expiração de certificados SSL',
+        'fint_4350'         => 'Instala AIDE e inicializa integridade de arquivos',
+        'fint_schedule'     => 'Agendamento de verificação do AIDE',
+        'tool_5002'         => 'Verifica presença de ferramentas de automação',
+        'file_7524'         => 'Corrige permissões inseguras de arquivos',
+        'krnl_6000'         => 'Aplica sysctl seguros e gera backup',
+        'krnl_6000_restore' => 'Restaura sysctl a partir de backup salvo',
+        'hrdn_7222'         => 'Restringe uso de compiladores por usuários',
+        'hrdn_7222_prune'   => 'Remove compiladores não autorizados',
+        'hrdn_7230'         => 'Instala e agenda scanner com rkhunter',
+    );
+
+    my $action = shift @ARGV // '';
+    if ($action eq '--help' or $action eq '-h' or $action eq '') {
+        print "\n🔐 Arch Linux Hardening Script (Lynis-based)\n";
+        print "Uso: perl $0 <ação> [--dry-run] [--auto]\n\n";
+        print "Ações disponíveis:\n";
+        foreach my $cmd (sort keys %actions) {
+            my $desc = $descriptions{$cmd} // '';
+            printf "  %-22s  %s\n", $cmd, $desc;
+        }
+        print "\nUse --dry-run para simular e --auto para execução sem perguntas.\n";
+        exit 0;
+    }
+
+    if (exists $actions{$action}) {
+        $actions{$action}->();
+    } else {
+        die "❌ Ação desconhecida: $action\nUse --help para listar as ações disponíveis.\n";
+    }
+}
+
+main() unless caller;
+
+
