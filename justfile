@@ -8,7 +8,7 @@ RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sit
 PYTHON_PACKAGES := "isort pipenv nose nose2 pytest pylatexenc "
 RUBY_PACKAGES := "neovim"
 RUBY_PACKAGES_NOT_USED := "chef-utils concurrent kramdown kramdown-parser-gfm mixlib-cli mixlib-config mixlib-shellout rexml ruby-tomlrb"
-GO_PACKAGES := "github.com/jesseduffield/lazygit@latest github.com/fatih/gomodifytags@latest github.com/cweill/gotests/gotests@latest github.com/x-motemen/gore/cmd/gore@latest golang.org/x/tools/gopls@latest"
+GO_PACKAGES := "github.com/jesseduffield/lazygit@latest github.com/fatih/gomodifytags@latest github.com/cweill/gotests/gotests@latest github.com/x-motemen/gore/cmd/gore@latest golang.org/x/tools/gopls@latest mvdan.cc/sh/v3/cmd/shfmt@latest "
 NPM_PACKAGES := "prettier bash-language-server node-gyp semver stylelint neovim @mermaid-js/mermaid-cli js-beautify markdownlint"
 PERL_PACKAGES := "Neovim::Ext"
 MAKE_PACKAGES := "fzf neovim go lua luarocks texlive pandoc pynvim"
@@ -31,7 +31,6 @@ alias igem := install-gem-packages
 alias ifonts := install-fonts
 alias ros := remove-os-packages
 alias i := install
-alias t := test
 alias c := clean
 alias h := hardening
 
@@ -72,7 +71,7 @@ install:
 [linux]
 [group('main')]
 clean:
-  ls {{ join(home_dir(), 'tmp') }}
+  rm -rf "$HOME/tmp"/*
 
 # Hardening usando lynis
 [linux]
@@ -190,6 +189,11 @@ install-go:
 install-fzf:
   git clone https://github.com/junegunn/fzf.git
   cd fzf && ./install --bin
+  cp fzf/bin/* "$HOME/.local/bin/"
+
+[group('base')]
+install-cabal:
+  curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
 [group('app')]
 install-pynvim:
@@ -238,6 +242,40 @@ install-hunspell:
   unzip -j "es.zip" "es/es_ES.*" -d "$HOME/.local/share/hunspell/"
   curl -O https://hunspell.memoq.com/en.zip
   unzip -j "en.zip" "en/en_US.*" -d "$HOME/.local/share/hunspell/"
+
+[linux]
+[group('dependency')]
+install-imagemagick:
+  git clone --depth 1 --branch 7.1.1-47 https://github.com/ImageMagick/ImageMagick.git
+  cd ImageMagick && ./configure --prefix="$HOME/.local" --enable-hdri --enable-64bit-channel-masks --with-modules
+  cd ImageMagick ** ./make && ./make install
+  sudo ldconfig "$HOME/.local/lib"
+
+[linux]
+[group('app')]
+install-emacs:
+  # git clone -b emacs-30 git://git.sv.gnu.org/emacs.git
+  # cd emacs && ./autogen.sh
+  # cd emacs && ./configure --prefix="$HOME/.local" --with-mailutils --with-tree-sitter --without-xaw3d --with-pgtk --with-native-compilation=aot
+  sudo pacman -S emacs-wayland
+
+[group('lsp')]
+install-bash-lsp:
+  cabal update
+  cabal install ShellCheck
+  go install mvdan.cc/sh/v3/cmd/shfmt@latest
+  npm i -g bash-language-server
+  # see also https://github.com/idank/explainshell
+
+[linux]
+[group('lsp')]
+install-bibtex-lsp:
+  uv tool install citation-langserver
+
+install-clangd:
+  curl -fsSLO https://github.com/clangd/clangd/releases/download/19.1.2/clangd-linux-19.1.2.zip
+  unzip clangd-linux-19.1.2.zip
+  cp -R clangd_19.1.2/{bin,lib} "$HOME/.local/"
 
 
 # Instala pacotes gem (o único necessário até agora é o neovim)

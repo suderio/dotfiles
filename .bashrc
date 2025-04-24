@@ -74,3 +74,5 @@ command -v fzf >/dev/null 2>&1 && eval "$(fzf --bash)"
 [ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
 
 checkrepos
+
+[ -f "/home/paulo/.ghcup/env" ] && . "/home/paulo/.ghcup/env" # ghcup-env

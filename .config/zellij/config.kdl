@@ -1,7 +1,7 @@
 
 keybinds clear-defaults=true {
     locked {
-        bind "Ctrl g" { SwitchToMode "normal"; }
+        bind "Ctrl z" { SwitchToMode "normal"; }
     }
     pane {
         bind "left" { MoveFocus "left"; }
@@ -139,7 +139,7 @@ keybinds clear-defaults=true {
         bind "Alt o" { MoveTab "right"; }
     }
     shared_except "locked" {
-        bind "Ctrl g" { SwitchToMode "locked"; }
+        bind "Ctrl z" { SwitchToMode "locked"; }
         bind "Ctrl q" { Quit; }
     }
     shared_except "locked" "move" {
@@ -266,7 +266,7 @@ load_plugins {
 // Choose the theme that is specified in the themes section.
 // Default: default
 // 
-theme "tokyonight_moon"
+theme "tokyo-nigh"
  
 // Choose the base input mode of zellij.
 // Default: normal
@@ -311,7 +311,7 @@ theme "tokyonight_moon"
 //   - true (default, enabled)
 //   - false
 // 
-// pane_frames false
+pane_frames false
  
 // When attaching to an existing session with other users,
 // should the session be mirrored (true)
@@ -349,7 +349,7 @@ theme "tokyonight_moon"
 // copy_command "wl-copy"                    // wayland
 // copy_command "pbcopy"                     // osx
 // 
-copy_command "xclip -i -selection clipboard"
+copy_command "wl-copy"
  
 // Choose the destination for copied text
 // Allows using the primary selection buffer (on x11/wayland) instead of the system clipboard.
@@ -363,7 +363,7 @@ copy_command "xclip -i -selection clipboard"
 // Enable automatic copying (and clearing) of selection when releasing mouse
 // Default: true
 // 
-// copy_on_select true
+copy_on_select true
  
 // Path to the default editor to use to edit pane scrollbuffer
 // Default: $EDITOR or $VISUAL
@@ -374,13 +374,13 @@ copy_command "xclip -i -selection clipboard"
 // otherwise this will error if such a session exists.
 // Default: <RANDOM>
 // 
-// session_name "My singleton session"
+session_name "main"
  
 // When `session_name` is provided, attaches to that session
 // if it is already running or creates it otherwise.
 // Default: false
 // 
-// attach_to_session true
+attach_to_session true
  
 // Toggle between having Zellij lay out panes according to a predefined set of layouts whenever possible
 // Options:

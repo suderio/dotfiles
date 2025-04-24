@@ -34,3 +34,5 @@ export DICPATH="$HOME/.local/share/hunspell"
 [ -d "$HOME/.local/texlive/2025/bin/x86_64-linux" ] && PATH="$HOME/.local/texlive/2025/bin/x86_64-linux:$PATH"
 
 export PATH
+
+[ -f "/home/paulo/.ghcup/env" ] && . "/home/paulo/.ghcup/env" # ghcup-env
