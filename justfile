@@ -4,13 +4,13 @@ set working-directory := 'tmp'
 
 # Lista de linguagens/pacotes desejados
 OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils php bash-completion"
-RUST_PACKAGES := "bat eza ripgrep git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs ast-grep starship zellij nu"
+RUST_PACKAGES := "bat eza git-delta bvaisvil/zenith.git du-dust tree-sitter-cli viu fd-find procs ast-grep starship zellij nu ripgrep "
 PYTHON_PACKAGES := "isort pipenv nose nose2 pytest pylatexenc "
 RUBY_PACKAGES := "neovim"
 RUBY_PACKAGES_NOT_USED := "chef-utils concurrent kramdown kramdown-parser-gfm mixlib-cli mixlib-config mixlib-shellout rexml ruby-tomlrb"
 GO_PACKAGES := "github.com/jesseduffield/lazygit@latest github.com/fatih/gomodifytags@latest github.com/cweill/gotests/gotests@latest golang.org/x/tools/gopls@latest mvdan.cc/sh/v3/cmd/shfmt@latest github.com/x-motemen/gore/cmd/gore@latest"
 NPM_PACKAGES := "prettier bash-language-server node-gyp semver stylelint neovim  js-beautify markdownlint @mermaid-js/mermaid-cli"
-PERL_PACKAGES := "Neovim::Ext"
+PERL_PACKAGES := "Neovim::Ext Time::Piece"
 MAKE_PACKAGES := "fzf neovim go lua luarocks texlive pandoc pynvim"
 FONTS := "FiraCode DejaVuSansMono JetBrainsMono SourceCodePro Hack NerdFontsSymbolsOnly"
 OTHER_PACKAGES := "setuptools lynis clamav emacs-wayland github-cli zathura zathura-djvu zathura-ps zathura-cb xdotool lua51 kitty ghostty imagemagick sbcl"
@@ -292,7 +292,7 @@ install-perl-packages:
   #!/usr/bin/env bash
   perl -I ~/perl5/lib/perl5 -Mlocal::lib
   for pkg in {{PERL_PACKAGES}}; do
-    "$HOME/perl5/bin/cpanm" "$pkg"
+    "$HOME/perl5/bin/cpanm --local-lib=$HOME/perl5" "$pkg"
   done
 
 # Instala pacotes Rust
