@@ -72,7 +72,7 @@ command -v fzf >/dev/null 2>&1 && eval "$(fzf --bash)"
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
 [ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
-[ -f "$HOME/.ghcup/env" ] && . "/home/paulo/.ghcup/env"
+[ -f "$HOME/.ghcup/env" ] && . "/$HOME/.ghcup/env"
 
 for prog in perl go cargo git starship ruby php julia fzf java; do command -v $prog >/dev/null 2>&1 || echo "No $prog!"; done
 command -v perl >/dev/null 2>&1 && checkrepos
