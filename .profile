@@ -32,6 +32,7 @@ export DICPATH="$HOME/.local/share/hunspell"
 [ -d "$HOME/perl5/bin" ] && PATH="$HOME/perl5/bin:${PATH}"
 [ -d "$HOME/.local/lua/bin" ] && PATH="$HOME/.local/lua/bin:$PATH"
 [ -d "$HOME/.local/texlive/2025/bin/x86_64-linux" ] && PATH="$HOME/.local/texlive/2025/bin/x86_64-linux:$PATH"
+[ -d "$HOME/.local/nvim/bin" ] && PATH="$HOME/.local/nvim/bin:$PATH"
 
 export PATH
 

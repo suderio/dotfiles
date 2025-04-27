@@ -187,6 +187,13 @@ install-go:
   tar -xvf go1.24.2.linux-amd64.tar.gz
   mv go "$HOME/.local/"
 
+[group('base')]
+install-sbcl:
+  curl -fsSLo sbcl.tar.bz2 http://prdownloads.sourceforge.net/sbcl/sbcl-2.5.3-x86-64-linux-binary.tar.bz2
+  bzip2 -cd sbcl.tar.bz2 | tar xvf -
+  cd sbcl-2.5.3-x86-64-linux && INSTALL_ROOT="$HOME/.local" sh install.sh
+ 
+[group('base')]
 install-zig:
   curl -fsSLo zig.tar.xz https://ziglang.org/download/0.14.0/zig-linux-x86_64-0.14.0.tar.xz
   tar -xvf zig.tar.xz
@@ -210,10 +217,10 @@ install-pynvim:
 
 [group('app')]
 install-neovim:
-  curl -RL -o nvim.tar.gz https://github.com/neovim/neovim/releases/download/v0.11.0/nvim-linux-x86_64.tar.gz
-  tar zxf nvim.tar.gz
-  cp -R nvim-linux-x86_64/* "$HOME/.local/"
-
+  git clone https://github.com/neovim/neovim.git
+  make CMAKE_BUILD_TYPE=Release
+  make CMAKE_INSTALL_PREFIX=$HOME/.local/nvim install
+  
 [group('app')]
 install-texlive:
   # see https://www.tug.org/texlive/quickinstall.html
@@ -268,10 +275,38 @@ install-emacs:
   # cd emacs && ./configure --prefix="$HOME/.local" --with-mailutils --with-tree-sitter --without-xaw3d --with-pgtk --with-native-compilation=aot
   sudo pacman -S emacs-wayland
 
+[unix]
+[group('app')]
+install-lazyvim:
+  # required
+  mv ~/.config/nvim{,.bak}
+
+  # optional but recommended
+  mv ~/.local/share/nvim{,.bak}
+  mv ~/.local/state/nvim{,.bak}
+  mv ~/.cache/nvim{,.bak}
+
+  git clone https://github.com/LazyVim/starter ~/.config/nvim
+  rm -rf ~/.config/nvim/.git
+
+[unix]
+[group('app')]
+install-doom:
+  git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.config/doomemacs
+  ~/.config/emacs/bin/doom install
+
 [group('lsp')]
 install-lsps:
   # see https://langserver.org/
   # see https://microsoft.github.io/language-server-protocol/implementors/servers/
+
+[group('lsp')]
+install-tidy:
+  git clone https://github.com/htacg/tidy-html5.git
+  cd tidy-html5/build/cmake \
+    && cmake ../.. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DBUILD_SHARED_LIB:BOOL=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+    && make \
+    && make install
 
 [group('lsp')]
 install-typescript-lsp:

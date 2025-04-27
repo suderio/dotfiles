@@ -204,36 +204,6 @@ sub auth_9230 {
     }
 }
 
-
-# Executar função diretamente se o script for chamado isoladamente
-
-if (!caller) {
-    my $action = shift @ARGV // '';
-
-    if ($action eq 'boot_5264') {
-        boot_5264();
-    } elsif ($action eq 'krnl_5820') {
-        krnl_5820();
-    } elsif ($action eq 'auth_9230') {
-        auth_9230();
-    } elsif ($action eq 'auth_9262') {
-        auth_9262();
-    } elsif ($action eq 'auth_9282') {
-        auth_9282();
-    } else {
-        print "Uso: $0 [boot_5264 | krnl_5820 | auth_9230 | auth_9262 | auth_9282]
-";
-    }
-} elsif ($action eq 'krnl_5820') {
-        krnl_5820();
-    } elsif ($action eq 'auth_9230') {
-        auth_9230();
-    } else {
-        print "Uso: $0 [boot_5264 | krnl_5820 | auth_9230]
-";
-    }
-}
-
 # AUTH-9328: Enforce umask 027 in /etc/login.defs
 sub auth_9328 {
     my $file = '/etc/login.defs';
@@ -611,113 +581,113 @@ sub netw_3200 {
 
 }
 
-# SSH-7408: Harden SSH configuration
-sub ssh_7408 {
-    my $config_file = '/etc/ssh/sshd_config';
-    my $backup_file = '/etc/ssh/sshd_config.bak';
-    my $dry_run     = grep { $_ eq '--dry-run' } @ARGV;
-    my $auto        = grep { $_ eq '--auto'    } @ARGV;
-
-    print "[SSH-7408] Endurecendo configurações de SSH em $config_file...\n";
-
-    unless (-f $config_file) {
-        print "❌ Arquivo $config_file não encontrado.\n";
-        return;
-    }
-
-    # Cria backup
-    if (!$dry_run && !$auto) {
-        print "Deseja criar um backup de $config_file? [S/n] ";
-        chomp(my $resp = <STDIN>);
-        if (lc($resp) ne 'n') {
-            system("cp $config_file $backup_file") == 0
-                ? print "📦 Backup criado em $backup_file\n"
-                : print "⚠️  Falha ao criar backup.\n";
-        }
-    }
-
-    my %desired = (
-        'AllowTcpForwarding'   => 'no',
-        'ClientAliveCountMax'  => '2',
-        'LogLevel'             => 'VERBOSE',
-        'MaxAuthTries'         => '3',
-        'MaxSessions'          => '2',
-        'TCPKeepAlive'         => 'no',
-        'X11Forwarding'        => 'no',
-        'AllowAgentForwarding' => 'no',
-    );
-
-    print "Deseja alterar a porta padrão 22? [s/N] ";
-    my $port_line = '';
-    if (!$dry_run && (!$auto || grep { $_ =~ /^--port=/ } @ARGV)) {
-        my $new_port = '';
-        if ($auto) {
-            ($new_port) = map { /^--port=(\\d+)/ ? $1 : () } @ARGV;
-        } else {
-            chomp(my $resp = <STDIN>);
-            if (lc($resp) eq 's') {
-                print "Digite a nova porta desejada (ex: 2222): ";
-                chomp($new_port = <STDIN>);
-            }
-        }
-        if ($new_port && $new_port =~ /^\\d+$/) {
-            $desired{'Port'} = $new_port;
-            $port_line = "Port $new_port\n";
-        }
-    }
-
-    open my $in, '<', $config_file or die "Erro ao abrir $config_file: $!";
-    my @lines = <$in>;
-    close $in;
-
-    my %found;
-    for (@lines) {
-        foreach my $key (keys %desired) {
-            if (/^\\s*$key\\b/) {
-                $_ = \"$key $desired{$key}\\n\";
-                $found{$key} = 1;
-            }
-        }
-    }
-
-    # Adiciona os que não foram encontrados
-    foreach my $key (keys %desired) {
-        next if $found{$key};
-        push @lines, \"$key $desired{$key}\\n\";
-    }
-
-    if ($port_line) {
-        @lines = grep { !/^\\s*Port\\b/ } @lines;
-        push @lines, $port_line unless $port_line eq '';
-    }
-
-    if ($dry_run) {
-        print \"🔍 Modo simulação: mudanças seriam:\n\";
-        foreach my $key (keys %desired) {
-            print \" - $key $desired{$key}\\n\";
-        }
-        print \" - Port $desired{Port}\\n\" if exists $desired{Port};
-        return;
-    }
-
-    open my $out, '>', $config_file or die \"Erro ao escrever $config_file: $!\";
-    print $out @lines;
-    close $out;
-
-    print \"✅ sshd_config endurecido com sucesso.\n\";
-
-    if (!$dry_run && !$auto) {
-        print \"Deseja reiniciar o sshd agora? [s/N] \";
-        chomp(my $resp = <STDIN>);
-        if (lc($resp) eq 's') {
-            system(\"sudo systemctl restart sshd\") == 0
-                ? print \"🔁 sshd reiniciado com sucesso.\n\"
-                : print \"❌ Falha ao reiniciar sshd.\n\";
-        }
-    } elsif ($auto) {
-        system(\"sudo systemctl restart sshd\");
-    }
-}
+## SSH-7408: Harden SSH configuration
+#sub ssh_7408 {
+#    my $config_file = '/etc/ssh/sshd_config';
+#    my $backup_file = '/etc/ssh/sshd_config.bak';
+#    my $dry_run     = grep { $_ eq '--dry-run' } @ARGV;
+#    my $auto        = grep { $_ eq '--auto'    } @ARGV;
+#
+#    print "[SSH-7408] Endurecendo configurações de SSH em $config_file...\n";
+#
+#    unless (-f $config_file) {
+#        print "❌ Arquivo $config_file não encontrado.\n";
+#        return;
+#    }
+#
+#    # Cria backup
+#    if (!$dry_run && !$auto) {
+#        print "Deseja criar um backup de $config_file? [S/n] ";
+#        chomp(my $resp = <STDIN>);
+#        if (lc($resp) ne 'n') {
+#            system("cp $config_file $backup_file") == 0
+#                ? print "📦 Backup criado em $backup_file\n"
+#                : print "⚠️  Falha ao criar backup.\n";
+#        }
+#    }
+#
+#    my %desired = (
+#        'AllowTcpForwarding'   => 'no',
+#        'ClientAliveCountMax'  => '2',
+#        'LogLevel'             => 'VERBOSE',
+#        'MaxAuthTries'         => '3',
+#        'MaxSessions'          => '2',
+#        'TCPKeepAlive'         => 'no',
+#        'X11Forwarding'        => 'no',
+#        'AllowAgentForwarding' => 'no',
+#    );
+#
+#    print "Deseja alterar a porta padrão 22? [s/N] ";
+#    my $port_line = '';
+#    if (!$dry_run && (!$auto || grep { $_ =~ /^--port=/ } @ARGV)) {
+#        my $new_port = '';
+#        if ($auto) {
+#            ($new_port) = map { /^--port=(\\d+)/ ? $1 : () } @ARGV;
+#        } else {
+#            chomp(my $resp = <STDIN>);
+#            if (lc($resp) eq 's') {
+#                print "Digite a nova porta desejada (ex: 2222): ";
+#                chomp($new_port = <STDIN>);
+#            }
+#        }
+#        if ($new_port && $new_port =~ /^\\d+$/) {
+#            $desired{'Port'} = $new_port;
+#            $port_line = "Port $new_port\n";
+#        }
+#    }
+#
+#    open my $in, '<', $config_file or die "Erro ao abrir $config_file: $!";
+#    my @lines = <$in>;
+#    close $in;
+#
+#    my %found;
+#    for (@lines) {
+#        foreach my $key (keys %desired) {
+#            if (/^\\s*$key\\b/) {
+#                $_ = \"$key $desired{$key}\\n\";
+#                $found{$key} = 1;
+#            }
+#        }
+#    }
+#
+#    # Adiciona os que não foram encontrados
+#    foreach my $key (keys %desired) {
+#        next if $found{$key};
+#        push @lines, \"$key $desired{$key}\\n\";
+#    }
+#
+#    if ($port_line) {
+#        @lines = grep { !/^\\s*Port\\b/ } @lines;
+#        push @lines, $port_line unless $port_line eq '';
+#    }
+#
+#    if ($dry_run) {
+#        print \"🔍 Modo simulação: mudanças seriam:\n\";
+#        foreach my $key (keys %desired) {
+#            print \" - $key $desired{$key}\\n\";
+#        }
+#        print \" - Port $desired{Port}\\n\" if exists $desired{Port};
+#        return;
+#    }
+#
+#    open my $out, '>', $config_file or die \"Erro ao escrever $config_file: $!\";
+#    print $out @lines;
+#    close $out;
+#
+#    print \"✅ sshd_config endurecido com sucesso.\n\";
+#
+#    if (!$dry_run && !$auto) {
+#        print \"Deseja reiniciar o sshd agora? [s/N] \";
+#        chomp(my $resp = <STDIN>);
+#        if (lc($resp) eq 's') {
+#            system(\"sudo systemctl restart sshd\") == 0
+#                ? print \"🔁 sshd reiniciado com sucesso.\n\"
+#                : print \"❌ Falha ao reiniciar sshd.\n\";
+#        }
+#    } elsif ($auto) {
+#        system(\"sudo systemctl restart sshd\");
+#    }
+#}
 
 # PHP-2372: Desativa exposição de versão do PHP via expose_php = Off
 sub php_2372 {
