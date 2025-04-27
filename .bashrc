@@ -53,13 +53,13 @@ if ! shopt -oq posix; then
   fi
 fi
 
+. .profile
+
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do source "$f"; done
 
 eval "$(ssh-agent -s)" >/dev/null 2>&1 && ssh-add "$HOME/.ssh/id_ed25519" > /dev/null 2>&1
 
 command -v starship >/dev/null 2>&1 && eval -- "$(starship init bash --print-full-init)"
-
-#command -v pipx >/dev/null 2>&1 && eval "$(register-python-argcomplete pipx)"
 
 [ -x "$HOME/.rbenv/bin/rbenv" ] && eval "$(~/.rbenv/bin/rbenv init - --no-rehash bash)"
 

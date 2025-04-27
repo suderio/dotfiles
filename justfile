@@ -34,8 +34,10 @@ alias i := install
 alias c := clean
 alias h := hardening
 
-# Task principal - instala todos os pacotes
-[linux]
+default:
+  @just --list | more
+
+[unix]
 [group('main')]
 install:
   echo {{ cache_directory() }}
@@ -68,13 +70,13 @@ install:
   @just install-pandoc
   @just install-hunspell
 
-[linux]
+[unix]
 [group('main')]
 clean:
   rm -rf "$HOME/tmp"/*
 
 # Hardening usando lynis
-[linux]
+[unix]
 [group('main')]
 hardening:
   #!/usr/bin/env bash
@@ -90,7 +92,7 @@ hardening:
   sudo chmod 0644 /etc/pam.d/common-session
 
 # Instala algumas Nerd Fonts
-[linux]
+[unix]
 [group('base')]
 install-fonts:
   for font in {{FONTS}}; do \
@@ -98,21 +100,21 @@ install-fonts:
   done
   fc-cache -v
 
-[linux]
+[unix]
 [group('aux')]
 install-font font:
     mkdir -p "$XDG_DATA_HOME/fonts/{{font}}"
     curl -sL "{{NERD_FONTS_URL}}{{font}}.tar.xz" | unxz | tar -xvf - -C "$XDG_DATA_HOME/fonts/{{font}}"
     chmod -R "u=rwx,g=r,o=r" "$XDG_DATA_HOME/fonts/{{font}}"
 
-[linux]
+[unix]
 [group('base')]
 install-nvm:
   mkdir -p "$NVM_DIR"
   [ -s "$NVM_DIR/nvm.sh" ] || bash -c 'curl -o- {{NVM_INSTALL_URL}} | bash'
   source "$NVM_DIR/nvm.sh" && nvm install node
 
-[linux]
+[unix]
 [group('base')]
 install-rustup:
   command -v cargo >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -185,6 +187,12 @@ install-go:
   tar -xvf go1.24.2.linux-amd64.tar.gz
   mv go "$HOME/.local/"
 
+install-zig:
+  curl -fsSLo zig.tar.xz https://ziglang.org/download/0.14.0/zig-linux-x86_64-0.14.0.tar.xz
+  tar -xvf zig.tar.xz
+  mv zig-linux-x86_64*/zig "$HOME/.local/bin/"
+  mv zig-linux-x86_64*/lib "$HOME/.local/lib/zig"
+
 [group('base')]
 install-fzf:
   git clone https://github.com/junegunn/fzf.git
@@ -215,11 +223,12 @@ install-texlive:
 
 [group('app')]
 install-pandoc:
-  curl -RL -o pandoc.tar.gz https://github.com/jgm/pandoc/releases/download/3.6.4/pandoc-3.6.4-linux-amd64.tar.gz
-  tar zxf pandoc.tar.gz
-  cp -R pandoc-*/* "$HOME/.local/"
+  cabal install pandoc-cli
+  curl -fsSLO --output-dir "$HOME/.local/share/man/man1" https://raw.githubusercontent.com/jgm/pandoc/refs/heads/main/pandoc-cli/man/pandoc.1
+  curl -fsSLO --output-dir "$HOME/.local/share/man/man1" https://raw.githubusercontent.com/jgm/pandoc/refs/heads/main/pandoc-cli/man/pandoc-lua.1
+  curl -fsSLO --output-dir "$HOME/.local/share/man/man1" https://raw.githubusercontent.com/jgm/pandoc/refs/heads/main/pandoc-cli/man/pandoc-server.1
 
-[linux]
+[unix]
 [group('app')]
 install-hunspell:
   #!/usr/bin/env bash
@@ -243,7 +252,7 @@ install-hunspell:
   curl -O https://hunspell.memoq.com/en.zip
   unzip -j "en.zip" "en/en_US.*" -d "$HOME/.local/share/hunspell/"
 
-[linux]
+[unix]
 [group('dependency')]
 install-imagemagick:
   git clone --depth 1 --branch 7.1.1-47 https://github.com/ImageMagick/ImageMagick.git
@@ -251,13 +260,47 @@ install-imagemagick:
   cd ImageMagick ** ./make && ./make install
   sudo ldconfig "$HOME/.local/lib"
 
-[linux]
+[unix]
 [group('app')]
 install-emacs:
   # git clone -b emacs-30 git://git.sv.gnu.org/emacs.git
   # cd emacs && ./autogen.sh
   # cd emacs && ./configure --prefix="$HOME/.local" --with-mailutils --with-tree-sitter --without-xaw3d --with-pgtk --with-native-compilation=aot
   sudo pacman -S emacs-wayland
+
+[group('lsp')]
+install-lsps:
+  # see https://langserver.org/
+  # see https://microsoft.github.io/language-server-protocol/implementors/servers/
+
+[group('lsp')]
+install-typescript-lsp:
+  npm install -g typescript-language-server typescript
+
+[group('lsp')]
+install-json-lsp:
+  npm install -g vscode-json-languageserver
+
+[group('lsp')]
+install-kotlin-lsp:
+  #!/usr/bin/env bash
+  git clone https://github.com/fwcd/kotlin-language-server.git
+  cd kotlin-language-server
+  . "$HOME/.sdkman/bin/sdkman-init.sh"
+  sdk install java 11.0.27-tem
+  ./gradlew :server:installDist
+  sdk uninstall java 11.0.27-tem
+  cp server/build/install/server/bin/kotlin-language-server "$HOME/.local/bin/"
+
+[group('lsp')]
+install-tex-lsp:
+  cargo install --git https://github.com/latex-lsp/texlab --locked --tag v5.22.1
+
+[group('lsp')]
+install-lua-lsp:
+  git clone https://github.com/LuaLS/lua-language-server
+  cd lua-language-server && ./make.sh
+  mv lua-language-server/bin/lua-language-server "$HOME/.local/bin/"
 
 [group('lsp')]
 install-bash-lsp:
@@ -267,16 +310,57 @@ install-bash-lsp:
   npm i -g bash-language-server
   # see also https://github.com/idank/explainshell
 
-[linux]
+[group('lsp')]
+install-perl-lsp:
+  cpanm --local-lib="$HOME/perl5" Perl::LanguageServer
+
 [group('lsp')]
 install-bibtex-lsp:
   uv tool install citation-langserver
 
+[group('lsp')]
 install-clangd:
   curl -fsSLO https://github.com/clangd/clangd/releases/download/19.1.2/clangd-linux-19.1.2.zip
   unzip clangd-linux-19.1.2.zip
   cp -R clangd_19.1.2/{bin,lib} "$HOME/.local/"
 
+[group('lsp')]
+install-clojure-lsp:
+  curl -fsSLO https://raw.githubusercontent.com/clojure-lsp/clojure-lsp/master/install
+  chmod u+x install
+  ./install --dir "$HOME/.local/bin"
+
+[group('lsp')]
+install-dockerfile-lsp:
+  npm install -g dockerfile-language-server-nodejs
+
+[group('lsp')]
+install-php-lsp:
+  curl -fsSLo phpactor.phar --output-dir "$HOME/.local/bin" https://github.com/phpactor/phpactor/releases/latest/download/phpactor.phar
+  chmod u+x "$HOME/.local/bin/phpactor.phar"
+
+[group('lsp')]
+instlal-python-lsp:
+  uv tool install pyright
+
+[group('lsp')]
+install-ruby-lsp:
+  gem install ruby-lsp
+
+[group('lsp')]
+install-yaml-lsp:
+   npm install yaml-language-server
+
+[group('lsp')]
+install-zig-lsp:
+  curl -fsSLo zls.tar.xz https://builds.zigtools.org/zls-linux-x86_64-0.14.0.tar.xz
+  tar -xvf zls.tar.xz
+  mv zls "$HOME/.local/bin/"
+
+[group('lsp')]
+install-java-lsp:
+  curl -fsSLo jdtls.tar.gz https://download.eclipse.org/jdtls/milestones/1.46.1/jdt-language-server-1.46.1-202504011455.tar.gz
+  tar -xvf jdtls.tar.gz -C "$HOME/.local/share/jdtls/"
 
 # Instala pacotes gem (o único necessário até agora é o neovim)
 [group('packages')]
@@ -344,18 +428,18 @@ install-python-packages:
 
 # Limpa o que tinha sido instalado anteriormente
 [group('achtung!')]
-[linux]
+[unix]
 remove-os-packages:
   @just remove-os-package {{PACKAGES_UNINSTALL}}
 
 [group('aux')]
-[linux]
+[unix]
 remove-os-package +pkg:
   sudo pacman --noconfirm -R {{pkg}}
 
 # Instala pacotes do SO
 [group('base')]
-[linux]
+[unix]
 install-os-packages:
   @just _check-os-and-install "{{OS_PACKAGES}}"
 
