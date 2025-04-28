@@ -264,7 +264,7 @@ install-hunspell:
 install-imagemagick:
   git clone --depth 1 --branch 7.1.1-47 https://github.com/ImageMagick/ImageMagick.git
   cd ImageMagick && ./configure --prefix="$HOME/.local" --enable-hdri --enable-64bit-channel-masks --with-modules
-  cd ImageMagick ** ./make && ./make install
+  cd ImageMagick && make && make install
   sudo ldconfig "$HOME/.local/lib"
 
 [unix]
