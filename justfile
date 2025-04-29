@@ -39,6 +39,11 @@ default:
 
 [unix]
 [group('main')]
+check:
+    for p in clang cmake emacs git less ninja ssh php sudo unzip vim wget zip go cargo starship ruby php fzf java; do command -v "$p" >/dev/null 2>&1 || echo "No $p!"; done
+
+[unix]
+[group('main')]
 install:
   echo {{ cache_directory() }}
   echo {{ config_directory() }}
@@ -260,7 +265,7 @@ install-hunspell:
   unzip -j "en.zip" "en/en_US.*" -d "$HOME/.local/share/hunspell/"
 
 [unix]
-[group('dependency')]
+[group('app')]
 install-imagemagick:
   git clone --depth 1 --branch 7.1.1-47 https://github.com/ImageMagick/ImageMagick.git
   cd ImageMagick && ./configure --prefix="$HOME/.local" --enable-hdri --enable-64bit-channel-masks --with-modules
