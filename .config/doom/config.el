@@ -60,12 +60,8 @@
     (setq doom-serif-font (font-spec :family "Noto Serif" :size 12)))
 
 (setq frame-title-format
-    '((:eval (if (buffer-file-name)
-                 (abbreviate-file-name (buffer-file-name))
-                    "%b"))
-      (:eval (if (buffer-modified-p)
-                 "!"))
-      " (" user-login-name "@" system-name ")"))
+    '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
+      (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
 
 (setq org-directory "~/org/")
 (setq org-agenda-files '("inbox.org" "work.org"))

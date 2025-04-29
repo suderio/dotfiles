@@ -102,13 +102,8 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
 *** Frame
 #+begin_src emacs-lisp
 (setq frame-title-format
-    '((:eval (if (buffer-file-name)
-                 (abbreviate-file-name (buffer-file-name))
-                    "%b"))
-      (:eval (if (buffer-modified-p)
-                 "!"))
-      " (" user-login-name "@" system-name ")"))
-
+    '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
+      (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
 #+end_src
 ** Org
 `org-directory'must be set before org loads!
@@ -267,7 +262,7 @@ Obs.: diff-refine-hunk may be slow
 (after! lsp-julia
   (setq lsp-julia-default-environment "~/.julia/environments/v1.11"))
 #+end_src
-** TODO Biblio
+** Biblio
 #+begin_src emacs-lisp
  (setq! org-cite-csl-styles-dir "~/org/biblio")
 
