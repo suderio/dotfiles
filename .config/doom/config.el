@@ -14,6 +14,11 @@
       which-key-max-description-length 55
       which-key-separator " → " )
 
+(map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
+
+(setq global-auto-revert-mode-text "󰀘"
+      global-auto-revert-non-file-buffers t)
+
 (setenv "LANG" "pt_BR,en_US")
 (setq-default ispell-program-name "hunspell")
 (with-eval-after-load "ispell"
@@ -33,6 +38,15 @@
 
 (setq fancy-splash-image (file-name-concat doom-user-dir "emacs-logo.png"))
 
+(add-to-list '+doom-dashboard-menu-sections
+    '("Open Journal"
+     :icon (nerd-icons-octicon "nf-oct-note" :face 'doom-dashboard-menu-title)
+     :key "SPC n j o"
+     :when (featurep! :lang org +journal)
+     :face (:inherit (doom-dashboard-menu-title))
+     :action org-journal-open-current-journal-file)
+)
+
 (if (font-installed? "FiraCode Nerd Font")
     (setq doom-font (font-spec :family "FiraCode Nerd Font" :size 12 :weight 'semi-light)))
 
@@ -41,6 +55,17 @@
 
 (if (font-installed? "FiraCode Nerd Font Mono")
     (setq doom-big-font (font-spec :family "FiraCode Nerd Font Mono" :size 16 :weight 'bold)))
+
+(if (font-installed? "Noto Serif")
+    (setq doom-serif-font (font-spec :family "Noto Serif" :size 12)))
+
+(setq frame-title-format
+    '((:eval (if (buffer-file-name)
+                 (abbreviate-file-name (buffer-file-name))
+                    "%b"))
+      (:eval (if (buffer-modified-p)
+                 "!"))
+      " (" user-login-name "@" system-name ")"))
 
 (setq org-directory "~/org/")
 (setq org-agenda-files '("inbox.org" "work.org"))
@@ -62,15 +87,18 @@
 ;;(setq org-refile-targets 'FIXME)
 
 ;; Org-roam variables
-;;(setq org-roam-directory "~/Org/org-roam/")
-;;(setq org-roam-index-file "~/Org/org-roam/index.org")
+(setq org-roam-directory "~/org/roam/")
+(setq org-roam-index-file "~/org/roam/index.org")
 ;;; Optional variables
 
 ;; Advanced: Custom link types
 ;; This example is for linking a person's 7-character ID to their page on the
 ;; free genealogy website Family Search.
 (setq org-link-abbrev-alist
-      '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")))
+      '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")
+        ("tarefa" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=TMS%3ATask&server=itsm.bndes.net&eid=%s")
+        ("incidente" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=HPD%3AHelp+Desk&server=itsm.bndes.net&eid=%s")
+        ))
 
 (setq-default org-startup-indented t
               org-pretty-entities t
@@ -86,6 +114,18 @@
  '(org-level-4 ((t (:inherit outline-4 :height 1.2))))
  '(org-level-5 ((t (:inherit outline-5 :height 1.1)))))
 
+(setq org-journal-dir "~/org/journal/"
+      org-journal-file-format "%Y%m.org")
+(after! org-journal
+  (setq
+   org-journal-date-format "%Y-%m-%d (%A)"
+   org-journal-enable-agenda-integration t
+   org-journal-file-type 'monthly
+   org-icalendar-store-UID t
+   org-icalendar-include-todo "all"
+   org-icalendar-combined-agenda-file "~/org/org-journal.ics" ;; export with (org-icalendar-combine-agenda-files)
+))
+
 (after! org
 (setq org-capture-templates
       '(("c" "Default Capture" entry (file "inbox.org")
@@ -98,13 +138,14 @@
         ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
          "** TODO %?\n%U\n%i\n%a")
         ("wt" "Work task" entry (file+headline "work.org" "Tasks")
-         "** TODO %c\n%U\n[[http://itsmweb.bndes.net/servlet/ViewFormServlet?form=TMS%3ATask&server=itsm.bndes.net&eid=%c][remedy]]\n%?")
+         "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
         ("wi" "Work incident" entry (file+headline "work.org" "Incidents")
-         "** TODO %c\n%U\n[[http://itsmweb.bndes.net/servlet/ViewFormServlet?form=HPD%3AHelp+Desk&server=itsm.bndes.net&eid=%c][remedy]]\n%?")
+         "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
         ("wa" "Work adhoc" entry (file+headline "work.org" "Ad hoc")
          "** TODO %?\n%U\n%i\n%a")
         ("wr" "Work report" entry (file+headline "work.org" "Reports")
-         "** TODO %?\n%U\n%i\n%a"))))
+         "** TODO %?\n%U\n%i\n%a")
+      )))
 
 (after! org
 (setq org-log-done 'time
@@ -120,9 +161,6 @@
         ("w" "Work" agenda ""
          ((org-agenda-files '("work.org"))))))
 
-;; Make org-open-at-point follow file links in the same window
-;;(setf (cdr (assoc 'file org-link-frame-setup)) 'find-file)
-
 ;; Make exporting quotes better
 (setq org-export-with-smart-quotes t
       org-export-with-drawers nil
@@ -131,9 +169,9 @@
       org-export-with-toc nil
       org-export-date-timestamp-format "%d %B %Y")
 ;; Export ODT to MS-Word
-(setq-default org-odt-preferred-output-format "docx")
+;;(setq-default org-odt-preferred-output-format "docx")
 ;; Export ODT to PDF
-;; (setq-default org-odt-preferred-output-format "pdf")
+(setq-default org-odt-preferred-output-format "pdf")
 
 (require 'org-tempo)
 
