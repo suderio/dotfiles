@@ -48,3 +48,5 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
 (package! just-mode)
+(package! latex-preview-pane)
+(package! ox-epub)

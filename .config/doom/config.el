@@ -1,9 +1,66 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
-(defun font-installed? (font-name)
+(defun sud-font-installed? (font-name)
   "Retorna t se a fonte font-name está instalada"
   (if (find-font (font-spec :name font-name))
       t nil))
+
+(after! dash
+  (defmacro sud-convert-shell-scripts-to-interactive-commands (directory)
+    "Make the shell scripts in DIRECTORY available as interactive commands."
+    (cons 'progn
+          (-map
+           (lambda (filename)
+             (let ((function-name (intern (concat "sud-shell-" (file-name-nondirectory filename)))))
+               `(defun ,function-name (&rest args)
+                  (interactive)
+                  (cond
+                   ((not (called-interactively-p 'any))
+                    (shell-command-to-string (mapconcat 'shell-quote-argument (cons ,filename args) " ")))
+                   ((region-active-p)
+                    (apply 'call-process-region (point) (mark) ,filename nil (if current-prefix-arg t nil) t args))
+                   (t
+                    (apply 'call-process ,filename nil (if current-prefix-arg t nil) nil args))))))
+           (-filter (-not #'file-directory-p)
+                    (-filter #'file-executable-p (directory-files directory t))))))
+  (sud-convert-shell-scripts-to-interactive-commands "~/.local/bin")
+)
+
+(defvar sud-git-clone-destination "~/git/")
+(defun sud-git-clone-clipboard-url ()
+  "Clone git URL in clipboard asynchronously and open in dired when finished."
+  (interactive)
+  (cl-assert (string-match-p "^\\(http\\|https\\|ssh\\)://" (current-kill 0)) nil "No URL in clipboard")
+  (let* ((url (current-kill 0))
+         (download-dir (expand-file-name sud-git-clone-destination))
+         (project-dir (concat (file-name-as-directory download-dir)
+                              (file-name-base url)))
+         (default-directory download-dir)
+         (command (format "git clone %s" url))
+         (buffer (generate-new-buffer (format "*%s*" command)))
+         (proc))
+    (when (file-exists-p project-dir)
+      (if (y-or-n-p (format "%s exists. delete?" (file-name-base url)))
+          (delete-directory project-dir t)
+        (user-error "Bailed")))
+    (switch-to-buffer buffer)
+    (setq proc (start-process-shell-command (nth 0 (split-string command)) buffer command))
+    (with-current-buffer buffer
+      (setq default-directory download-dir)
+      (shell-command-save-pos-or-erase)
+      (require 'shell)
+      (shell-mode)
+      (view-mode +1))
+    (set-process-sentinel proc (lambda (process state)
+                                 (let ((output (with-current-buffer (process-buffer process)
+                                                 (buffer-string))))
+                                   (kill-buffer (process-buffer process))
+                                   (if (= (process-exit-status process) 0)
+                                       (progn
+                                         (message "finished: %s" command)
+                                         (dired project-dir))
+                                     (user-error (format "%s\n%s" command output))))))
+    (set-process-filter proc #'comint-output-filter)))
 
 (setq user-full-name "Paulo Suderio"
       user-mail-address "paulo.suderio@gmail.com")
@@ -30,6 +87,9 @@
   (ispell-set-spellchecker-params)
   (ispell-hunspell-add-multi-dic "pt_BR,en_US"))
 
+(use-package! ws-butler
+  :hook prog-mode-hook)
+
 (setq doom-theme 'doom-vibrant)
 (add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
 
@@ -47,16 +107,16 @@
      :action org-journal-open-current-journal-file)
 )
 
-(if (font-installed? "FiraCode Nerd Font")
+(if (sud-font-installed? "FiraCode Nerd Font")
     (setq doom-font (font-spec :family "FiraCode Nerd Font" :size 12 :weight 'semi-light)))
 
-(if (font-installed? "FiraCode Nerd Font Propo")
+(if (sud-font-installed? "FiraCode Nerd Font Propo")
     (setq doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 13)))
 
-(if (font-installed? "FiraCode Nerd Font Mono")
+(if (sud-font-installed? "FiraCode Nerd Font Mono")
     (setq doom-big-font (font-spec :family "FiraCode Nerd Font Mono" :size 16 :weight 'bold)))
 
-(if (font-installed? "Noto Serif")
+(if (sud-font-installed? "Noto Serif")
     (setq doom-serif-font (font-spec :family "Noto Serif" :size 12)))
 
 (setq frame-title-format
@@ -102,6 +162,9 @@
               org-hide-emphasis-markers t
               org-startup-with-inline-images t
               org-image-actual-width '(300))
+(use-package! toc-org
+  :commands toc-org-enable
+  :init (add-hook 'org-mode-hook 'toc-org-enable))
 
 (custom-set-faces
  '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
@@ -143,6 +206,15 @@
          "** TODO %?\n%U\n%i\n%a")
       )))
 
+(after! org-roam
+  (setq org-roam-capture-templates
+    '(("d" "default" plain "%?"
+       :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
+
+    ("i" "ideas" plain "%?"
+     :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
+)))
+
 (after! org
 (setq org-log-done 'time
       org-todo-keywords '((sequence "TODO" "WAITING" "DOING" "|" "DONE(!)" "CANCELLED(!)"))
@@ -183,3 +255,66 @@
 (setq! org-cite-csl-styles-dir "~/org/biblio")
 
 (setq! citar-bibliography '("~/org/biblio/global.bib"))
+
+(use-package! ox-latex
+  :ensure nil
+  :demand t
+  :custom
+  ;; Multiple LaTeX passes for bibliographies
+  (org-latex-pdf-process
+   '("pdflatex -interaction nonstopmode -output-directory %o %f"
+     "bibtex %b"
+     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+  ;; Clean temporary files after export
+  (org-latex-logfiles-extensions
+   (quote ("lof" "lot" "tex~" "aux" "idx" "log" "out"
+           "toc" "nav" "snm" "vrb" "dvi" "fdb_latexmk"
+           "blg" "brf" "fls" "entoc" "ps" "spl" "bbl"
+           "tex" "bcf"))))
+(use-package! latex-preview-pane
+  :defer t
+  :commands  (latex-preview-pane-mode)
+  :hook ((latex-mode . latex-preview-pane-mode)))
+(use-package! ox-epub
+  :demand t)
+
+(after! ox-latex
+  (add-to-list 'org-latex-classes
+               '("abntex2"
+"[NO-DEFAULT-PACKAGES]
+\\documentclass{abntex2}
+\\usepackage{lmodern}
+\\usepackage[T1]{fontenc}
+\\usepackage[utf8]{inputenc}
+\\usepackage{indentfirst}
+\\usepackage{nomencl}
+\\usepackage{color}
+\\usepackage{graphicx}
+\\usepackage{microtype}
+\\usepackage[brazilian,hyperpageref]{backref}
+\\usepackage[alf]{abntex2cite}
+\\usepackage{fourier}
+[EXTRA]"
+("\\section{%s}" . "\\section*{%s}")
+("\\subsection{%s}" . "\\subsection*{%s}")
+("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+("\\paragraph{%s}" . "\\paragraph*{%s}")
+("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 )))
+
+(setq org-latex-hyperref-template
+"\\hypersetup{
+ pdftitle={%t},
+ pdfauthor={%a},
+ pdfsubject={%d},
+ pdfcreator={%c},
+ pdfkeywords={%k},
+ pdflang={%L},
+ colorlinks=true,
+ linkcolor=blue,
+ citecolor=blue,
+ filecolor=magenta,
+ urlcolor=blue,
+ bookmarksdepth=4}
+")

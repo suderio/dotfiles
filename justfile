@@ -40,7 +40,8 @@ default:
 [unix]
 [group('main')]
 check:
-    for p in clang cmake emacs git less ninja ssh php sudo unzip vim wget zip go cargo starship ruby php fzf java; do command -v "$p" >/dev/null 2>&1 || echo "No $p!"; done
+    @for p in clang cmake emacs git less ninja ssh php sudo unzip vim lua wget zip go cargo starship ruby php fzf java nvim; do command -v "$p" >/dev/null 2>&1 || echo "No $p!"; done
+    @for p in bat eza delta zenith dust fd procs zellij rg uv lazygit pandoc tex magick sbcl zig tidy; do command -v "$p" >/dev/null 2>&1 || echo "Missing $p."; done
 
 [unix]
 [group('main')]
@@ -214,6 +215,18 @@ install-fzf:
 [group('base')]
 install-cabal:
   curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+
+[group('app')]
+install-jq:
+  curl -fsSLo jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
+  chmod u+x jq
+  mv jq "$HOME/.local/bin/"
+
+[group('app')]
+install-graphviz:
+  curl -fsSLO https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/12.2.1/graphviz-12.2.1.tar.gz
+  tar -xvf graphviz-12.2.1.tar.gz
+  cd graphviz-12.2.1 && ./configure --prefix="$HOME/.local" --enable-static && make && make install
 
 [group('app')]
 install-pynvim:

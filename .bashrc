@@ -74,6 +74,5 @@ command -v fzf >/dev/null 2>&1 && eval "$(fzf --bash)"
 [ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
 [ -f "$HOME/.ghcup/env" ] && . "/$HOME/.ghcup/env"
 
-for prog in perl go cargo git starship ruby php julia fzf java; do command -v $prog >/dev/null 2>&1 || echo "No $prog!"; done
-command -v perl >/dev/null 2>&1 && checkrepos
-
+command -v just >/dev/null 2>&1 && just check
+command -v perl >/dev/null 2>&1 && checkrepos 2>/dev/null
