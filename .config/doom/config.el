@@ -145,6 +145,7 @@
 ;; Org-roam variables
 (setq org-roam-directory "~/org/roam/")
 (setq org-roam-index-file "~/org/roam/index.org")
+(setq org-roam-dailies-directory "journal/")
 ;;; Optional variables
 
 ;; Advanced: Custom link types
@@ -213,7 +214,11 @@
 
     ("i" "ideas" plain "%?"
      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
-)))
+  ))
+  (setq org-roam-dailies-capture-templates
+    '(("d" "default" entry "* %<%I:%M %p>: %?"
+       :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
+)
 
 (after! org
 (setq org-log-done 'time

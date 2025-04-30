@@ -46,14 +46,11 @@ export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
+[ -x /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion
+[ -x /etc/bash_completion ] && . /etc/bash_completion
 fi
 
-. .profile
+. "$HOME/.profile"
 
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do source "$f"; done
 
@@ -72,7 +69,7 @@ command -v fzf >/dev/null 2>&1 && eval "$(fzf --bash)"
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
 [ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
-[ -f "$HOME/.ghcup/env" ] && . "/$HOME/.ghcup/env"
+[ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
 
 command -v just >/dev/null 2>&1 && just check
 command -v perl >/dev/null 2>&1 && checkrepos 2>/dev/null
