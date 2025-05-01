@@ -1,17 +1,15 @@
-;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
-
 (defun sud-font-installed? (font-name)
   "Retorna t se a fonte font-name está instalada"
   (if (find-font (font-spec :name font-name))
-      t nil))
+       t nil))
 
 (after! dash
-  (defmacro sud-convert-shell-scripts-to-interactive-commands (directory)
+  (defmacro sud/convert-shell-scripts-to-interactive-commands (directory)
     "Make the shell scripts in DIRECTORY available as interactive commands."
     (cons 'progn
           (-map
            (lambda (filename)
-             (let ((function-name (intern (concat "sud-shell-" (file-name-nondirectory filename)))))
+             (let ((function-name (intern (concat "sud/shell-" (file-name-nondirectory filename)))))
                `(defun ,function-name (&rest args)
                   (interactive)
                   (cond
@@ -23,16 +21,16 @@
                     (apply 'call-process ,filename nil (if current-prefix-arg t nil) nil args))))))
            (-filter (-not #'file-directory-p)
                     (-filter #'file-executable-p (directory-files directory t))))))
-  (sud-convert-shell-scripts-to-interactive-commands "~/.local/bin")
+  (sud/convert-shell-scripts-to-interactive-commands "~/.local/bin")
 )
 
-(defvar sud-git-clone-destination "~/git/")
-(defun sud-git-clone-clipboard-url ()
+(defvar sud/git-clone-destination "~/git/")
+(defun sud/git-clone-clipboard-url ()
   "Clone git URL in clipboard asynchronously and open in dired when finished."
   (interactive)
   (cl-assert (string-match-p "^\\(http\\|https\\|ssh\\)://" (current-kill 0)) nil "No URL in clipboard")
   (let* ((url (current-kill 0))
-         (download-dir (expand-file-name sud-git-clone-destination))
+         (download-dir (expand-file-name sud/git-clone-destination))
          (project-dir (concat (file-name-as-directory download-dir)
                               (file-name-base url)))
          (default-directory download-dir)
@@ -62,14 +60,41 @@
                                      (user-error (format "%s\n%s" command output))))))
     (set-process-filter proc #'comint-output-filter)))
 
+(defun sud/org-roam-copy-todo-to-today ()
+  (interactive)
+  (let ((org-refile-keep t) ;; Set this to nil to delete the original!
+        (org-roam-dailies-capture-templates
+          '(("t" "tasks" entry "%?"
+             :if-new (file+head+olp "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n" ("Tasks")))))
+        (org-after-refile-insert-hook #'save-buffer)
+        today-file
+        pos)
+    (save-window-excursion
+      (org-roam-dailies--capture (current-time) t)
+      (setq today-file (buffer-file-name))
+      (setq pos (point)))
+
+    ;; Only refile if the target file is different than the current file
+    (unless (equal (file-truename today-file)
+                   (file-truename (buffer-file-name)))
+      (org-refile nil nil (list "Tasks" today-file nil pos)))))
+
+(after! org
+(add-to-list 'org-after-todo-state-change-hook
+             (lambda ()
+               (when (equal org-state "DONE")
+                 (sud/org-roam-copy-todo-to-today)))))
+
 (setq user-full-name "Paulo Suderio"
       user-mail-address "paulo.suderio@gmail.com")
 
 (setq display-line-numbers-type 'relative
       evil-respect-visual-line-mode t
       which-key-idle-delay 0.8
-      which-key-max-description-length 55
-      which-key-separator " → " )
+      which-key-max-description-length 155
+      which-key-separator " → "
+      which-key-dont-use-unicode nil
+      )
 
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
 
@@ -90,8 +115,14 @@
 (use-package! ws-butler
   :hook prog-mode-hook)
 
-(setq doom-theme 'doom-vibrant)
+(setq doom-theme 'modus-vivendi)
 (add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
+(setq modus-themes-bold-constructs t)
+(setq modus-themes-italic-constructs t)
+(setq modus-themes-prompts '(bold))
+;; Important!
+(setq modus-themes-scale-headings t)
+(setq  modus-themes-variable-pitch-ui t)
 
 (setq visible-bell nil)
 (setq ring-bell-function 'ignore)
@@ -167,12 +198,13 @@
   :commands toc-org-enable
   :init (add-hook 'org-mode-hook 'toc-org-enable))
 
+(after! org
 (custom-set-faces
  '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
  '(org-level-2 ((t (:inherit outline-2 :height 1.4))))
  '(org-level-3 ((t (:inherit outline-3 :height 1.3))))
  '(org-level-4 ((t (:inherit outline-4 :height 1.2))))
- '(org-level-5 ((t (:inherit outline-5 :height 1.1)))))
+ '(org-level-5 ((t (:inherit outline-5 :height 1.1))))))
 
 (setq org-journal-dir "~/org/journal/"
       org-journal-file-format "%Y%m.org")
@@ -187,38 +219,38 @@
 ))
 
 (after! org
-(setq org-capture-templates
-      '(("c" "Default Capture" entry (file "inbox.org")
-         "* TODO %?\n%U\n%i")
-        ;; Capture and keep an org-link to the thing we're currently working with
-        ("r" "Capture with Reference" entry (file "inbox.org")
-         "* TODO %?\n%U\n%i\n%a")
-        ;; Define a section
-        ("w" "Work")
-        ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
-         "** TODO %?\n%U\n%i\n%a")
-        ("wt" "Work task" entry (file+headline "work.org" "Tasks")
-         "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
-        ("wi" "Work incident" entry (file+headline "work.org" "Incidents")
-         "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
-        ("wa" "Work adhoc" entry (file+headline "work.org" "Ad hoc")
-         "** TODO %?\n%U\n%i\n%a")
-        ("wr" "Work report" entry (file+headline "work.org" "Reports")
-         "** TODO %?\n%U\n%i\n%a")
-      )))
+        (setq org-capture-templates
+              '(("c" "Default Capture" entry (file "inbox.org")
+                 "* TODO %?\n%U\n%i")
+                ;; Capture and keep an org-link to the thing we're currently working with
+                ("r" "Capture with Reference" entry (file "inbox.org")
+                 "* TODO %?\n%U\n%i\n%a")
+                ;; Define a section
+                ("w" "Work")
+                ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
+                 "** TODO %?\n%U\n%i\n%a")
+                ("wt" "Work task" entry (file+headline "work.org" "Tasks")
+                 "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
+                ("wi" "Work incident" entry (file+headline "work.org" "Incidents")
+                 "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
+                ("wa" "Work adhoc" entry (file+headline "work.org" "Ad hoc")
+                 "** TODO %?\n%U\n%i\n%a")
+                ("wr" "Work report" entry (file+headline "work.org" "Reports")
+                 "** TODO %?\n%U\n%i\n%a")
+                )))
 
 (after! org-roam
-  (setq org-roam-capture-templates
-    '(("d" "default" plain "%?"
-       :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
+        (setq org-roam-capture-templates
+              '(("d" "default" plain "%?"
+                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
 
-    ("i" "ideas" plain "%?"
-     :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
-  ))
-  (setq org-roam-dailies-capture-templates
-    '(("d" "default" entry "* %<%I:%M %p>: %?"
-       :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
-)
+                ("i" "ideas" plain "%?"
+                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
+                ))
+        (setq org-roam-dailies-capture-templates
+              '(("d" "default" entry "* %<%I:%M %p>: %?"
+                 :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
+        )
 
 (after! org
 (setq org-log-done 'time
@@ -261,6 +293,34 @@
 
 (setq! citar-bibliography '("~/org/biblio/global.bib"))
 
+(use-package! lsp-ui
+  :hook (lsp-mode . lsp-ui-mode))
+
+;; Disable format-on-save behavior in Emacs Lisp buffers
+ ;(setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
+
+ ;; To permenantly disable a formatter:
+ (after! csharp-mode
+   (set-formatter! 'csharpier nil))
+
+ ;; To define new formatters:
+ ;; From modules/tools/docker/config.el:
+ (after! dockerfile-mode
+   (set-formatter! 'dockfmt '("dockfmt" "fmt" filepath) :modes '(dockerfile-mode)))
+
+ ;; From modules/lang/sh/config.el:
+ (after! sh-script
+   (set-formatter! 'shfmt '("shfmt" "-ci"
+                            (unless indent-tabs-mode
+                              (list "-i" (number-to-string tab-width))))))
+
+(setq +format-on-save-disabled-modes
+      '(emacs-lisp-mode  ; elisp's mechanisms are good enough
+        sql-mode         ; sqlformat is currently broken
+        tex-mode         ; latexindent is broken
+        latex-mode))
+
+;(setq reftex-default-bibliography "/your/bib/file.bib")
 (use-package! ox-latex
   :ensure nil
   :demand t
@@ -285,8 +345,8 @@
   :demand t)
 
 (after! ox-latex
-  (add-to-list 'org-latex-classes
-               '("abntex2"
+        (add-to-list 'org-latex-classes
+                     '("abntex2"
 "[NO-DEFAULT-PACKAGES]
 \\documentclass{abntex2}
 \\usepackage{lmodern}
@@ -301,12 +361,12 @@
 \\usepackage[alf]{abntex2cite}
 \\usepackage{fourier}
 [EXTRA]"
-("\\section{%s}" . "\\section*{%s}")
-("\\subsection{%s}" . "\\subsection*{%s}")
-("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-("\\paragraph{%s}" . "\\paragraph*{%s}")
-("\\subparagraph{%s}" . "\\subparagraph*{%s}")
-                 )))
+                       ("\\section{%s}" . "\\section*{%s}")
+                       ("\\subsection{%s}" . "\\subsection*{%s}")
+                       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                       ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                       )))
 
 (setq org-latex-hyperref-template
 "\\hypersetup{
@@ -323,3 +383,6 @@
  urlcolor=blue,
  bookmarksdepth=4}
 ")
+
+(after! PACKAGE
+  (setq x y))

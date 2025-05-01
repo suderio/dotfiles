@@ -16,7 +16,7 @@ shopt -s checkwinsize
 
 shopt -q globstar 2>/dev/null && shopt -s globstar
 
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+comman -v lesspipe &>/dev/null && eval "$(SHELL=/bin/sh lesspipe)"
 
 [ -z "${chroot_ps1:-}" ] && [ -r /etc/chroot_ps1 ] && chroot_ps1=$(cat /etc/chroot_ps1)
 
@@ -28,9 +28,10 @@ force_color_prompt=yes
 # We have color support; assume it's compliant with Ecma-48
 # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
 # a case would tend to support setf rather than setaf.)
-[ -n "$force_color_prompt" ] && [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null && color_prompt=yes || color_prompt=
-[ "$color_prompt" = yes ] && \
-  PS1='${chroot_ps1:+($chroot_ps1)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ ' || \
+
+[ -n "$force_color_prompt" ] && command -v tput &>/dev/null && (tput setaf || tput AF) &>/dev/null && color_prompt=yes || color_prompt=
+[ "$color_prompt" = yes ] &&
+  PS1='${chroot_ps1:+($chroot_ps1)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ ' ||
   PS1='${chroot_ps1:+($chroot_ps1)}\u@\h:\w\$ '
 unset color_prompt force_color_prompt
 
@@ -46,23 +47,23 @@ export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 if ! shopt -oq posix; then
-[ -x /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion
-[ -x /etc/bash_completion ] && . /etc/bash_completion
+  [ -x /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion
+  [ -x /etc/bash_completion ] && . /etc/bash_completion
 fi
 
 . "$HOME/.profile"
 
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do source "$f"; done
 
-eval "$(ssh-agent -s)" >/dev/null 2>&1 && ssh-add "$HOME/.ssh/id_ed25519" > /dev/null 2>&1
+eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
 
-command -v starship >/dev/null 2>&1 && eval -- "$(starship init bash --print-full-init)"
+command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-init)"
 
 [ -x "$HOME/.rbenv/bin/rbenv" ] && eval "$(~/.rbenv/bin/rbenv init - --no-rehash bash)"
 
-command -v perl >/dev/null 2>&1 && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)"
+command -v perl &>/dev/null && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)"
 
-command -v fzf >/dev/null 2>&1 && eval "$(fzf --bash)"
+command -v fzf &>/dev/null && eval "$(fzf --bash)"
 
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
@@ -71,5 +72,5 @@ command -v fzf >/dev/null 2>&1 && eval "$(fzf --bash)"
 [ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
 
-command -v just >/dev/null 2>&1 && just check
-command -v perl >/dev/null 2>&1 && checkrepos 2>/dev/null
+command -v just &>/dev/null && just check
+command -v perl &>/dev/null && checkrepos 2>/dev/null

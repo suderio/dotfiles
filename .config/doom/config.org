@@ -5,11 +5,19 @@
 #+OPTIONS: toc:2
 #+PROPERTY: header-args    :tangle yes
 
-* Emacs config
-#+begin_src emacs-lisp
-;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
-#+end_src
-Do not need to run 'doom sync' after modifying this file!
+
+* Emacs config :TOC:
+  - [[#functions][Functions]]
+  - [[#basic][Basic]]
+  - [[#ui][UI]]
+  - [[#org][Org]]
+  - [[#magit][Magit]]
+  - [[#languages][Languages]]
+  - [[#biblio][Biblio]]
+  - [[#lsp][LSP]]
+  - [[#latex][Latex]]
+  - [[#remember][Remember]]
+
 ** Functions
 
 *** Check if font is installed and change
@@ -17,19 +25,19 @@ Do not need to run 'doom sync' after modifying this file!
 (defun sud-font-installed? (font-name)
   "Retorna t se a fonte font-name está instalada"
   (if (find-font (font-spec :name font-name))
-      t nil))
+       t nil))
 #+end_src
 *** Create interactive commands from every executable in directory
 
 An idea taken from [[https://pages.sachachua.com/.emacs.d/#scan-bin-and-turn-the-scripts-into-interactive-commands][sachachua]]
 #+begin_src emacs-lisp
 (after! dash
-  (defmacro sud-convert-shell-scripts-to-interactive-commands (directory)
+  (defmacro sud/convert-shell-scripts-to-interactive-commands (directory)
     "Make the shell scripts in DIRECTORY available as interactive commands."
     (cons 'progn
           (-map
            (lambda (filename)
-             (let ((function-name (intern (concat "sud-shell-" (file-name-nondirectory filename)))))
+             (let ((function-name (intern (concat "sud/shell-" (file-name-nondirectory filename)))))
                `(defun ,function-name (&rest args)
                   (interactive)
                   (cond
@@ -41,18 +49,18 @@ An idea taken from [[https://pages.sachachua.com/.emacs.d/#scan-bin-and-turn-the
                     (apply 'call-process ,filename nil (if current-prefix-arg t nil) nil args))))))
            (-filter (-not #'file-directory-p)
                     (-filter #'file-executable-p (directory-files directory t))))))
-  (sud-convert-shell-scripts-to-interactive-commands "~/.local/bin")
+  (sud/convert-shell-scripts-to-interactive-commands "~/.local/bin")
 )
 #+end_src
 *** Clones git repo from clipboard and opens dired when finished
 #+begin_src emacs-lisp
-(defvar sud-git-clone-destination "~/git/")
-(defun sud-git-clone-clipboard-url ()
+(defvar sud/git-clone-destination "~/git/")
+(defun sud/git-clone-clipboard-url ()
   "Clone git URL in clipboard asynchronously and open in dired when finished."
   (interactive)
   (cl-assert (string-match-p "^\\(http\\|https\\|ssh\\)://" (current-kill 0)) nil "No URL in clipboard")
   (let* ((url (current-kill 0))
-         (download-dir (expand-file-name sud-git-clone-destination))
+         (download-dir (expand-file-name sud/git-clone-destination))
          (project-dir (concat (file-name-as-directory download-dir)
                               (file-name-base url)))
          (default-directory download-dir)
@@ -83,6 +91,35 @@ An idea taken from [[https://pages.sachachua.com/.emacs.d/#scan-bin-and-turn-the
     (set-process-filter proc #'comint-output-filter)))
 
 #+end_src
+*** Copies every DONE task to the dailies file
+Taken from [[https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam-hacks/][System Crafters]]
+#+begin_src emacs-lisp
+(defun sud/org-roam-copy-todo-to-today ()
+  (interactive)
+  (let ((org-refile-keep t) ;; Set this to nil to delete the original!
+        (org-roam-dailies-capture-templates
+          '(("t" "tasks" entry "%?"
+             :if-new (file+head+olp "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n" ("Tasks")))))
+        (org-after-refile-insert-hook #'save-buffer)
+        today-file
+        pos)
+    (save-window-excursion
+      (org-roam-dailies--capture (current-time) t)
+      (setq today-file (buffer-file-name))
+      (setq pos (point)))
+
+    ;; Only refile if the target file is different than the current file
+    (unless (equal (file-truename today-file)
+                   (file-truename (buffer-file-name)))
+      (org-refile nil nil (list "Tasks" today-file nil pos)))))
+
+(after! org
+(add-to-list 'org-after-todo-state-change-hook
+             (lambda ()
+               (when (equal org-state "DONE")
+                 (sud/org-roam-copy-todo-to-today)))))
+
+#+end_src
 ** Basic
 Some functionality uses this to identify you, e.g. GPG configuration, email clients, file templates and snippets. It is optional.
 #+begin_src emacs-lisp
@@ -94,8 +131,10 @@ This determines the style of line numbers in effect. If set to `nil', line numbe
 (setq display-line-numbers-type 'relative
       evil-respect-visual-line-mode t
       which-key-idle-delay 0.8
-      which-key-max-description-length 55
-      which-key-separator " → " )
+      which-key-max-description-length 155
+      which-key-separator " → "
+      which-key-dont-use-unicode nil
+      )
 #+end_src
 *** Keybindings
 #+begin_src emacs-lisp
@@ -128,8 +167,14 @@ This trims whitespaces at EOL with little intervention.
 ** UI
 *** Theme
 #+begin_src emacs-lisp
-(setq doom-theme 'doom-vibrant)
+(setq doom-theme 'modus-vivendi)
 (add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
+(setq modus-themes-bold-constructs t)
+(setq modus-themes-italic-constructs t)
+(setq modus-themes-prompts '(bold))
+;; Important!
+(setq modus-themes-scale-headings t)
+(setq  modus-themes-variable-pitch-ui t)
 #+end_src
 *** Bell
 Disables annoying bell
@@ -229,13 +274,14 @@ org-directory must be set before org loads!
   :init (add-hook 'org-mode-hook 'toc-org-enable))
 #+end_src
 *** Org Level Headers
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp 
+(after! org
 (custom-set-faces
  '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
  '(org-level-2 ((t (:inherit outline-2 :height 1.4))))
  '(org-level-3 ((t (:inherit outline-3 :height 1.3))))
  '(org-level-4 ((t (:inherit outline-4 :height 1.2))))
- '(org-level-5 ((t (:inherit outline-5 :height 1.1)))))
+ '(org-level-5 ((t (:inherit outline-5 :height 1.1))))))
 #+end_src
 *** Journal
 #+begin_src emacs-lisp
@@ -251,43 +297,43 @@ org-directory must be set before org loads!
    org-icalendar-combined-agenda-file "~/org/org-journal.ics" ;; export with (org-icalendar-combine-agenda-files)
 ))
 #+end_src
-*** TODO Capture
+*** DOING Capture
 #+begin_src emacs-lisp
 (after! org
-(setq org-capture-templates
-      '(("c" "Default Capture" entry (file "inbox.org")
-         "* TODO %?\n%U\n%i")
-        ;; Capture and keep an org-link to the thing we're currently working with
-        ("r" "Capture with Reference" entry (file "inbox.org")
-         "* TODO %?\n%U\n%i\n%a")
-        ;; Define a section
-        ("w" "Work")
-        ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
-         "** TODO %?\n%U\n%i\n%a")
-        ("wt" "Work task" entry (file+headline "work.org" "Tasks")
-         "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
-        ("wi" "Work incident" entry (file+headline "work.org" "Incidents")
-         "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
-        ("wa" "Work adhoc" entry (file+headline "work.org" "Ad hoc")
-         "** TODO %?\n%U\n%i\n%a")
-        ("wr" "Work report" entry (file+headline "work.org" "Reports")
-         "** TODO %?\n%U\n%i\n%a")
-      )))
+        (setq org-capture-templates
+              '(("c" "Default Capture" entry (file "inbox.org")
+                 "* TODO %?\n%U\n%i")
+                ;; Capture and keep an org-link to the thing we're currently working with
+                ("r" "Capture with Reference" entry (file "inbox.org")
+                 "* TODO %?\n%U\n%i\n%a")
+                ;; Define a section
+                ("w" "Work")
+                ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
+                 "** TODO %?\n%U\n%i\n%a")
+                ("wt" "Work task" entry (file+headline "work.org" "Tasks")
+                 "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
+                ("wi" "Work incident" entry (file+headline "work.org" "Incidents")
+                 "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
+                ("wa" "Work adhoc" entry (file+headline "work.org" "Ad hoc")
+                 "** TODO %?\n%U\n%i\n%a")
+                ("wr" "Work report" entry (file+headline "work.org" "Reports")
+                 "** TODO %?\n%U\n%i\n%a")
+                )))
 
 (after! org-roam
-  (setq org-roam-capture-templates
-    '(("d" "default" plain "%?"
-       :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
+        (setq org-roam-capture-templates
+              '(("d" "default" plain "%?"
+                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
 
-    ("i" "ideas" plain "%?"
-     :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
-  ))
-  (setq org-roam-dailies-capture-templates
-    '(("d" "default" entry "* %<%I:%M %p>: %?"
-       :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
-)
+                ("i" "ideas" plain "%?"
+                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
+                ))
+        (setq org-roam-dailies-capture-templates
+              '(("d" "default" entry "* %<%I:%M %p>: %?"
+                 :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
+        )
 #+end_src
-*** TODO Workflow
+*** Workflow
 #+begin_src emacs-lisp
 (after! org
 (setq org-log-done 'time
@@ -296,7 +342,7 @@ org-directory must be set before org loads!
       org-outline-path-complete-in-steps nil
       org-refile-use-outline-path 'file))
 #+end_src
-*** TODO Agenda
+*** Agenda
 #+begin_src emacs-lisp
 (setq org-agenda-custom-commands
       '(("n" "Agenda and All Todos"
@@ -305,7 +351,7 @@ org-directory must be set before org loads!
         ("w" "Work" agenda ""
          ((org-agenda-files '("work.org"))))))
 #+end_src
-*** TODO Export
+*** DOING Export
 #+begin_src emacs-lisp
 ;; Make exporting quotes better
 (setq org-export-with-smart-quotes t
@@ -360,15 +406,47 @@ Obs.: diff-refine-hunk may be slow
 
 #+end_src
 
-** TODO see lsp-mode configuration
+** LSP
+See https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 
-(https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/)
+#+begin_src emacs-lisp
+(use-package! lsp-ui
+  :hook (lsp-mode . lsp-ui-mode))
+#+end_src
+*** Formatting
+#+begin_src emacs-lisp
+ ;; Disable format-on-save behavior in Emacs Lisp buffers
+ ;(setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
+
+ ;; To permenantly disable a formatter:
+ (after! csharp-mode
+   (set-formatter! 'csharpier nil))
+
+ ;; To define new formatters:
+ ;; From modules/tools/docker/config.el:
+ (after! dockerfile-mode
+   (set-formatter! 'dockfmt '("dockfmt" "fmt" filepath) :modes '(dockerfile-mode)))
+
+ ;; From modules/lang/sh/config.el:
+ (after! sh-script
+   (set-formatter! 'shfmt '("shfmt" "-ci"
+                            (unless indent-tabs-mode
+                              (list "-i" (number-to-string tab-width))))))
+
+(setq +format-on-save-disabled-modes
+      '(emacs-lisp-mode  ; elisp's mechanisms are good enough
+        sql-mode         ; sqlformat is currently broken
+        tex-mode         ; latexindent is broken
+        latex-mode))
+
+
+#+end_src
 ** Latex
- (setq reftex-default-bibliography "/your/bib/file.bib")
 
 https://github.com/james-stoup/emacs-org-mode-tutorial
 
 #+begin_src emacs-lisp
+;(setq reftex-default-bibliography "/your/bib/file.bib")
 (use-package! ox-latex
   :ensure nil
   :demand t
@@ -392,11 +470,11 @@ https://github.com/james-stoup/emacs-org-mode-tutorial
 (use-package! ox-epub
   :demand t)
 #+end_src
-**** ABNT2
+*** ABNT2
 #+begin_src emacs-lisp
 (after! ox-latex
-  (add-to-list 'org-latex-classes
-               '("abntex2"
+        (add-to-list 'org-latex-classes
+                     '("abntex2"
 "[NO-DEFAULT-PACKAGES]
 \\documentclass{abntex2}
 \\usepackage{lmodern}
@@ -411,12 +489,12 @@ https://github.com/james-stoup/emacs-org-mode-tutorial
 \\usepackage[alf]{abntex2cite}
 \\usepackage{fourier}
 [EXTRA]"
-("\\section{%s}" . "\\section*{%s}")
-("\\subsection{%s}" . "\\subsection*{%s}")
-("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-("\\paragraph{%s}" . "\\paragraph*{%s}")
-("\\subparagraph{%s}" . "\\subparagraph*{%s}")
-                 )))
+                       ("\\section{%s}" . "\\section*{%s}")
+                       ("\\subsection{%s}" . "\\subsection*{%s}")
+                       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                       ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                       )))
 
 (setq org-latex-hyperref-template
 "\\hypersetup{
@@ -438,12 +516,12 @@ https://github.com/james-stoup/emacs-org-mode-tutorial
 ** Remember
 Whenever you reconfigure a package, make sure to wrap your config in an
  `after!' block, otherwise Doom's defaults may override your settings. E.g.
-
+#+begin_src emacs-lisp tangle: no
    (after! PACKAGE
      (setq x y))
+#+end_src
 
  The exceptions to this rule:
-
    - Setting file/directory variables (like `org-directory')
    - Setting variables which explicitly tell you to set them before their
      package is loaded (see 'C-h v VARIABLE' to look up their documentation).
