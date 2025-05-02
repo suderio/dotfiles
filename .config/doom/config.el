@@ -65,7 +65,7 @@
   (let ((org-refile-keep t) ;; Set this to nil to delete the original!
         (org-roam-dailies-capture-templates
           '(("t" "tasks" entry "%?"
-             :if-new (file+head+olp "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n" ("Tasks")))))
+             :if-new (file+head+olp "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n" ("Done!")))))
         (org-after-refile-insert-hook #'save-buffer)
         today-file
         pos)
@@ -77,7 +77,7 @@
     ;; Only refile if the target file is different than the current file
     (unless (equal (file-truename today-file)
                    (file-truename (buffer-file-name)))
-      (org-refile nil nil (list "Tasks" today-file nil pos)))))
+      (org-refile nil nil (list "Done!" today-file nil pos)))))
 
 (after! org
 (add-to-list 'org-after-todo-state-change-hook

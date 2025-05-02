@@ -7,11 +7,22 @@ alias config='git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
 # config config --local status.showUntrackedFiles no
 # config checkout
 configsync() {
+  config commit --all -m "Autocommit: $(uname -mro)\n\n$(config status --porcelain)"
   config pull --all
-  config commit -m "config autocommit: $(uname -nmro)"
+  config remote | grep github && config push github
+  config push origin
+  printf "Dotfiles sync'ed"
+
+  git -C "$HOME/org" commit --all -m "Autocommit: $(uname -mro)\n\n$(config status --porcelain)"
+  git -C "$HOME/org" pull --all
   config push
+  printf "Org sync'ed"
+
 }
 
 configstatus() {
+  printf "Dotfiles:\n"
   config status -s
+  printf "\nOrg:\n"
+  git -C "$HOME/org" status -s
 }

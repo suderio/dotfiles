@@ -10,7 +10,6 @@
 	safecrlf = warn
 	filemode = false
 	pager = delta
-
 [gc]
 	auto = 7000
 [grep]
@@ -33,7 +32,6 @@
 	autoStash = true
 [push]
 	default = matching
-
 [color]
 	ui = auto
 [color "branch"]
@@ -50,7 +48,6 @@
 	added = green bold
 	changed = yellow bold
 	untracked = red bold
-
 [diff]
   tool = nvimdiff
   guitool = meld
@@ -74,14 +71,14 @@
   trustExitCode = false
 [delta]
 	navigate = true
-
 [gitflow "prefix"]
 	feature = feature-
 	release = release-
 	hotfix = hotfix-
 	support = support-
 	versiontag = v
-
+[credential]
+	helper = store
 [alias]
      tree = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset%n' --abbrev-commit --date=relative --branches
      # List commits in short form, with colors and branch/tag annotations                                           
