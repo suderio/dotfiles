@@ -55,7 +55,7 @@ sub krnl_5820 {
 
 # AUTH-9262: Install a PAM module for password strength testing
 sub auth_9262 {
-    my $pkg = 'libpam-passwdqc';
+    my $pkg = 'pam';
     my $pam_file = '/etc/pam.d/passwd';
     my $marker = '# Added by auth_9262 hardening script';
     my $pam_line = 'password    requisite     pam_passwdqc.so';
