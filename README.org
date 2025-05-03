@@ -1,29 +1,40 @@
 #+TITLE: Shell Config
 #+AUTHOR: Paulo Suderio
 
-[[Dotfiles][http://github.com/suderio/dotfiles.git]]
-
 * Bootstrap
 
 ** Configure git to manage the dotfile bare repo
 
 Manage dot file with git, see https://www.atlassian.com/git/tutorials/dotfiles
 
-Use this alias to manage all configuration
-
-#+begin_src bash
-alias config='/usr/bin/git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
+Bootstraping can be done by the brave of heart with:
+#+begin_src shell :tangle no
+curl -fsS https://raw.githubusercontent.com/suderio/dotfiles/refs/heads/main/install.sh | sh
 #+end_src
 
 ** Config in a new machine
-
-#+begin_src bash
-git clone --bare git@github.com:suderio/dotfiles $HOME/.local/dotfiles
+*** Use this alias to manage all configuration
+#+begin_src shell :tangle install.sh
+alias config='git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
+#+end_src
+*** Clone, don't show untracked files and checkout
+#+begin_src shell :tangle install.sh
+git clone --bare git@github.com:suderio/dotfiles "$HOME/.local/dotfiles"
 config config --local status.showUntrackedFiles no
 config checkout
 #+end_src
-
+*** Install rustup and just
+#+begin_src shell :tangle install.sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+cargo install just
+#+end_src
+*** Create a tmp directory in ~
+#+begin_src shell :tangle install.sh
+mkdir -p "$HOME/tmp"
+#+end_src
 ** Justfile
+The justfile has all the tools, bells and whistles.
+
 Works well in arch distros, less so in others.
 *** Minimum requirements
 - ansible
@@ -34,21 +45,23 @@ Works well in arch distros, less so in others.
 - fontconfig
 - git
 - less
+- ninja
 - openssh
 - pacman-contrib
 - php
 - sudo
 - unzip
 - vim
+- wget
 - zip
-*** Install rustup and just
-#+begin_src bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-cargo install just
-#+end_src
-*** Create a tmp directory in ~
-#+begin_src bash
-mkdir -p "$HOME/tmp"
-#+end_src
-
-
+*** Other requirements
+- maim
+- wl-clipboard
+- xclip
+- emacs-wayland
+- poppler-glib
+*** Nice to have
+- man-db
+- man-pages
+- noto-fonts
+- reflector
