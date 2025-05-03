@@ -108,7 +108,7 @@ __log_msg() {
 # echo the git dir
 __gitdir() {
     if [ "true" = "$($GIT_CMD rev-parse --is-inside-work-tree "$PWD" | head -1)" ]; then
-        $GIT_CMD rev-parse --git-dir "$PWD" 2>/dev/null
+        $GIT_CMD rev-parse --git-dir "$pwd" 2>/dev/null
     fi
 }
 
@@ -229,6 +229,7 @@ exit_assuming_sync() {
 #        Here git-sync actually starts
 #
 
+echo "------------------------------ git-sync ------------------------------"
 # first some sanity checks
 rstate="$(git_repo_state)"
 if [[ -z "$rstate" || "|DIRTY" = "$rstate" ]]; then
@@ -306,8 +307,6 @@ __log_msg "Using $remote_name/$branch_name"
 # check for intentionally unhandled file states
 if [ ! -z "$(check_initial_file_state)" ]; then
     __log_msg "There are changed files you should probably handle manually."
-    printf "==> %s" "$(check_initial_file_state)"
-
     $GIT_CMD status
     exit 1
 fi

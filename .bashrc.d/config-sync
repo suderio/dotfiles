@@ -3,26 +3,16 @@
 alias config='git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
 
 # Config in new machine
-# git clone --bare git@github.com:suderio/dotfiles $HOME/.local/dotfiles
+# git clone --bare git@github.com:user/dotfiles $HOME/.local/dotfiles
 # config config --local status.showUntrackedFiles no
 # config checkout
+
 configsync() {
-  config commit --all -m "Autocommit: $(uname -mro)\n\n$(config status --porcelain)"
-  config pull --all
-  config remote | grep github && config push github
-  config push origin
-  printf "Dotfiles sync'ed"
-
-  git -C "$HOME/org" commit --all -m "Autocommit: $(uname -mro)\n\n$(config status --porcelain)"
-  git -C "$HOME/org" pull --all
-  config push
-  printf "Org sync'ed"
-
+  git-sync -g "$HOME/.local/dotfiles" -w "$HOME" -s sync
+  git-sync -C "$HOME/org" -s sync
 }
 
 configstatus() {
-  printf "Dotfiles:\n"
-  config status -s
-  printf "\nOrg:\n"
-  git -C "$HOME/org" status -s
+  git-sync -g "$HOME/.local/dotfiles" -w "$HOME" -s check
+  git-sync -C "$HOME/org" -s check
 }

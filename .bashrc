@@ -73,4 +73,4 @@ command -v fzf &>/dev/null && eval "$(fzf --bash)"
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
 
 command -v just &>/dev/null && just check
-command -v perl &>/dev/null && checkrepos 2>/dev/null
+configstatus 2>/dev/null
