@@ -387,11 +387,14 @@ Org-tempo is not a separate package but a module within org that can be enabled.
 Obs.: diff-refine-hunk may be slow
 #+begin_src emacs-lisp
 (after! magit
-  (setq magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")))
-(after! magit
-  (setq magit-diff-refine-hunk 'all))
+  (setq magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")
+        magit-diff-refine-hunk 'all))
 #+end_src
 ** Languages
+*** Java
+#+begin_src emacs-lisp
+(setq! lsp-java-server-install-dir "~/.local/etc/eclipse.jdt.ls")
+#+end_src
 *** Julia
 #+begin_src emacs-lisp
 (setq lsp-julia-package-dir nil)

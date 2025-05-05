@@ -281,9 +281,10 @@
 (require 'org-tempo)
 
 (after! magit
-  (setq magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")))
-(after! magit
-  (setq magit-diff-refine-hunk 'all))
+  (setq magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")
+        magit-diff-refine-hunk 'all))
+
+(setq! lsp-java-server-install-dir "~/.local/etc/eclipse.jdt.ls")
 
 (setq lsp-julia-package-dir nil)
 (after! lsp-julia

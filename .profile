@@ -37,3 +37,11 @@ export DICPATH="$HOME/.local/share/hunspell"
 export PATH
 
 [ -f "/home/paulo/.ghcup/env" ] && . "/home/paulo/.ghcup/env" # ghcup-env
+
+shell="$(which bash)"
+export SHELL="$shell"
+
+export LANG="ptBR.UTF-8"
+export LC_ALL="pt_BR.UTF-8"
+
+export MANPAGER="less -X"
