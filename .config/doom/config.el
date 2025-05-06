@@ -1,4 +1,4 @@
-(defun sud-font-installed? (font-name)
+(defun sud/font-installed? (font-name)
   "Retorna t se a fonte font-name está instalada"
   (if (find-font (font-spec :name font-name))
        t nil))
@@ -85,10 +85,10 @@
                (when (equal org-state "DONE")
                  (sud/org-roam-copy-todo-to-today)))))
 
-(setq user-full-name "Paulo Suderio"
+(setq! user-full-name "Paulo Suderio"
       user-mail-address "paulo.suderio@gmail.com")
 
-(setq display-line-numbers-type 'relative
+(setq! display-line-numbers-type 'relative
       evil-respect-visual-line-mode t
       which-key-idle-delay 0.8
       which-key-max-description-length 155
@@ -98,15 +98,15 @@
 
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
 
-(setq global-auto-revert-mode-text "󰀘"
+(setq! global-auto-revert-mode-text "󰀘"
       global-auto-revert-non-file-buffers t)
 
 (setenv "LANG" "pt_BR,en_US")
 (setq-default ispell-program-name "hunspell")
 (with-eval-after-load "ispell"
-  (setq ispell-really-hunspell t)
-  (setq ispell-program-name "hunspell")
-  (setq ispell-dictionary "pt_BR,en_US")
+  (setq! ispell-really-hunspell t)
+  (setq! ispell-program-name "hunspell")
+  (setq! ispell-dictionary "pt_BR,en_US")
   ;; ispell-set-spellchecker-params has to be called
   ;; before ispell-hunspell-add-multi-dic will work
   (ispell-set-spellchecker-params)
@@ -115,19 +115,19 @@
 (use-package! ws-butler
   :hook prog-mode-hook)
 
-(setq doom-theme 'modus-vivendi)
+(setq! doom-theme 'modus-vivendi)
 (add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
-(setq modus-themes-bold-constructs t)
-(setq modus-themes-italic-constructs t)
-(setq modus-themes-prompts '(bold))
+(setq! modus-themes-bold-constructs t)
+(setq! modus-themes-italic-constructs t)
+(setq! modus-themes-prompts '(bold))
 ;; Important!
-(setq modus-themes-scale-headings t)
-(setq  modus-themes-variable-pitch-ui t)
+(setq! modus-themes-scale-headings t)
+(setq!  modus-themes-variable-pitch-ui t)
 
-(setq visible-bell nil)
-(setq ring-bell-function 'ignore)
+(setq! visible-bell nil)
+(setq! ring-bell-function 'ignore)
 
-(setq fancy-splash-image (file-name-concat doom-user-dir "emacs-logo.png"))
+(setq! fancy-splash-image (file-name-concat doom-user-dir "emacs-logo.png"))
 
 (add-to-list '+doom-dashboard-menu-sections
     '("Open Journal"
@@ -138,27 +138,33 @@
      :action org-journal-open-current-journal-file)
 )
 
-(if (sud-font-installed? "FiraCode Nerd Font")
-    (setq doom-font (font-spec :family "FiraCode Nerd Font" :size 12 :weight 'semi-light)))
+(if (sud/font-installed? "FiraCode Nerd Font")
+    (setq! doom-font (font-spec :family "FiraCode Nerd Font" :size 12 :weight 'semi-light)))
 
-(if (sud-font-installed? "FiraCode Nerd Font Propo")
-    (setq doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 13)))
+(if (sud/font-installed? "FiraCode Nerd Font Propo")
+    (setq! doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 12)))
 
-(if (sud-font-installed? "FiraCode Nerd Font Mono")
-    (setq doom-big-font (font-spec :family "FiraCode Nerd Font Mono" :size 16 :weight 'bold)))
+(if (sud/font-installed? "FiraCode Nerd Font Mono")
+    (setq! doom-big-font (font-spec :family "FiraCode Nerd Font Mono" :size 16 :weight 'bold)))
 
-(if (sud-font-installed? "Noto Serif")
-    (setq doom-serif-font (font-spec :family "Noto Serif" :size 12)))
+(if (sud/font-installed? "NotoSerif Nerd Font")
+    (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 12)))
 
-(setq frame-title-format
+(if (sud/font-installed? "Symbols Nerd Font")
+    (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
+           doom-emoji-font (font-spec :family "Symbols Nerd Font")
+           doom-unicode-font (font-spec :family "Symbols Nerd Font")
+           ))
+
+(setq! frame-title-format
     '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
       (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
 
-(setq org-directory "~/org/")
-(setq org-agenda-files '("inbox.org" "work.org"))
+(setq! org-directory "~/org/")
+(setq! org-agenda-files '("inbox.org" "work.org"))
 
 ;; Default tags
-(setq org-tag-alist '(
+(setq! org-tag-alist '(
                       ;; locale
                       (:startgroup)
                       ("personal" . ?h)
@@ -171,22 +177,24 @@
                       ("reading")))
 
 ;; Org-refile: where should org-refile look?
-;;(setq org-refile-targets 'FIXME)
+;;(setq! org-refile-targets 'FIXME)
 
 ;; Org-roam variables
-(setq org-roam-directory "~/org/roam/")
-(setq org-roam-index-file "~/org/roam/index.org")
-(setq org-roam-dailies-directory "journal/")
+(setq! org-roam-directory "~/org/roam/")
+(setq! org-roam-index-file "~/org/roam/index.org")
+(setq! org-roam-dailies-directory "journal/")
 ;;; Optional variables
 
 ;; Advanced: Custom link types
 ;; This example is for linking a person's 7-character ID to their page on the
 ;; free genealogy website Family Search.
-(setq org-link-abbrev-alist
+(setq! org-link-abbrev-alist
       '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")
         ("tarefa" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=TMS%3ATask&server=itsm.bndes.net&eid=%s")
         ("incidente" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=HPD%3AHelp+Desk&server=itsm.bndes.net&eid=%s")
-        ))
+        ("google" . "https://www.google.com/#q=%s")
+        ("github" . "https://www.github.com/%s")
+))
 
 (setq-default org-startup-indented t
               org-pretty-entities t
@@ -206,7 +214,7 @@
  '(org-level-4 ((t (:inherit outline-4 :height 1.2))))
  '(org-level-5 ((t (:inherit outline-5 :height 1.1))))))
 
-(setq org-journal-dir "~/org/journal/"
+(setq! org-journal-dir "~/org/journal/"
       org-journal-file-format "%Y%m.org")
 (after! org-journal
   (setq
@@ -219,7 +227,7 @@
 ))
 
 (after! org
-        (setq org-capture-templates
+        (setq! org-capture-templates
               '(("c" "Default Capture" entry (file "inbox.org")
                  "* TODO %?\n%U\n%i")
                 ;; Capture and keep an org-link to the thing we're currently working with
@@ -240,26 +248,26 @@
                 )))
 
 (after! org-roam
-        (setq org-roam-capture-templates
+        (setq! org-roam-capture-templates
               '(("d" "default" plain "%?"
                  :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
 
                 ("i" "ideas" plain "%?"
                  :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
                 ))
-        (setq org-roam-dailies-capture-templates
+        (setq! org-roam-dailies-capture-templates
               '(("d" "default" entry "* %<%I:%M %p>: %?"
                  :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
         )
 
 (after! org
-(setq org-log-done 'time
+(setq! org-log-done 'time
       org-todo-keywords '((sequence "TODO" "WAITING" "DOING" "|" "DONE(!)" "CANCELLED(!)"))
 ;; Refile configuration
       org-outline-path-complete-in-steps nil
       org-refile-use-outline-path 'file))
 
-(setq org-agenda-custom-commands
+(setq! org-agenda-custom-commands
       '(("n" "Agenda and All Todos"
          ((agenda)
           (todo)))
@@ -267,7 +275,7 @@
          ((org-agenda-files '("work.org"))))))
 
 ;; Make exporting quotes better
-(setq org-export-with-smart-quotes t
+(setq! org-export-with-smart-quotes t
       org-export-with-drawers nil
       org-export-with-todo-keywords nil
       org-export-with-broken-links t
@@ -281,14 +289,14 @@
 (require 'org-tempo)
 
 (after! magit
-  (setq magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")
+  (setq! magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")
         magit-diff-refine-hunk 'all))
 
 (setq! lsp-java-server-install-dir "~/.local/etc/eclipse.jdt.ls")
 
-(setq lsp-julia-package-dir nil)
+(setq! lsp-julia-package-dir nil)
 (after! lsp-julia
-  (setq lsp-julia-default-environment "~/.julia/environments/v1.11"))
+  (setq! lsp-julia-default-environment "~/.julia/environments/v1.11"))
 
 (setq! org-cite-csl-styles-dir "~/org/biblio")
 
@@ -315,13 +323,13 @@
                             (unless indent-tabs-mode
                               (list "-i" (number-to-string tab-width))))))
 
-(setq +format-on-save-disabled-modes
+(setq! +format-on-save-disabled-modes
       '(emacs-lisp-mode  ; elisp's mechanisms are good enough
         sql-mode         ; sqlformat is currently broken
         tex-mode         ; latexindent is broken
         latex-mode))
 
-;(setq reftex-default-bibliography "/your/bib/file.bib")
+;(setq! reftex-default-bibliography "/your/bib/file.bib")
 (use-package! ox-latex
   :ensure nil
   :demand t
@@ -369,7 +377,7 @@
                        ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
                        )))
 
-(setq org-latex-hyperref-template
+(setq! org-latex-hyperref-template
 "\\hypersetup{
  pdftitle={%t},
  pdfauthor={%a},
@@ -386,4 +394,4 @@
 ")
 
 (after! PACKAGE
-  (setq x y))
+  (setq! x y))
