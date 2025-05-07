@@ -40,8 +40,8 @@ default:
 [unix]
 [group('main')]
 check:
-    @for p in clang cmake emacs git less ninja ssh php sudo unzip vim lua wget zip go cargo starship ruby php fzf java nvim; do command -v "$p" >/dev/null 2>&1 || echo "No $p!"; done
-    @for p in bat eza delta zenith dust fd procs zellij rg uv lazygit pandoc tex magick sbcl zig tidy; do command -v "$p" >/dev/null 2>&1 || echo "Missing $p."; done
+    @for p in clang cmake emacs git less ninja ssh cabal sudo unzip vim lua wget zip go cargo starship ruby php fzf java nvim; do command -v "$p" >/dev/null 2>&1 || echo "No $p!"; done
+    @for p in bat eza delta dot zenith dust fd procs zellij rg uv lazygit pandoc tex magick sbcl zig tidy; do command -v "$p" >/dev/null 2>&1 || echo "Missing $p."; done
 
 [unix]
 [group('main')]
@@ -250,8 +250,8 @@ install-pynvim:
 install-neovim:
   git clone https://github.com/neovim/neovim.git
   cd neovim && git checkout v0.11.1
-  make CMAKE_BUILD_TYPE=Release
-  make CMAKE_INSTALL_PREFIX=$HOME/.local/nvim install
+  cd neovim && make CC="zig cc" CXX="zig c++" CMAKE_BUILD_TYPE=Release
+  cd neovim && make CC="zig cc" CXX="zig c++" CMAKE_INSTALL_PREFIX=$HOME/.local/nvim install
   
 [group('app')]
 install-texlive:
