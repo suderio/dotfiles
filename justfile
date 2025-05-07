@@ -217,6 +217,7 @@ install-ninja:
   git clone https://github.com/ninja-build/ninja.git
   cd ninja && git checkout release
   cd ninja && ./configure.py --bootstrap
+  cp ninja/ninja "$HOME/.local/bin/"
 
 [group('base')]
 install-fzf:
