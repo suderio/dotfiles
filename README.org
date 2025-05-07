@@ -25,8 +25,8 @@ config checkout
 #+end_src
 *** Install rustup and just
 #+begin_src shell :tangle install.sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-cargo install just
+command -v cargo || (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh)
+command -v just || cargo install just
 #+end_src
 *** Create a tmp directory in ~
 #+begin_src shell :tangle install.sh
@@ -40,7 +40,6 @@ Works well in arch distros, less so in others.
 - base
 - base-devel
 - clang
-- cmake
 - fontconfig
 - git
 - less
