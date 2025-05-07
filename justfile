@@ -213,6 +213,12 @@ install-cmake:
   ./cmake.sh --prefix="$HOME/.local" --skip-license
 
 [group('base')]
+install-ninja:
+  git clone https://github.com/ninja-build/ninja.git
+  cd ninja && git checkout release
+  cd ninja && ./configure.py --bootstrap
+
+[group('base')]
 install-fzf:
   git clone https://github.com/junegunn/fzf.git
   cd fzf && ./install --bin
@@ -242,6 +248,7 @@ install-pynvim:
 [group('app')]
 install-neovim:
   git clone https://github.com/neovim/neovim.git
+  cd neovim && git checkout v0.11.1
   make CMAKE_BUILD_TYPE=Release
   make CMAKE_INSTALL_PREFIX=$HOME/.local/nvim install
   
