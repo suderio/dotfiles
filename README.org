@@ -11,7 +11,7 @@ Bootstraping can be done by the brave of heart with:
 #+begin_src shell :tangle no
 curl -fsS https://raw.githubusercontent.com/suderio/dotfiles/refs/heads/main/install.sh | sh
 #+end_src
-The ìnstall.sh script is _literate_ly made of the following code blocks of this page.
+The ~install.sh~ script is /literately/ made of the following code blocks in this page.
 ** Config in a new machine
 *** Use this alias to manage all configuration
 #+begin_src shell :tangle install.sh
