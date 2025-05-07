@@ -207,6 +207,12 @@ install-zig:
   mv zig-linux-x86_64*/lib "$HOME/.local/lib/zig"
 
 [group('base')]
+install-cmake:
+  curl -fsSLo cmake.sh https://github.com/Kitware/CMake/releases/download/v4.0.2/cmake-4.0.2-linux-x86_64.sh
+  chmod u+x cmake.sh
+  ./cmake.sh --prefix="$HOME/.local" --skip-license
+
+[group('base')]
 install-fzf:
   git clone https://github.com/junegunn/fzf.git
   cd fzf && ./install --bin
