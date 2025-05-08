@@ -16,6 +16,7 @@
   - [[#biblio][Biblio]]
   - [[#lsp][LSP]]
   - [[#latex][Latex]]
+  - [[#tramp][Tramp]]
   - [[#remember][Remember]]
 
 ** Functions
@@ -528,11 +529,23 @@ https://github.com/james-stoup/emacs-org-mode-tutorial
  bookmarksdepth=4}
 ")
 #+end_src
-
+** Tramp
+Check if this makes sense!
+#+begin_src emacs-lisp :tangle no
+;; Tramp (http://www.emacswiki.org/emacs/TrampMode) for remote files
+(after! tramp)
+(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+(setq tramp-default-method "ssh")
+;; Backup (file~) disabled and auto-save (#file#) locally to prevent delays in editing remote files
+(add-to-list 'backup-directory-alist
+             (cons tramp-file-name-regexp nil))
+(setq tramp-auto-save-directory temporary-file-directory)
+(setq tramp-verbose 10)
+#+end_src
 ** Remember
 Whenever you reconfigure a package, make sure to wrap your config in an
  `after!' block, otherwise Doom's defaults may override your settings. E.g.
-#+begin_src emacs-lisp tangle: no
+#+begin_src emacs-lisp :tangle no
    (after! PACKAGE
      (setq! x y))
 #+end_src

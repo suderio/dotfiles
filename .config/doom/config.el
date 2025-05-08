@@ -394,6 +394,3 @@
  urlcolor=blue,
  bookmarksdepth=4}
 ")
-
-(after! PACKAGE
-  (setq! x y))
