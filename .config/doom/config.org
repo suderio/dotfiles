@@ -411,7 +411,7 @@ Obs.: diff-refine-hunk may be slow
 #+end_src
 *** Lua
 #+begin_src emacs-lisp
-(setq! lsp-clients-lua-language-server-bin "~/.local/bin/lua-language-server")
+(setq! lsp-clients-lua-language-server-bin "~/.local/bin")
 
 #+end_src
 ** Biblio

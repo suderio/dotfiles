@@ -298,7 +298,7 @@
 (after! lsp-julia
   (setq! lsp-julia-default-environment "~/.julia/environments/v1.11"))
 
-(setq! lsp-clients-lua-language-server-bin "~/.local/bin/lua-language-server")
+(setq! lsp-clients-lua-language-server-bin "~/.local/bin")
 
 (setq! org-cite-csl-styles-dir "~/org/biblio")
 
