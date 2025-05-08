@@ -17,10 +17,18 @@ OTHER_PACKAGES := "setuptools lynis clamav emacs-wayland github-cli zathura zath
 DUNO := "xclip aria2 aspell biber direnv git-lfs gnuplot pass sshfs chafa ueberzugpp zig zshdb shfmt tidy zls bashdb"
 PACKAGES_UNINSTALL := "python-pynvim texlive pandoc markdownlint ruby-mixlib-shellout ruby-chef-utils ruby-concurrent ruby-kramdown-parser-gfm ruby-kramdown ruby-mixlib-cli ruby-mixlib-config ruby-rexml ruby-tomlrb lazygit npm bash-language-server node-gyp nodejs-nopt prettier semver stylelint nodejs bat eza ripgrep git-delta zenith dust tree-sitter-cli viu fd procs rustup ruby composer jdk-openjdk kotlin ktlint cpanminus julia gopls python-pipx python-isort python-nose python-nose2 python-pipenv python-pylatexenc python-pytest"
 
+LOCAL_DIR := "$HOME/.local"
+LUA_VERSION := "5.4.7"
+LUAROCKS_VERSION := "3.11.1"
+GO_VERSION := "1.24.2"
 NERD_FONTS_URL := "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/"
 NVM_INSTALL_URL := "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh"
 KTLINT_INSTALL_URL := "https://github.com/pinterest/ktlint/releases/download/1.5.0/ktlint"
 NEOVIM_INSTALL_URL := "https://github.com/neovim/neovim/releases/download/v0.11.0/nvim-linux-x86_64.tar.gz"
+LUA_INSTALL_URL := "https://www.lua.org/ftp/lua-{{LUA_VERSION}}.tar.gz"
+LUAROCKS_INSTALL_URL := "https://luarocks.github.io/luarocks/releases/luarocks-{{LUAROCKS_VERSION}}.tar.gz"
+GO_INSTALL_URL := "https://go.dev/dl/go{{GO_VERSION}}.linux-amd64.tar.gz"
+
 alias ios := install-os-packages
 alias igo := install-go-packages
 alias inpm := install-npm-packages
@@ -176,28 +184,32 @@ install-cpan:
 
 [group('base')]
 install-lua:
-  curl -L -R -O https://www.lua.org/ftp/lua-5.4.7.tar.gz
-  tar zxf lua-5.4.7.tar.gz
-  cd lua-5.4.7 && make all test
-  cd lua-5.4.7 && make install INSTALL_TOP="$HOME/.local"
-  curl -L -R -O https://luarocks.github.io/luarocks/releases/luarocks-3.11.1.tar.gz
-  tar zxf luarocks-3.11.1.tar.gz
-  cd luarocks-3.11.1 && ./configure --prefix="$HOME/.local" --with-lua="$HOME/.local"
-  cd luarocks-3.11.1 && make
-  cd luarocks-3.11.1 && make install
+  curl -fsSLRO {{LUA_INSTALL_URL}}
+  tar zxf lua-{{LUA_VERSION}}.tar.gz
+  cd lua-{{LUA_VERSION}} && make all test
+  cd lua-{{LUA_VERSION}} && make install INSTALL_TOP={{LOCAL_DIR}}
+  curl -fsSLRO {{LUAROCKS_INSTALL_URL}}
+  tar zxf luarocks-{{LUAROCKS_VERSION}}.tar.gz
+  cd luarocks-{{LUAROCKS_VERSION}} && ./configure --prefix={{LOCAL_DIR}} --with-lua="$HOME/.local"
+  cd luarocks-{{LUAROCKS_VERSION}} && make
+  cd luarocks-{{LUAROCKS_VERSION}} && make install
+  rm -rf lua-{{LUA_VERSION}}.tar.gz lua-{{LUA_VERSION}} luarocks-{{LUAROCKS_VERSION}}.tar.gz luarocks-{{LUAROCKS_VERSION}}
 
 [group('base')]
 install-go:
-  rm -rf "$HOME/.local/go"
-  curl -LRO https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
-  tar -xvf go1.24.2.linux-amd64.tar.gz
-  mv go "$HOME/.local/"
+  curl -fsSLRO {{GO_INSTALL_URL}}
+  tar -xvf go{{GO_VERSION}}.linux-amd64.tar.gz
+  mv go "{{LOCAL_DIR}}/"
+
+[group('uninstall')]
+uninstall-go:
+  rm -rf "{{LOCAL_DIR}}/go"
 
 [group('base')]
 install-sbcl:
   curl -fsSLo sbcl.tar.bz2 http://prdownloads.sourceforge.net/sbcl/sbcl-2.5.3-x86-64-linux-binary.tar.bz2
   bzip2 -cd sbcl.tar.bz2 | tar xvf -
-  cd sbcl-2.5.3-x86-64-linux && INSTALL_ROOT="$HOME/.local" sh install.sh
+  cd sbcl-2.5.3-x86-64-linux && INSTALL_ROOT={{LOCAL_DIR}} sh install.sh
  
 [group('base')]
 install-zig:
@@ -210,7 +222,7 @@ install-zig:
 install-cmake:
   curl -fsSLo cmake.sh https://github.com/Kitware/CMake/releases/download/v4.0.2/cmake-4.0.2-linux-x86_64.sh
   chmod u+x cmake.sh
-  ./cmake.sh --prefix="$HOME/.local" --skip-license
+  ./cmake.sh --prefix={{LOCAL_DIR}} --skip-license
 
 [group('base')]
 install-ninja:
@@ -239,7 +251,7 @@ install-jq:
 install-graphviz:
   curl -fsSLO https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/12.2.1/graphviz-12.2.1.tar.gz
   tar -xvf graphviz-12.2.1.tar.gz
-  cd graphviz-12.2.1 && ./configure --prefix="$HOME/.local" --enable-static && make && make install
+  cd graphviz-12.2.1 && ./configure --prefix={{LOCAL_DIR}} --enable-static && make && make install
 
 [group('app')]
 install-pynvim:
@@ -295,7 +307,7 @@ install-hunspell:
 [group('app')]
 install-imagemagick:
   git clone --depth 1 --branch 7.1.1-47 https://github.com/ImageMagick/ImageMagick.git
-  cd ImageMagick && ./configure --prefix="$HOME/.local" --enable-hdri --enable-64bit-channel-masks --with-modules
+  cd ImageMagick && ./configure --prefix={{LOCAL_DIR}} --enable-hdri --enable-64bit-channel-masks --with-modules
   cd ImageMagick && make && make install
   sudo ldconfig "$HOME/.local/lib"
 
@@ -304,7 +316,7 @@ install-imagemagick:
 install-emacs:
   # git clone -b emacs-30 git://git.sv.gnu.org/emacs.git
   # cd emacs && ./autogen.sh
-  # cd emacs && ./configure --prefix="$HOME/.local" --with-mailutils --with-tree-sitter --without-xaw3d --with-pgtk --with-native-compilation=aot
+  # cd emacs && ./configure --prefix={{LOCAL_DIR}} --with-mailutils --with-tree-sitter --without-xaw3d --with-pgtk --with-native-compilation=aot
   sudo pacman -S emacs-wayland
 
 [unix]
@@ -336,7 +348,7 @@ install-lsps:
 install-tidy:
   git clone https://github.com/htacg/tidy-html5.git
   cd tidy-html5/build/cmake \
-    && cmake ../.. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DBUILD_SHARED_LIB:BOOL=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+    && cmake ../.. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX={{LOCAL_DIR}} -DBUILD_SHARED_LIB:BOOL=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
     && make \
     && make install
 
