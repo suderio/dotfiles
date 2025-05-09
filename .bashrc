@@ -46,11 +46,6 @@ export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-if ! shopt -oq posix; then
-  [ -x /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion
-  [ -x /etc/bash_completion ] && . /etc/bash_completion
-fi
-
 . "$HOME/.profile"
 
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do source "$f"; done
