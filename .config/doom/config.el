@@ -329,7 +329,8 @@
       '(emacs-lisp-mode  ; elisp's mechanisms are good enough
         sql-mode         ; sqlformat is currently broken
         tex-mode         ; latexindent is broken
-        latex-mode))
+        latex-mode
+        sh-mode))
 
 ;(setq! reftex-default-bibliography "/your/bib/file.bib")
 (use-package! ox-latex
