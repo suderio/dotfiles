@@ -121,6 +121,13 @@ Taken from [[https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam
                  (sud/org-roam-copy-todo-to-today)))))
 
 #+end_src
+*** Sync org files in github
+#+begin_src emacs-lisp
+(defun orgsync ()
+  "Call sync."
+  (interactive)
+  (shell-command "git-sync -C ~/org -s sync"))
+#+end_src
 ** Basic
 Some functionality uses this to identify you, e.g. GPG configuration, email clients, file templates and snippets. It is optional.
 #+begin_src emacs-lisp
@@ -269,6 +276,8 @@ org-directory must be set before org loads!
         ("google" . "https://www.google.com/#q=%s")
         ("github" . "https://www.github.com/%s")
 ))
+
+(add-hook 'org-ctrl-c-ctrl-c-hook 'orgsync)
 #+end_src
 *** UI Tweaks
 #+begin_src emacs-lisp

@@ -85,6 +85,11 @@
                (when (equal org-state "DONE")
                  (sud/org-roam-copy-todo-to-today)))))
 
+(defun orgsync ()
+  "Call sync."
+  (interactive)
+  (shell-command "git-sync -C ~/org -s sync"))
+
 (setq! user-full-name "Paulo Suderio"
       user-mail-address "paulo.suderio@gmail.com")
 
@@ -195,6 +200,8 @@
         ("google" . "https://www.google.com/#q=%s")
         ("github" . "https://www.github.com/%s")
 ))
+
+(add-hook 'org-ctrl-c-ctrl-c-hook 'orgsync)
 
 (setq-default org-startup-indented t
               org-pretty-entities t
