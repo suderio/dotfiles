@@ -241,6 +241,19 @@ install-fzf:
 install-cabal:
   curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
+[group('lem')]
+install-qlot:
+  curl -fsSL https://qlot.tech/installer | sh
+
+[group('lem')]
+install-lem-deps:
+  sudo pacman -S sdl2_image sdl2_ttf
+
+[group('lem')]
+install-lem:
+  git clone https://github.com/lem-project/lem.git
+  cd lem && PREFIX="$HOME/.local" make install
+
 [group('app')]
 install-jq:
   curl -fsSLo jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
