@@ -1,6 +1,7 @@
 #!/usr/bin/env just --justfile
 
 set working-directory := 'tmp'
+set tempdir := 'tmp'
 
 # Lista de linguagens/pacotes desejados
 OS_PACKAGES := "cmake mpv sxiv jq zip unzip git less curl wget shellcheck file gnupg openssh base-devel xdg-user-dirs xdg-utils php bash-completion"
@@ -25,9 +26,9 @@ NERD_FONTS_URL := "https://github.com/ryanoasis/nerd-fonts/releases/latest/downl
 NVM_INSTALL_URL := "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh"
 KTLINT_INSTALL_URL := "https://github.com/pinterest/ktlint/releases/download/1.5.0/ktlint"
 NEOVIM_INSTALL_URL := "https://github.com/neovim/neovim/releases/download/v0.11.0/nvim-linux-x86_64.tar.gz"
-LUA_INSTALL_URL := "https://www.lua.org/ftp/lua-{{LUA_VERSION}}.tar.gz"
-LUAROCKS_INSTALL_URL := "https://luarocks.github.io/luarocks/releases/luarocks-{{LUAROCKS_VERSION}}.tar.gz"
-GO_INSTALL_URL := "https://go.dev/dl/go{{GO_VERSION}}.linux-amd64.tar.gz"
+LUA_INSTALL_URL := "https://www.lua.org/ftp/lua-5.4.7.tar.gz"
+LUAROCKS_INSTALL_URL := "https://luarocks.github.io/luarocks/releases/luarocks-3.11.1.tar.gz"
+GO_INSTALL_URL := "https://go.dev/dl/go1.24.2.linux-amd64.tar.gz"
 
 alias ios := install-os-packages
 alias igo := install-go-packages
@@ -244,6 +245,7 @@ install-cabal:
 [group('lem')]
 install-qlot:
   curl -fsSL https://qlot.tech/installer | sh
+  ln -s "$HOME/.local/share/qlot/bin/qlot" "$HOME/.local/bin/qlot"
 
 [group('lem')]
 install-lem-deps:
@@ -275,13 +277,13 @@ install-pynvim:
 install-neovim:
   git clone https://github.com/neovim/neovim.git
   cd neovim && git checkout v0.11.1
-  cd neovim && make CC="zig cc" CXX="zig c++" CMAKE_BUILD_TYPE=Release
-  cd neovim && make CC="zig cc" CXX="zig c++" CMAKE_INSTALL_PREFIX=$HOME/.local/nvim install
+  cd neovim && make CMAKE_BUILD_TYPE=Release
+  cd neovim && make CMAKE_INSTALL_PREFIX=$HOME/.local/nvim install
   
 [group('app')]
 install-texlive:
   # see https://www.tug.org/texlive/quickinstall.html
-  curl -L -o install-tl-unx.tar.gz https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
+  curl -fsSLk -o install-tl-unx.tar.gz https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
   zcat < install-tl-unx.tar.gz | tar xf -
   cd install-tl-2* && perl ./install-tl
 
