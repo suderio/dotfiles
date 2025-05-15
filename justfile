@@ -41,7 +41,6 @@ alias ifonts := install-fonts
 alias ros := remove-os-packages
 alias i := install
 alias c := clean
-alias h := hardening
 
 default:
   @just --list | more
@@ -50,7 +49,7 @@ default:
 [group('main')]
 check:
     @for p in clang cmake emacs git less ninja ssh cabal sudo unzip vim lua wget zip go cargo starship ruby php fzf java nvim; do command -v "$p" >/dev/null 2>&1 || echo "No $p!"; done
-    @for p in bat eza delta dot zenith dust fd procs zellij rg uv lazygit pandoc tex magick sbcl zig tidy; do command -v "$p" >/dev/null 2>&1 || echo "Missing $p."; done
+    @for p in bat eza delta dot zenith dust fd procs zellij rg uv lazygit pandoc tex magick sbcl zig tidy doom; do command -v "$p" >/dev/null 2>&1 || echo "Missing $p."; done
 
 [unix]
 [group('main')]
@@ -62,49 +61,11 @@ install:
   echo {{ data_local_directory() }}
   echo {{ executable_directory() }}
   echo {{ home_directory() }}
-  @just irust
-  @just ifonts
-  @just install-go
-  @just igo
-  @just install-python
-  @just ipython
-  @just install-nvm
-  @just inpm # TODO ver como fazer para rodar depois da instalação do nvm (reload .profile)
-  @just install-rbenv # TODO recuperar última versão do ruby
-  @just igem # TODO recarregar o environment 
-  @just install-composer # TODO confirmar se rodou
-  @just install-sdkman
-  @just install-julia
-  @just install-cpan # TODO recarregar o environment
-  @just iperl
-  @just install-lua
-  @just install-fzf
-  @just install-pynvim
-  @just install-neovim
-  @just install-texlive
-  @just install-pandoc
-  @just install-hunspell
 
 [unix]
 [group('main')]
 clean:
   rm -rf "$HOME/tmp"/*
-
-# Hardening usando lynis
-[unix]
-[group('main')]
-hardening:
-  #!/usr/bin/env bash
-  # Understand and configure core dumps on Linux - https://linux-audit.com/software/understand-and-configure-core-dumps-work-on-linux/#disable-core-dumps
-  echo 'ulimit -c 0' | sudo tee /etc/profile.d/disable-coredumps.sh >/dev/null
-  sudo chown root:root /etc/profile.d/disable-coredumps.sh
-  sudo chmod 0644 /etc/profile.d/disable-coredumps.sh
-  # Linux password security hashing rounds - https://linux-audit.com/authentication/configure-the-minimum-password-length-on-linux-systems/
-  sudo pacman --noconfirm -S libpwquality
-  # Set default file permissions on Linux with umask - https://linux-audit.com/filesystems/file-permissions/set-default-file-permissions-with-umask/
-  echo 'session optional pam_umask.so umask=027' | sudo tee /etc/pam.d/common-session >/dev/null
-  sudo chown root:root /etc/pam.d/common-session
-  sudo chmod 0644 /etc/pam.d/common-session
 
 # Instala algumas Nerd Fonts
 [unix]
@@ -145,8 +106,8 @@ install-rbenv:
   curl -fsSL https://rbenv.org/install.sh | bash
   # TODO recuperar a última versão do install -l
   "$HOME/.rbenv/bin/rbenv" install -l
-  "$HOME/.rbenv/bin/rbenv" install 3.4.3
-  "$HOME/.rbenv/bin/rbenv" global 3.4.3
+  "$HOME/.rbenv/bin/rbenv" install 3.4.4
+  "$HOME/.rbenv/bin/rbenv" global 3.4.4
 
 [group('base')]
 install-composer:
@@ -470,7 +431,7 @@ install-perl-packages:
   #!/usr/bin/env bash
   perl -I ~/perl5/lib/perl5 -Mlocal::lib
   for pkg in {{PERL_PACKAGES}}; do
-    "$HOME/perl5/bin/cpanm --local-lib=$HOME/perl5" "$pkg"
+    "$HOME/perl5/bin/cpanm" --local-lib="$HOME/perl5" "$pkg"
   done
 
 # Instala pacotes Rust
