@@ -67,5 +67,4 @@ command -v fzf &>/dev/null && eval "$(fzf --bash)"
 [ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
 
-command -v just &>/dev/null && just check
 configstatus 2>/dev/null

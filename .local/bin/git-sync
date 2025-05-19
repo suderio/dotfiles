@@ -32,7 +32,9 @@
 # changes, pull etc. without losing any data. When check returns
 # 0, sync can start immediately. This does not, however, indicate
 # that syncing is at all likely to succeed.
-#
+
+# Paulo Suderio
+# 2025
 # New Parameters:
 # C: passes base path (-C <path>) to git (default: PWD)
 # g: passes git-dir (--git-dir) to git (default: .git)
@@ -96,13 +98,13 @@ DEFAULT_AUTOCOMMIT_CMD="$GIT_CMD add -u ; $GIT_CMD commit -m \"%message\";"
 ALL_AUTOCOMMIT_CMD="$GIT_CMD add -A ; $GIT_CMD commit -m \"%message\";"
 
 # default commit message substituted into autocommit commands
-DEFAULT_AUTOCOMMIT_MSG="changes from $(uname -n) on $(date)"
+DEFAULT_AUTOCOMMIT_MSG="changes from $(uname -mrs) on $(date)"
 #
 #    utility functions, some adapted from git bash completion
 #
 
 __log_msg() {
-    echo git-sync: "$1"
+    echo "git -> $1"
 }
 
 # echo the git dir
