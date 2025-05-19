@@ -210,7 +210,7 @@ install-qlot:
 
 [group('lem')]
 install-lem-deps:
-  sudo pacman -S sdl2_image sdl2_ttf
+  paru -S sdl2 sdl2_image sdl2_ttf
 
 [group('lem')]
 install-lem:
@@ -415,6 +415,7 @@ install-zig-lsp:
 [group('lsp')]
 install-java-lsp:
   curl -fsSLo jdtls.tar.gz https://download.eclipse.org/jdtls/milestones/1.46.1/jdt-language-server-1.46.1-202504011455.tar.gz
+  mkdir -p "$HOME/.local/etc/eclipse.jdt.ls"
   tar -xvf jdtls.tar.gz -C "$HOME/.local/etc/eclipse.jdt.ls/"
 
 # Instala pacotes gem (o único necessário até agora é o neovim)
