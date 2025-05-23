@@ -9,7 +9,7 @@ alias config='git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
 
 configsync() {
   git-sync -g "$HOME/.local/dotfiles" -w "$HOME" -s sync
-  git-sync -C "$HOME/org" -s sync
+  git-sync -C "$HOME/org" -ns sync
 }
 
 configstatus() {
