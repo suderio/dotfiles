@@ -312,9 +312,7 @@
 
 (setq! lsp-clients-lua-language-server-bin "~/.local/bin")
 
-(setq! org-cite-csl-styles-dir "~/org/biblio")
 
-(setq! citar-bibliography '("~/org/biblio/global.bib"))
 
 (use-package! lsp-ui
   :hook (lsp-mode . lsp-ui-mode))
@@ -343,6 +341,10 @@
         tex-mode         ; latexindent is broken
         latex-mode
         sh-mode))
+
+(setq! org-cite-csl-styles-dir "~/org/biblio")
+
+(setq! citar-bibliography '("~/org/biblio/global.bib"))
 
 ;(setq! reftex-default-bibliography "/your/bib/file.bib")
 (use-package! ox-latex

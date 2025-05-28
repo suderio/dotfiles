@@ -47,6 +47,21 @@ default:
 
 [unix]
 [group('main')]
+install-all:
+  # Install pacman pkgs
+  sudo pacman -S aspell ast-grep automake base base-devel bat chafa clamav clang cmake composer dust emacs-wayland eza fd fzf ghostty git git-delta github-cli gnuplot gopls graphviz hunspell hunspell-de hunspell-en_us hunspell-es_es hunspell-fr imagemagick jdk-openjdk julia just kitty kotlin ktlint lazygit less lua lua51 luarocks lynis maim man-db mermaid-cli neovim noto-fonts noto-fonts-emoji npm nushell openssh pacman-contrib pandoc-cli php procs python-black python-isort python-nose python-pipenv python-pyflakes python-pynvim python-pytest ruby rustup sbcl shellcheck shfmt sshfs starship stylelint sudo texlive-basic texlive-bibtexextra texlive-binextra texlive-context texlive-fontsextra texlive-fontsrecommended texlive-fontutils texlive-formatsextra texlive-games texlive-humanities texlive-latex texlive-latexextra texlive-latexrecommended texlive-luatex texlive-mathscience texlive-metapost texlive-music texlive-pictures texlive-plaingeneric texlive-pstricks texlive-publishers texlive-xetex tidy tree-sitter-cli ttf-firacode-nerd ttf-nerd-fonts-symbols ttf-nerd-fonts-symbols-mono ueberzugpp uv viu wget which xclip zathura zathura-cb zathura-djvu zathura-ps zellij zenith zig zls zshdb
+  # Install paru
+  git clone https://aur.archlinux.org/paru.git
+  cd paru && makepkg -si
+  # Install paru pkgs
+  paru -S cljfmt-bin gomodifytags gore gotests js-beautify
+  # Install dockfmt
+  /usr/lib/go/bin/go install github.com/jessfraz/dockfmt@latest
+  # Install Julia Language Server
+  /usr/sbin/julia -- "$HOME/.config/julia/emacs.jl"
+
+[unix]
+[group('main')]
 check:
     @for p in clang cmake emacs git less ninja ssh cabal sudo unzip vim lua wget zip go cargo starship ruby php fzf java nvim; do command -v "$p" >/dev/null 2>&1 || echo "No $p!"; done
     @for p in bat eza delta dot zenith dust fd procs zellij rg uv lazygit pandoc tex magick sbcl zig tidy doom; do command -v "$p" >/dev/null 2>&1 || echo "Missing $p."; done
