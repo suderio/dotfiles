@@ -14,7 +14,6 @@
   - [[#magit][Magit]]
   - [[#languages][Languages]]
   - [[#biblio][Biblio]]
-  - [[#lsp][LSP]]
   - [[#latex][Latex]]
   - [[#tramp][Tramp]]
   - [[#remember][Remember]]
@@ -424,22 +423,19 @@ Obs.: diff-refine-hunk may be slow
 (setq! lsp-clients-lua-language-server-bin "~/.local/bin")
 
 #+end_src
-** Biblio
+*** Lisp
 #+begin_src emacs-lisp
- (setq! org-cite-csl-styles-dir "~/org/biblio")
-
- (setq! citar-bibliography '("~/org/biblio/global.bib"))
 
 #+end_src
 
-** LSP
+*** LSP
 See https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 
 #+begin_src emacs-lisp
 (use-package! lsp-ui
   :hook (lsp-mode . lsp-ui-mode))
 #+end_src
-*** Formatting
+**** Formatting
 #+begin_src emacs-lisp
  ;; Disable format-on-save behavior in Emacs Lisp buffers
  ;(setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
@@ -466,6 +462,13 @@ See https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
         latex-mode
         sh-mode))
 
+
+#+end_src
+** Biblio
+#+begin_src emacs-lisp
+ (setq! org-cite-csl-styles-dir "~/org/biblio")
+
+ (setq! citar-bibliography '("~/org/biblio/global.bib"))
 
 #+end_src
 ** Latex
