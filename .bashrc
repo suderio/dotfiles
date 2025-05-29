@@ -66,5 +66,3 @@ command -v fzf &>/dev/null && eval "$(fzf --bash)"
 [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
 [ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
-
-configstatus 2>/dev/null
