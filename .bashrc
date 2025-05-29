@@ -56,7 +56,7 @@ command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-in
 
 [ -x "$HOME/.rbenv/bin/rbenv" ] && eval "$(~/.rbenv/bin/rbenv init - --no-rehash bash)"
 
-command -v perl &>/dev/null && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)"
+command -v perl &>/dev/null && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)" &>/dev/null
 
 command -v fzf &>/dev/null && eval "$(fzf --bash)"
 
