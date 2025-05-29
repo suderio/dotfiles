@@ -128,6 +128,13 @@ Taken from [[https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam
   (interactive)
   (shell-command "git-sync -C ~/org -s sync"))
 #+end_src
+*** Collapse all DONE tasks
+#+begin_src emacs-lisp
+(defun sud/org-hide-done-entries-in-buffer ()
+  (interactive)
+  (org-map-entries #'org-fold-hide-subtree
+                   "/+DONE" 'file 'archive 'comment))
+#+end_src
 ** Basic
 Some functionality uses this to identify you, e.g. GPG configuration, email clients, file templates and snippets. It is optional.
 #+begin_src emacs-lisp
