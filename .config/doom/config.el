@@ -90,6 +90,11 @@
   (interactive)
   (shell-command "git-sync -C ~/org -s sync"))
 
+(defun sud/org-hide-done-entries-in-buffer ()
+  (interactive)
+  (org-map-entries #'org-fold-hide-subtree
+                   "/+DONE" 'file 'archive 'comment))
+
 (setq! user-full-name "Paulo Suderio"
       user-mail-address "paulo.suderio@gmail.com")
 
