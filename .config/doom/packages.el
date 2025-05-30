@@ -50,3 +50,4 @@
 (package! just-mode)
 (package! latex-preview-pane)
 (package! ox-epub)
+(package! aidermacs)
