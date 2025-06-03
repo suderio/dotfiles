@@ -9,7 +9,7 @@
     (cons 'progn
           (-map
            (lambda (filename)
-             (let ((function-name (intern (concat "sud/shell-" (file-name-nondirectory filename)))))
+             (let ((function-name (intern (concat "sud/" (file-name-nondirectory filename)))))
                `(defun ,function-name (&rest args)
                   (interactive)
                   (cond
@@ -21,6 +21,7 @@
                     (apply 'call-process ,filename nil (if current-prefix-arg t nil) nil args))))))
            (-filter (-not #'file-directory-p)
                     (-filter #'file-executable-p (directory-files directory t))))))
+;; Creates commands for everything in .local/bin
   (sud/convert-shell-scripts-to-interactive-commands "~/.local/bin")
 )
 
@@ -85,10 +86,10 @@
                (when (equal org-state "DONE")
                  (sud/org-roam-copy-todo-to-today)))))
 
-(defun orgsync ()
+(defun sud/orgsync ()
   "Call sync."
   (interactive)
-  (shell-command "git-sync -C ~/org -s sync"))
+  (sud/git-sync "-C" "~/org" "-s" "sync"))
 
 (defun sud/org-hide-done-entries-in-buffer ()
   (interactive)
@@ -208,6 +209,7 @@
 
 (add-hook 'org-ctrl-c-ctrl-c-hook 'orgsync)
 
+(after! org
 (setq-default org-startup-indented t
               org-pretty-entities t
               org-use-sub-superscripts "{}"
@@ -216,7 +218,7 @@
               org-image-actual-width '(300))
 (use-package! toc-org
   :commands toc-org-enable
-  :init (add-hook 'org-mode-hook 'toc-org-enable))
+  :init (add-hook 'org-mode-hook 'toc-org-enable)))
 
 (after! org
 (custom-set-faces

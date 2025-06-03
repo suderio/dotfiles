@@ -37,7 +37,7 @@ An idea taken from [[https://pages.sachachua.com/.emacs.d/#scan-bin-and-turn-the
     (cons 'progn
           (-map
            (lambda (filename)
-             (let ((function-name (intern (concat "sud/shell-" (file-name-nondirectory filename)))))
+             (let ((function-name (intern (concat "sud/" (file-name-nondirectory filename)))))
                `(defun ,function-name (&rest args)
                   (interactive)
                   (cond
@@ -49,6 +49,7 @@ An idea taken from [[https://pages.sachachua.com/.emacs.d/#scan-bin-and-turn-the
                     (apply 'call-process ,filename nil (if current-prefix-arg t nil) nil args))))))
            (-filter (-not #'file-directory-p)
                     (-filter #'file-executable-p (directory-files directory t))))))
+;; Creates commands for everything in .local/bin
   (sud/convert-shell-scripts-to-interactive-commands "~/.local/bin")
 )
 #+end_src
@@ -122,10 +123,10 @@ Taken from [[https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam
 #+end_src
 *** Sync org files in github
 #+begin_src emacs-lisp
-(defun orgsync ()
+(defun sud/orgsync ()
   "Call sync."
   (interactive)
-  (shell-command "git-sync -C ~/org -s sync"))
+  (sud/git-sync "-C" "~/org" "-s" "sync"))
 #+end_src
 *** Collapse all DONE tasks
 #+begin_src emacs-lisp
@@ -245,7 +246,11 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
       (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
 #+end_src
 ** Org
-org-directory must be set before org loads!
+*** TODO Move DONE to monthly files
+*** TODO Move work.org to work folder
+*** TODO Roamify everything? (https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam-hacks/)
+
+*** Org directories must be set before org loads!
 #+begin_src emacs-lisp
 (setq! org-directory "~/org/")
 (setq! org-agenda-files '("inbox.org" "work.org"))
@@ -287,6 +292,7 @@ org-directory must be set before org loads!
 #+end_src
 *** UI Tweaks
 #+begin_src emacs-lisp
+(after! org
 (setq-default org-startup-indented t
               org-pretty-entities t
               org-use-sub-superscripts "{}"
@@ -295,7 +301,7 @@ org-directory must be set before org loads!
               org-image-actual-width '(300))
 (use-package! toc-org
   :commands toc-org-enable
-  :init (add-hook 'org-mode-hook 'toc-org-enable))
+  :init (add-hook 'org-mode-hook 'toc-org-enable)))
 #+end_src
 *** Org Level Headers
 #+begin_src emacs-lisp 
