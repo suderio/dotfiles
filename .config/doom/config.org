@@ -194,6 +194,8 @@ This determines the style of line numbers in effect. If set to `nil', line numbe
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
 (map! :leader :desc "Fast Note" "n ." #'sud/org-roam-node-insert-immediate)
 (map! :leader :desc "Inbox Note" "n i" #'sud/org-roam-capture-inbox)
+(map! :leader :desc "Eval" "e" nil)
+(map! :leader :desc "Eval Last Expression" "e l" #'eval-last-sexp)
 #+end_src
 *** Dired
 #+begin_src emacs-lisp
@@ -287,7 +289,6 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
 #+end_src
 ** Org
 *** TODO Move DONE to monthly files
-*** TODO Move work.org to work folder
 *** TODO Roamify everything? (https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam-hacks/)
 
 *** Org directories must be set before org loads!
@@ -379,7 +380,7 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
                 ;; Define a section
                 ("w" "Work")
                 ("wr" "Reuniões" entry (file+headline "work/2025.org" "Reuniões")
-                 "** %?\n%U\n%i\n%a")
+                 "** %?\n%U\n%i\n%a" :clock-in t)
                 ("wt" "Tarefas" entry (file+headline "work/2025.org" "Tarefas")
                  "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
                 ("wi" "Incidentes" entry (file+headline "work/2025.org" "Incidentes")

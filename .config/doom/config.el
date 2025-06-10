@@ -141,6 +141,7 @@
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
 (map! :leader :desc "Fast Note" "n ." #'sud/org-roam-node-insert-immediate)
 (map! :leader :desc "Inbox Note" "n i" #'sud/org-roam-capture-inbox)
+(map! :leader :desc "Eval Last Expression" "e l" #'eval-last-sexp)
 
 (setq! global-auto-revert-mode-text "󰀘"
       global-auto-revert-non-file-buffers t)
@@ -283,7 +284,7 @@
                 ;; Define a section
                 ("w" "Work")
                 ("wr" "Reuniões" entry (file+headline "work/2025.org" "Reuniões")
-                 "** %?\n%U\n%i\n%a")
+                 "** %?\n%U\n%i\n%a" :clock-in t)
                 ("wt" "Tarefas" entry (file+headline "work/2025.org" "Tarefas")
                  "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
                 ("wi" "Incidentes" entry (file+headline "work/2025.org" "Incidentes")

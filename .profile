@@ -45,3 +45,6 @@ export LANG="ptBR.UTF-8"
 export LC_ALL="pt_BR.UTF-8"
 
 export MANPAGER="less -X"
+
+# This allows git to find repos across filesystems
+export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
