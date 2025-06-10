@@ -96,6 +96,37 @@
   (org-map-entries #'org-fold-hide-subtree
                    "/+DONE" 'file 'archive 'comment))
 
+(defun sud/org-roam-node-insert-immediate (arg &rest args)
+  (interactive "P")
+  (let ((args (cons arg args))
+        (org-roam-capture-templates (list (append (car org-roam-capture-templates)
+                                                  '(:immediate-finish t)))))
+    (apply #'org-roam-node-insert args)))
+
+(defun sud/org-roam-capture-inbox ()
+  (interactive)
+  (org-roam-capture- :node (org-roam-node-create)
+                     :templates '(("i" "inbox" plain "* %?"
+                                  :if-new (file+head "Inbox.org" "#+title: Inbox\n")))))
+
+(defun sud/org-roam-filter-by-tag (tag-name)
+  (lambda (node)
+    (member tag-name (org-roam-node-tags node))))
+
+(defun sud/org-roam-list-notes-by-tag (tag-name)
+  (mapcar #'org-roam-node-file
+          (seq-filter
+           (sud/org-roam-filter-by-tag tag-name)
+           (org-roam-node-list))))
+
+(defun sud/org-roam-refresh-agenda-list ()
+  (interactive)
+  ;; TODO add more tags and files (ex. work.org)
+  (setq org-agenda-files (sud/org-roam-list-notes-by-tag "Project")))
+
+;; Build the agenda list the first time for the session
+;(sud/org-roam-refresh-agenda-list)
+
 (setq! user-full-name "Paulo Suderio"
       user-mail-address "paulo.suderio@gmail.com")
 
@@ -108,6 +139,8 @@
       )
 
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
+(map! :leader :desc "Fast Note" "n ." #'sud/org-roam-node-insert-immediate)
+(map! :leader :desc "Inbox Note" "n i" #'sud/org-roam-capture-inbox)
 
 (setq! global-auto-revert-mode-text "󰀘"
       global-auto-revert-non-file-buffers t)
@@ -172,7 +205,7 @@
       (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
 
 (setq! org-directory "~/org/")
-(setq! org-agenda-files '("inbox.org" "work.org"))
+(setq! org-agenda-files '("inbox.org" "work/2025.org"))
 
 ;; Default tags
 (setq! org-tag-alist '(
@@ -243,21 +276,19 @@
 (after! org
         (setq! org-capture-templates
               '(("c" "Default Capture" entry (file "inbox.org")
-                 "* TODO %?\n%U\n%i")
+                 "* %?\n%U\n%i")
                 ;; Capture and keep an org-link to the thing we're currently working with
                 ("r" "Capture with Reference" entry (file "inbox.org")
-                 "* TODO %?\n%U\n%i\n%a")
+                 "* %?\n%U\n%i\n%a")
                 ;; Define a section
                 ("w" "Work")
-                ("wm" "Work meeting" entry (file+headline "work.org" "Meetings")
-                 "** TODO %?\n%U\n%i\n%a")
-                ("wt" "Work task" entry (file+headline "work.org" "Tasks")
+                ("wr" "Reuniões" entry (file+headline "work/2025.org" "Reuniões")
+                 "** %?\n%U\n%i\n%a")
+                ("wt" "Tarefas" entry (file+headline "work/2025.org" "Tarefas")
                  "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
-                ("wi" "Work incident" entry (file+headline "work.org" "Incidents")
+                ("wi" "Incidentes" entry (file+headline "work/2025.org" "Incidentes")
                  "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
-                ("wa" "Work adhoc" entry (file+headline "work.org" "Ad hoc")
-                 "** TODO %?\n%U\n%i\n%a")
-                ("wr" "Work report" entry (file+headline "work.org" "Reports")
+                ("wa" "Ad Hoc" entry (file+headline "work/2025.org" "Ad hoc")
                  "** TODO %?\n%U\n%i\n%a")
                 )))
 
@@ -286,7 +317,7 @@
          ((agenda)
           (todo)))
         ("w" "Work" agenda ""
-         ((org-agenda-files '("work.org"))))))
+         ((org-agenda-files '("work/2025.org"))))))
 
 ;; Make exporting quotes better
 (setq! org-export-with-smart-quotes t
