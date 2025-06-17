@@ -79,12 +79,35 @@
     (unless (equal (file-truename today-file)
                    (file-truename (buffer-file-name)))
       (org-refile nil nil (list "Done!" today-file nil pos)))))
+(defun sud/org-copiar-tarefa-concluida-para-journal ()
+  "Copiar o item atual para o arquivo do org-journal quando for marcado como DONE.
+
+A função, para ser usada em `org-after-todo-state-change-hook`,
+identifica a mudança para um estado final (contido em
+`org-done-keywords`) e usa `org-refile` para copiar a entrada
+para o arquivo de journal do dia."
+  (when (member (org-state) org-done-keywords)
+    ;; A função `org-journal-find-location` JÁ CRIA o arquivo do dia
+    ;; com o cabeçalho padrão se ele não existir. Portanto,
+    ;; nenhuma verificação manual é necessária.
+    (let ((journal-file (org-journal-find-location)))
+      (when journal-file
+        ;; Chama `org-refile` de forma não-interativa para copiar (KEEP = t).
+        ;; `org-refile-targets` é temporariamente limitado ao arquivo de journal
+        ;; para garantir que a cópia seja direcionada corretamente.
+        (let ((org-refile-targets (list journal-file))
+              (org-refile-use-outline-path nil)
+              (org-refile-use-cache nil)
+              (org-refile-log-note "")) ; Evita o prompt "Refile note:"
+          (org-refile nil nil 'keep))))))
 
 (after! org
-(add-to-list 'org-after-todo-state-change-hook
-             (lambda ()
-               (when (equal org-state "DONE")
-                 (sud/org-roam-copy-todo-to-today)))))
+;; Adiciona a função ao hook, se ainda não tiver feito.
+(add-hook 'org-after-todo-state-change-hook #'meu/org-copiar-tarefa-concluida-para-journal))
+;(add-to-list 'org-after-todo-state-change-hook
+;             (lambda ()
+;               (when (equal org-state "DONE")
+;                 (sud/org-roam-copy-todo-to-today)))))
 
 (defun sud/orgsync ()
   "Call sync."
@@ -141,6 +164,7 @@
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
 (map! :leader :desc "Fast Note" "n ." #'sud/org-roam-node-insert-immediate)
 (map! :leader :desc "Inbox Note" "n i" #'sud/org-roam-capture-inbox)
+;(map! :leader :desc "Eval" "e" nil)
 (map! :leader :desc "Eval Last Expression" "e l" #'eval-last-sexp)
 
 (setq! global-auto-revert-mode-text "󰀘"
