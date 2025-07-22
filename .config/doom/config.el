@@ -375,6 +375,8 @@ para o arquivo de journal do dia."
 (use-package! lsp-ui
   :hook (lsp-mode . lsp-ui-mode))
 
+(setq! lsp-warn-no-matched-clients nil)
+
 ;; Disable format-on-save behavior in Emacs Lisp buffers
  ;(setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
 

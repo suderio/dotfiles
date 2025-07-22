@@ -508,6 +508,8 @@ See https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 #+begin_src emacs-lisp
 (use-package! lsp-ui
   :hook (lsp-mode . lsp-ui-mode))
+
+(setq! lsp-warn-no-matched-clients nil)
 #+end_src
 **** Formatting
 #+begin_src emacs-lisp
