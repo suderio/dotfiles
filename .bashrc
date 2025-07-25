@@ -50,7 +50,13 @@ export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
 
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do source "$f"; done
 
-eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
+if [ -n "$SSH_AUTH_SOCK" ]; then
+  echo "ssh-agent is already running and accessible."
+else
+  echo "ssh-agent is not running or not accessible. Starting a new one..."
+  eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
+fi
+
 
 command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-init)"
 
