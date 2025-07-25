@@ -257,7 +257,7 @@ install-pynvim:
 [group('app')]
 install-neovim:
   git clone https://github.com/neovim/neovim.git
-  cd neovim && git checkout v0.11.1
+  cd neovim && git checkout v0.11.2
   cd neovim && make CMAKE_BUILD_TYPE=Release
   cd neovim && make CMAKE_INSTALL_PREFIX=$HOME/.local/nvim install
   
