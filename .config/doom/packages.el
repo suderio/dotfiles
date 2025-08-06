@@ -51,3 +51,4 @@
 (package! latex-preview-pane)
 (package! ox-epub)
 (package! aidermacs)
+(package! cue-mode)
