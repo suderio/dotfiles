@@ -188,6 +188,8 @@ para o arquivo de journal do dia."
 (use-package! ws-butler
   :hook prog-mode-hook)
 
+(setq! browse-url-browser-function 'eww-browse-url)
+
 (setq! doom-theme 'modus-vivendi)
 (add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
 (setq! modus-themes-bold-constructs t)
