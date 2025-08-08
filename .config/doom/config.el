@@ -126,6 +126,10 @@ para o arquivo de journal do dia."
                                                   '(:immediate-finish t)))))
     (apply #'org-roam-node-insert args)))
 
+(defun sud/cria-mudanca ()
+  (interactive "P")
+  (sud/cria-mudança.sh (buffer-file-name)))
+
 (defun sud/org-roam-capture-inbox ()
   (interactive)
   (org-roam-capture- :node (org-roam-node-create)

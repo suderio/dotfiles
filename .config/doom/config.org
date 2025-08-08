@@ -167,6 +167,13 @@ para o arquivo de journal do dia."
                                                   '(:immediate-finish t)))))
     (apply #'org-roam-node-insert args)))
 #+end_src
+*** Rundeck
+#+begin_src emacs-lisp
+(defun sud/cria-mudanca ()
+  (interactive "P")
+  (sud/cria-mudança.sh (buffer-file-name)))
+
+#+end_src
 *** Inbox notes
 #+begin_src emacs-lisp
 (defun sud/org-roam-capture-inbox ()
