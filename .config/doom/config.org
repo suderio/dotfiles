@@ -251,6 +251,11 @@ This trims whitespaces at EOL with little intervention.
 (use-package! ws-butler
   :hook prog-mode-hook)
 #+end_src
+*** Other
+#+begin_src emacs-lisp
+(setq! browse-url-browser-function 'eww-browse-url)
+
+#+end_src
 ** UI
 *** Theme
 #+begin_src emacs-lisp
