@@ -52,7 +52,7 @@ require "showkeys".setup({ position = "top-right" })
 require "mini.pick".setup()
 require "oil".setup()
 
-vim.lsp.enable({ "bash-language-server", "lua_ls", "svelte", "tinymist", "emmetls" })
+vim.lsp.enable({ "bash-language-server", "cuelsp", "emmetls", "lua_ls", "svelte", "tinymist" })
 
 
 -- themes & colors
