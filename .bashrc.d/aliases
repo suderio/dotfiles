@@ -14,7 +14,7 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 alias restmux='[[ -z "$TMUX" ]] && exec tmux new-session -A -s $USER'
 
 # Remember to run this now and then
-alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" '
+alias scan='sudo freshclam && sudo clamscan -roi --exclude-dir="^/sys" --cross-fs=no'
 
 # Common pacman use
 alias fixpacman="sudo rm /var/lib/pacman/db.lck"
