@@ -47,12 +47,44 @@ vim.pack.add {
 	{ src = "https://github.com/L3MON4D3/LuaSnip" },
 }
 
+require('mason').setup()
+require('mason-lspconfig').setup()
 require('mason-tool-installer').setup({
 	ensure_installed = {
---		"lua_ls",
---		"stylua",
+		"bashls",
+		"bibtex-tidy",
+    "checkstyle",
+		"clangd",
+		"cljfmt",
+		"clojure_lsp",
+		"cueimports",
+		"dagger",
+		"docker_compose_language_service",
+		"docker_language_server",
+		"fennel_ls",
+		"google-java-format",
+		"gopls",
+		"jdtls",
+		"jsonls",
+		"julials",
+		"just",
+		"kcl",
+		"kotlin-debug-adapter",
+		"kotlin_language_server",
+		"lua_ls",
+		"markdownlint-cli2",
+		"nginx_language_server",
+		"rust_analyzer",
+		"shellcheck",
+		"shellharden",
+		"shfmt",
+		"stylua",
+		"yamlls",
+		"zls",
 	}
 })
+
+
 require "showkeys".setup({ position = "top-right" })
 require "mini.pick".setup()
 require "oil".setup()
