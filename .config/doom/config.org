@@ -522,6 +522,7 @@ Obs.: diff-refine-hunk may be slow
     (just-ts-mode-install-grammar)))
 #+end_src
 *** TODO Install treesitter grammars
+https://www.masteringemacs.org/article/how-to-get-started-tree-sitter
 *** LSP
 See https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 
