@@ -47,7 +47,7 @@
 ;; (unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
-(package! just-mode)
+(package! just-ts-mode)
 (package! latex-preview-pane)
 (package! ox-epub)
 (package! aidermacs)

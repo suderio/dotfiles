@@ -160,7 +160,7 @@ para o arquivo de journal do dia."
 (setq! display-line-numbers-type 'relative
       evil-respect-visual-line-mode t
       which-key-idle-delay 0.8
-      which-key-max-description-length 155
+      which-key-max-description-length 255
       which-key-separator " → "
       which-key-dont-use-unicode nil
       )
@@ -378,6 +378,12 @@ para o arquivo de journal do dia."
 
 
 
+(after! just-ts-mode
+;;(require 'just-ts-mode)
+;;Installs just grammar if not available
+  (unless (treesit-language-available-p 'just)
+    (just-ts-mode-install-grammar)))
+
 (use-package! lsp-ui
   :hook (lsp-mode . lsp-ui-mode))
 
@@ -475,3 +481,13 @@ para o arquivo de journal do dia."
  urlcolor=blue,
  bookmarksdepth=4}
 ")
+
+;; Tramp (http://www.emacswiki.org/emacs/TrampMode) for remote files
+(after! tramp
+(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+(setq! tramp-default-method "ssh")
+;; Backup (file~) disabled and auto-save (#file#) locally to prevent delays in editing remote files
+(add-to-list 'backup-directory-alist
+             (cons tramp-file-name-regexp nil))
+(setq! tramp-auto-save-directory temporary-file-directory)
+(setq! tramp-verbose 10))
