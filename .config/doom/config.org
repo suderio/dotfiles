@@ -138,9 +138,6 @@ para o arquivo de journal do dia."
               (org-refile-log-note "")) ; Evita o prompt "Refile note:"
           (org-refile nil nil 'keep))))))
 
-#+end_src
-
-#+begin_src emacs-lisp
 ;; Adiciona a função ao hook, se ainda não tiver feito.
 (add-hook 'org-after-todo-state-change-hook #'meu/org-copiar-tarefa-concluida-para-journal))
 ;(add-to-list 'org-after-todo-state-change-hook

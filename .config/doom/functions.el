@@ -26,7 +26,7 @@
                     (apply 'call-process ,filename nil (if current-prefix-arg t nil) nil args))))))
            (-filter (-not #'file-directory-p)
                     (-filter #'file-executable-p (directory-files directory t))))))
-;; Creates commands for everything in .local/bin
+  ;; Creates commands for everything in .local/bin
   (sud/convert-shell-scripts-to-interactive-commands "~/.local/bin"))
 
 
@@ -70,8 +70,8 @@
   (interactive)
   (let ((org-refile-keep t) ;; Set this to nil to delete the original!
         (org-roam-dailies-capture-templates
-          '(("t" "tasks" entry "%?"
-             :if-new (file+head+olp "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n" ("Done!")))))
+         '(("t" "tasks" entry "%?"
+            :if-new (file+head+olp "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n" ("Done!")))))
         (org-after-refile-insert-hook #'save-buffer)
         today-file
         pos)
@@ -84,6 +84,7 @@
     (unless (equal (file-truename today-file)
                    (file-truename (buffer-file-name)))
       (org-refile nil nil (list "Done!" today-file nil pos)))))
+
 (defun sud/org-copiar-tarefa-concluida-para-journal ()
   "Copiar o item atual para o arquivo do org-journal quando for marcado como DONE.
 
@@ -104,8 +105,8 @@ para o arquivo de journal do dia."
               (org-refile-use-outline-path nil)
               (org-refile-use-cache nil)
               (org-refile-log-note "")) ; Evita o prompt "Refile note:"
-          (org-refile nil nil 'keep))))))
-
+          (org-refile nil nil 'keep)))))
+  (add-hook 'org-after-todo-state-change-hook #'meu/org-copiar-tarefa-concluida-para-journal))
 
 (defun sud/orgsync ()
   "Call sync."
