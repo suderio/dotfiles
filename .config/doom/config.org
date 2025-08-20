@@ -19,9 +19,12 @@
   - [[#remember][Remember]]
 
 ** Functions
-
-*** Check if font is installed and change
 #+begin_src emacs-lisp
+(load! "functions")
+
+#+end_src
+*** Check if font is installed and change
+#+begin_src emacs-lisp :tangle no
 (defun sud/font-installed? (font-name)
   "Retorna t se a fonte font-name está instalada"
   (if (find-font (font-spec :name font-name))
@@ -30,7 +33,7 @@
 *** Create interactive commands from every executable in directory
 
 An idea taken from [[https://pages.sachachua.com/.emacs.d/#scan-bin-and-turn-the-scripts-into-interactive-commands][sachachua]]
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (after! dash
   (defmacro sud/convert-shell-scripts-to-interactive-commands (directory)
     "Make the shell scripts in DIRECTORY available as interactive commands."
@@ -54,7 +57,7 @@ An idea taken from [[https://pages.sachachua.com/.emacs.d/#scan-bin-and-turn-the
 )
 #+end_src
 *** Clones git repo from clipboard and opens dired when finished
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defvar sud/git-clone-destination "~/git/")
 (defun sud/git-clone-clipboard-url ()
   "Clone git URL in clipboard asynchronously and open in dired when finished."
@@ -94,7 +97,7 @@ An idea taken from [[https://pages.sachachua.com/.emacs.d/#scan-bin-and-turn-the
 #+end_src
 *** Copies every DONE task to the dailies file
 Taken from [[https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam-hacks/][System Crafters]]
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defun sud/org-roam-copy-todo-to-today ()
   (interactive)
   (let ((org-refile-keep t) ;; Set this to nil to delete the original!
@@ -135,7 +138,9 @@ para o arquivo de journal do dia."
               (org-refile-log-note "")) ; Evita o prompt "Refile note:"
           (org-refile nil nil 'keep))))))
 
-(after! org
+#+end_src
+
+#+begin_src emacs-lisp
 ;; Adiciona a função ao hook, se ainda não tiver feito.
 (add-hook 'org-after-todo-state-change-hook #'meu/org-copiar-tarefa-concluida-para-journal))
 ;(add-to-list 'org-after-todo-state-change-hook
@@ -145,21 +150,21 @@ para o arquivo de journal do dia."
 
 #+end_src
 *** Sync org files in github
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defun sud/orgsync ()
   "Call sync."
   (interactive)
   (sud/git-sync "-C" "~/org" "-s" "sync"))
 #+end_src
 *** Collapse all DONE tasks
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defun sud/org-hide-done-entries-in-buffer ()
   (interactive)
   (org-map-entries #'org-fold-hide-subtree
                    "/+DONE" 'file 'archive 'comment))
 #+end_src
 *** Fast note insertion
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defun sud/org-roam-node-insert-immediate (arg &rest args)
   (interactive "P")
   (let ((args (cons arg args))
@@ -168,7 +173,7 @@ para o arquivo de journal do dia."
     (apply #'org-roam-node-insert args)))
 #+end_src
 *** Rundeck
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defun sud/cria-mudanca ()
   (interactive "P")
   (sud/cria-mudança.sh (buffer-file-name)))
@@ -280,7 +285,7 @@ estejam definidas:
 ;; Para usar: M-x sud/submete-mudança RET /caminho/para/o/arquivo.yaml RET
 #+end_src
 *** Inbox notes
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defun sud/org-roam-capture-inbox ()
   (interactive)
   (org-roam-capture- :node (org-roam-node-create)
@@ -289,7 +294,7 @@ estejam definidas:
 
 #+end_src
 *** Add to agenda based on tags
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defun sud/org-roam-filter-by-tag (tag-name)
   (lambda (node)
     (member tag-name (org-roam-node-tags node))))
