@@ -173,6 +173,111 @@ para o arquivo de journal do dia."
   (interactive "P")
   (sud/cria-mudança.sh (buffer-file-name)))
 
+;;; rundeck-deploy.el --- Submete arquivos YAML para um job do Rundeck
+
+;; Adicione este arquivo ao seu load-path e execute (require 'rundeck-deploy)
+;; ou simplesmente cole o código em seu arquivo de configuração (init.el).
+
+(require 'json)
+(require 'url)
+
+(defun sud/get-env (var-name)
+  "Retorna o valor da variável de ambiente VAR-NAME.
+Primeiro tenta obter do ambiente do SO. Se não encontrar,
+tenta encontrar uma variável Elisp com o mesmo nome."
+  (or (getenv var-name)
+      (when (boundp (intern var-name))
+        (symbol-value (intern var-name)))))
+
+(defun sud/submete-mudança (yaml-file)
+  "Envia um arquivo YAML para um job do Rundeck e monitora sua execução.
+
+A função requer que as seguintes variáveis de ambiente (ou variáveis Elisp)
+estejam definidas:
+- rundeck_url
+- rundeck_dir
+- rundeck_token
+- rundeck_cria_mudanca_job_id"
+  (interactive "fArquivo para enviar: ")
+  (let* ((rundeck-url (sud/get-env "rundeck_url"))
+         (rundeck-dir (sud/get-env "rundeck_dir"))
+         (rundeck-token (sud/get-env "rundeck_token"))
+         (job-id (sud/get-env "rundeck_cria_mudanca_job_id"))
+         (file-name (file-name-nondirectory yaml-file))
+         (dest-file (expand-file-name file-name rundeck-dir)))
+
+    ;; --- Validação das variáveis ---
+    (unless (and rundeck-dir (file-directory-p rundeck-dir))
+      (error "Variável 'rundeck_dir' não configurada ou não é um diretório válido"))
+    (when (or (null rundeck-token) (string-empty-p rundeck-token))
+      (error "Variável 'rundeck_token' não configurada"))
+    (when (or (null job-id) (string-empty-p job-id))
+      (error "Variável 'rundeck_cria_mudanca_job_id' não configurada"))
+    (when (or (null rundeck-url) (string-empty-p rundeck-url))
+      (error "Variável 'rundeck_url' não configurada"))
+
+    ;; 1. Copiar o arquivo
+    (message "Enviando %s para %s..." file-name rundeck-dir)
+    (copy-file yaml-file dest-file t) ; O 't' permite sobrescrever
+
+    ;; 2. Chamar o job para criar a mudança
+    (message "Iniciando job %s..." job-id)
+    (let* ((url-request-method "POST")
+           (url-request-extra-headers `(("Content-Type" . "application/json")
+                                       ("Accept" . "application/json")
+                                       ("X-Rundeck-Auth-Token" . ,rundeck-token)))
+           (url-request-data (json-encode `(:argString ,(format "-nome_arquivo %s" file-name))))
+           (api-url (format "%s/api/14/job/%s/run" rundeck-url job-id))
+           (buffer (url-retrieve-synchronously api-url))
+           execution-id)
+      (with-current-buffer buffer
+        (goto-char (point-min))
+        ;; Pula os cabeçalhos HTTP para chegar ao corpo JSON
+        (re-search-forward "\n\n")
+        (let ((json-object-type 'hash-table))
+          (setq execution-id (gethash "id" (json-read)))))
+      (kill-buffer buffer)
+
+      (unless execution-id
+        (error "Não foi possível obter o ID da execução do Rundeck"))
+
+      (message "Job iniciado com ID de execução: %s. Aguardando 60s..." execution-id)
+      (sleep-for 60)
+
+      ;; 3. Verificar o estado da execução
+      (message "Verificando estado da execução %s..." execution-id)
+      (let* ((state-url (format "%s/api/14/execution/%s/state" rundeck-url execution-id))
+             (state-buffer (url-retrieve-synchronously state-url))
+             execution-state)
+        (with-current-buffer state-buffer
+          (goto-char (point-min))
+          (re-search-forward "\n\n")
+          (let ((json-object-type 'hash-table))
+            (setq execution-state (gethash "executionState" (json-read)))))
+        (kill-buffer state-buffer)
+
+        (unless (string= execution-state "succeeded")
+          (error "Execução falhou com status: %s" execution-state))
+
+        (message "Mudança processada com sucesso."))
+
+      ;; 4. Obter a saída do job e exibir o ID da mudança
+      (let* ((output-url (format "%s/api/14/execution/%s/output" rundeck-url execution-id))
+             (output-buffer (url-retrieve-synchronously output-url))
+             output-text)
+        (with-current-buffer output-buffer
+          (goto-char (point-min))
+          (re-search-forward "\n\n")
+          (setq output-text (buffer-string)))
+        (kill-buffer output-buffer)
+
+        (if-let ((change-id-line (car (seq-filter (lambda (line)
+                                                    (string-match-p "^ID da mudança criada = " line))
+                                                  (split-string output-text "\n")))))
+            (message "%s" change-id-line)
+          (message "Não foi possível encontrar o ID da mudança na saída do job."))))))
+
+;; Para usar: M-x sud/submete-mudança RET /caminho/para/o/arquivo.yaml RET
 #+end_src
 *** Inbox notes
 #+begin_src emacs-lisp
