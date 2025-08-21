@@ -232,6 +232,11 @@ estejam definidas:
 
 ;; Para usar: M-x sud/submete-mudança RET /caminho/para/o/arquivo.yaml RET
 
+(defun sud/submete-mudança-buffer ()
+  (interactive)
+  (sud/submete-mudança (buffer-file-name)))
+
+
 (defun sud/org-roam-capture-inbox ()
   (interactive)
   (org-roam-capture- :node (org-roam-node-create)
