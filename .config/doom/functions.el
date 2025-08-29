@@ -1,11 +1,13 @@
 ;;; functions.el -*- lexical-binding: t; -*-
 
-
+;; Check if font is installed and change
 (defun sud/font-installed? (font-name)
   "Retorna t se a fonte font-name está instalada"
   (if (find-font (font-spec :name font-name))
       t nil))
 
+;; Create interactive commands from every executable in directory
+;; An idea taken from sachachua
 (after! dash
   (defmacro sud/convert-shell-scripts-to-interactive-commands (directory)
     "Make the shell scripts in DIRECTORY available as interactive commands."
@@ -29,7 +31,7 @@
   ;; Creates commands for everything in .local/bin
   (sud/convert-shell-scripts-to-interactive-commands "~/.local/bin"))
 
-
+;; Clones git repo from clipboard and opens dired when finished
 (defvar sud/git-clone-destination "~/git/")
 (defun sud/git-clone-clipboard-url ()
   "Clone git URL in clipboard asynchronously and open in dired when finished."
@@ -66,6 +68,8 @@
                                      (user-error (format "%s\n%s" command output))))))
     (set-process-filter proc #'comint-output-filter)))
 
+;; Copies every DONE task to the dailies file
+;; Taken from System Crafters
 (defun sud/org-roam-copy-todo-to-today ()
   (interactive)
   (let ((org-refile-keep t) ;; Set this to nil to delete the original!
@@ -108,16 +112,19 @@ para o arquivo de journal do dia."
           (org-refile nil nil 'keep)))))
   (add-hook 'org-after-todo-state-change-hook #'meu/org-copiar-tarefa-concluida-para-journal))
 
+;; Sync org files in github
 (defun sud/orgsync ()
   "Call sync."
   (interactive)
   (sud/git-sync "-C" "~/org" "-s" "sync"))
 
+;; Collapse all DONE tasks
 (defun sud/org-hide-done-entries-in-buffer ()
   (interactive)
   (org-map-entries #'org-fold-hide-subtree
                    "/+DONE" 'file 'archive 'comment))
 
+;; Fast note insertion
 (defun sud/org-roam-node-insert-immediate (arg &rest args)
   (interactive "P")
   (let ((args (cons arg args))
@@ -125,6 +132,7 @@ para o arquivo de journal do dia."
                                                   '(:immediate-finish t)))))
     (apply #'org-roam-node-insert args)))
 
+;; Rundeck
 (defun sud/cria-mudanca ()
   (interactive "P")
   (sud/cria-mudança.sh (buffer-file-name)))
@@ -236,13 +244,14 @@ estejam definidas:
   (interactive)
   (sud/submete-mudança (buffer-file-name)))
 
-
+;; Inbox notes
 (defun sud/org-roam-capture-inbox ()
   (interactive)
   (org-roam-capture- :node (org-roam-node-create)
                      :templates '(("i" "inbox" plain "* %?"
                                    :if-new (file+head "Inbox.org" "#+title: Inbox\n")))))
 
+;; Add to agenda based on tags
 (defun sud/org-roam-filter-by-tag (tag-name)
   (lambda (node)
     (member tag-name (org-roam-node-tags node))))
