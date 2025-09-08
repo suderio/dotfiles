@@ -183,10 +183,10 @@
 
        :app
        ;;calendar
-       ;;emms
-       ;;everywhere                                                   ; *leave* Emacs!? You must be joking
-       ;;irc                                                          ; how neckbeards socialize
-       ;;(rss +org)                                                   ; emacs as an RSS reader
+       emms
+       everywhere                                                   ; *leave* Emacs!? You must be joking
+       irc                                                          ; how neckbeards socialize
+       (rss +org)                                                   ; emacs as an RSS reader
 
        :config
        literate

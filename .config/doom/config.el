@@ -16,6 +16,7 @@
 (map! :leader :desc "Inbox Note" "n i" #'sud/org-roam-capture-inbox)
 ;(map! :leader :desc "Eval" "e" nil)
 (map! :leader :desc "Eval Last Expression" "e l" #'eval-last-sexp)
+(map! :leader :desc "Comment Line" "#" #'comment-line)
 
 (setq! global-auto-revert-mode-text "󰀘"
       global-auto-revert-non-file-buffers t)
@@ -71,11 +72,11 @@
 (if (sud/font-installed? "NotoSerif Nerd Font")
     (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 12)))
 
-(if (sud/font-installed? "Symbols Nerd Font")
-    (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
-           doom-emoji-font (font-spec :family "Symbols Nerd Font")
-           doom-unicode-font (font-spec :family "Symbols Nerd Font")
-           ))
+;; (if (sud/font-installed? "Symbols Nerd Font")
+;;     (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
+;;            doom-emoji-font (font-spec :family "Symbols Nerd Font")
+;;            doom-unicode-font (font-spec :family "Symbols Nerd Font")
+;;            ))
 
 (setq! frame-title-format
     '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
@@ -136,7 +137,10 @@
  '(org-level-2 ((t (:inherit outline-2 :height 1.4))))
  '(org-level-3 ((t (:inherit outline-3 :height 1.3))))
  '(org-level-4 ((t (:inherit outline-4 :height 1.2))))
- '(org-level-5 ((t (:inherit outline-5 :height 1.1))))))
+ '(org-level-5 ((t (:inherit outline-5 :height 1.1)))))
+
+(custom-set-faces!
+  '(org-document-title :height 1.5 :bold t :underline nil)))
 
 (setq! org-journal-dir "~/org/journal/"
       org-journal-file-format "%Y%m.org")
