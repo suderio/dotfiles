@@ -46,6 +46,8 @@
 (setq! modus-themes-scale-headings t)
 (setq!  modus-themes-variable-pitch-ui t)
 
+(setq! lsp-modeline-code-action-fallback-icon "\N{HIGH VOLTAGE SIGN}")
+
 (setq! visible-bell nil)
 (setq! ring-bell-function 'ignore)
 
@@ -72,11 +74,10 @@
 (if (sud/font-installed? "NotoSerif Nerd Font")
     (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 12)))
 
-;; (if (sud/font-installed? "Symbols Nerd Font")
-;;     (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
-;;            doom-emoji-font (font-spec :family "Symbols Nerd Font")
-;;            doom-unicode-font (font-spec :family "Symbols Nerd Font")
-;;            ))
+ (if (sud/font-installed? "Symbols Nerd Font")
+     (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
+            doom-emoji-font (font-spec :family "Symbols Nerd Font")
+            doom-unicode-font (font-spec :family "Symbols Nerd Font")))
 
 (setq! frame-title-format
     '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))

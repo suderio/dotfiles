@@ -88,6 +88,8 @@ This trims whitespaces at EOL with little intervention.
 ;; Important!
 (setq! modus-themes-scale-headings t)
 (setq!  modus-themes-variable-pitch-ui t)
+
+(setq! lsp-modeline-code-action-fallback-icon "\N{HIGH VOLTAGE SIGN}")
 #+end_src
 *** Bell
 Disables annoying bell
@@ -130,11 +132,11 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
 (if (sud/font-installed? "NotoSerif Nerd Font")
     (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 12)))
 
-;; (if (sud/font-installed? "Symbols Nerd Font")
-;;     (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
-;;            doom-emoji-font (font-spec :family "Symbols Nerd Font")
-;;            doom-unicode-font (font-spec :family "Symbols Nerd Font")
-;;            ))
+ (if (sud/font-installed? "Symbols Nerd Font")
+     (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
+            doom-emoji-font (font-spec :family "Symbols Nerd Font")
+            doom-unicode-font (font-spec :family "Symbols Nerd Font")))
+
 #+end_src
 
 *** Frame
