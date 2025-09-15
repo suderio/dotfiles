@@ -136,7 +136,6 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
      (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
             doom-emoji-font (font-spec :family "Symbols Nerd Font")
             doom-unicode-font (font-spec :family "Symbols Nerd Font")))
-
 #+end_src
 
 *** Frame
