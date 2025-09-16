@@ -1,0 +1,43 @@
+# editorconfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Default settings:
+# A newline ending every file
+# Use 4 spaces as indentation
+[*]
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+# Specify UTF-8 without byte-order mark
+[*.{csproj,locproj,nativeproj,proj,resx,vbproj}]
+charset = utf-8
+
+# License header
+file_header_template = Licensed to Paulo Suderio <paulo.suderio@technearts.net>.\nThis file is under the MIT license.
+
+# C++ Files
+[*.{cpp,h,in}]
+curly_bracket_next_line = true
+indent_brace_style = Allman
+
+# Xml files
+[*.{xml}]
+indent_size = 2
+
+# Data serialization
+[*.{json,yaml,yml}]
+indent_size = 2
+
+# Shell scripts
+[*.sh]
+end_of_line = lf
+[*.{cmd,bat}]
+end_of_line = crlf
+
+# Tab indentation (no size specified)
+[Makefile]
+indent_style = tab

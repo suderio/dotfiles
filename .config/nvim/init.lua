@@ -61,7 +61,6 @@ require('mason-tool-installer').setup({
 		"dagger",
 		"docker_compose_language_service",
 		"docker_language_server",
-		"fennel_ls",
 		"google-java-format",
 		"gopls",
 		"jdtls",
@@ -108,7 +107,7 @@ vim.lsp.config('lua_ls', {
 	},
 })
 
-require('nvim-treesitter.configs').setup({ highlight = { enable = true, }, })
+-- require('nvim-treesitter.configs').setup({ highlight = { enable = true, }, })
 
 -- colors
 require "vague".setup({ transparent = true })
