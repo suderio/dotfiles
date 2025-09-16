@@ -36,7 +36,7 @@ export DICPATH="$HOME/.local/share/hunspell"
 
 export PATH
 
-[ -f "/home/paulo/.ghcup/env" ] && . "/home/paulo/.ghcup/env" # ghcup-env
+[ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env" # ghcup-env
 
 shell="$(command -v bash)"
 export SHELL="$shell"
