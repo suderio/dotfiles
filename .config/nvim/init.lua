@@ -110,7 +110,7 @@ Setup_plugin({"mason-org/mason-lspconfig.nvim"})
 Setup_plugin({"WhoIsSethDaniel/mason-tool-installer.nvim",
 	ensure_installed = {
 		"bashls",
-    "checkstyle",
+        "checkstyle",
 		"clangd",
 		"cljfmt",
 		"clojure_lsp",
