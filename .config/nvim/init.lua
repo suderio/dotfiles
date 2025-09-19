@@ -40,7 +40,7 @@ map('n', '<leader>lf', vim.lsp.buf.format)
 --
 -- @param plugin_spec A tabela de especificação do plugin.
 --
-function setup_plugin(plugin_spec)
+function Setup_plugin(plugin_spec)
   -- 1. Extrair o nome do plugin (ex: "lewis6991/gitsigns.nvim")
   local plugin_path = plugin_spec[1]
   if not plugin_path or type(plugin_path) ~= "string" then
@@ -105,12 +105,11 @@ vim.pack.add {
   { src = "https://github.com/folke/which-key.nvim" },
 }
 
-setup_plugin({"mason-org/mason.nvim" })
-setup_plugin({"mason-org/mason-lspconfig.nvim"})
-setup_plugin({"WhoIsSethDaniel/mason-tool-installer.nvim",
+Setup_plugin({"mason-org/mason.nvim" })
+Setup_plugin({"mason-org/mason-lspconfig.nvim"})
+Setup_plugin({"WhoIsSethDaniel/mason-tool-installer.nvim",
 	ensure_installed = {
 		"bashls",
-		"bibtex-tidy",
     "checkstyle",
 		"clangd",
 		"cljfmt",
@@ -130,10 +129,8 @@ setup_plugin({"WhoIsSethDaniel/mason-tool-installer.nvim",
 		"kotlin_language_server",
 		"lua_ls",
 		"markdownlint-cli2",
-		"nginx_language_server",
 		"rust_analyzer",
 		"shellcheck",
-		"shellharden",
 		"shfmt",
 		"stylua",
 		"yamlls",
@@ -161,19 +158,19 @@ vim.lsp.config('lua_ls', {
 })
 
 -- colors
-setup_plugin({"vague2k/vague.nvim", transparent = true })
+Setup_plugin({"vague2k/vague.nvim", transparent = true })
 vim.cmd("colorscheme vague")
 vim.cmd(":hi statusline guibg=NONE")
 
-setup_plugin({"NvChad/showkeys", position = "top-right" })
-setup_plugin({"echasnovski/mini.pick" })
-setup_plugin({"stevearc/oil.nvim"})
+Setup_plugin({"NvChad/showkeys", position = "top-right" })
+Setup_plugin({"echasnovski/mini.pick" })
+Setup_plugin({"stevearc/oil.nvim"})
 
 -- require('nvim-treesitter.configs').setup({ highlight = { enable = true, }, })
 
 
 -- snippets
-setup_plugin({"L3MON4D3/luasnip", enable_autosnippets = true })
+Setup_plugin({"L3MON4D3/luasnip", enable_autosnippets = true })
 require("luasnip.loaders.from_lua").load({ paths = "~/.config/nvim/snippets/" })
 
 local ls = require("luasnip")
@@ -182,8 +179,8 @@ map({ "i", "s" }, "<C-J>", function() ls.jump(1) end, { silent = true })
 map({ "i", "s" }, "<C-K>", function() ls.jump(-1) end, { silent = true })
 
 -- mini.pairs
-setup_plugin({
-  "vim-mini/mini.pairs",
+Setup_plugin({
+  "nvim-mini/mini.pairs",
   opts = {
     modes = { insert = true, command = true, terminal = false },
     -- skip autopair when next character is one of these
@@ -198,24 +195,24 @@ setup_plugin({
   },
 })
 
-setup_plugin({"folke/ts-comments.nvim" })
+Setup_plugin({"folke/ts-comments.nvim" })
 -- lazydev
 -- TODO rever paths
-require "lazydev".setup({
-  "folke/lazydev.nvim",
-  ft = "lua",
-  cmd = "LazyDev",
-  opts = {
-    library = {
-      { path = "${3rd}/luv/library", words = { "vim%.uv" } },
-      { path = "LazyVim", words = { "LazyVim" } },
-      { path = "snacks.nvim", words = { "Snacks" } },
-      { path = "lazy.nvim", words = { "LazyVim" } },
-    },
-  },
-})
+-- require "lazydev".setup({
+--   "folke/lazydev.nvim",
+--   ft = "lua",
+--   cmd = "LazyDev",
+--   opts = {
+--     library = {
+--       { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+--       { path = "LazyVim", words = { "LazyVim" } },
+--       { path = "snacks.nvim", words = { "Snacks" } },
+--       { path = "lazy.nvim", words = { "LazyVim" } },
+--     },
+--   },
+-- })
 
-setup_plugin({
+Setup_plugin({
   "MagicDuck/grug-far.nvim",
   opts = { headerMaxWidth = 80 },
   cmd = { "GrugFar", "GrugFarWithin" },
@@ -238,7 +235,7 @@ setup_plugin({
   },
 })
 
-setup_plugin({
+Setup_plugin({
   "folke/flash.nvim" ,
   event = "VeryLazy",
   vscode = true,
@@ -265,7 +262,7 @@ setup_plugin({
 })
 
 -- TODO configurar which-key
-setup_plugin(  {
+Setup_plugin(  {
     "lewis6991/gitsigns.nvim",
     opts = {
       signs = {
@@ -322,7 +319,7 @@ setup_plugin(  {
     },
   })
 
-  setup_plugin(  -- better diagnostics list and others
+  Setup_plugin(  -- better diagnostics list and others
   {
     "folke/trouble.nvim",
     cmd = { "Trouble" },
@@ -371,7 +368,7 @@ setup_plugin(  {
     },
   })
 
-  setup_plugin(  {
+  Setup_plugin(  {
     "folke/todo-comments.nvim",
     cmd = { "TodoTrouble", "TodoTelescope" },
     event = "LazyFile",
