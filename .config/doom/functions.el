@@ -266,3 +266,15 @@ estejam definidas:
   (interactive)
   ;; TODO add more tags and files (ex. work.org)
   (setq org-agenda-files (sud/org-roam-list-notes-by-tag "Project")))
+
+(defun sud/toggle-view-mode ()
+    "Toggle between `markdown-mode' and `markdown-view-mode'."
+    (interactive)
+    (case major-mode
+        ('markdown-view-mode
+            (markdown-mode))
+        ('markdown-mode
+            (markdown-view-mode))
+        ;; TODO add more cases here (ex. latex, org, etc)
+        (t
+            ())))
