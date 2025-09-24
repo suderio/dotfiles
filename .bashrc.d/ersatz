@@ -1,21 +1,10 @@
 #!/bin/bash
 
-# Define um nome para a imagem Docker para facilitar a referência
 readonly GO_IMAGE_NAME="golang-ersatz:1.0.0"
 readonly PROXY="http://proxy.inf.bndes.net:8080"
 readonly NO_PROXY="bndes.net,*.bndes.net,10.,10.*,10.0.0.0/8,10.0.0.0/255.0.0.0"
 
-gorun() {
-# Verifica se a imagem já existe localmente
-docker image inspect "${GO_IMAGE_NAME}" &>/dev/null || {
-  echo "Imagem '${GO_IMAGE_NAME}' não encontrada. Construindo agora..."
-  docker build \
-    --build-arg UID=$(id -u) \
-    --build-arg GID=$(id -g) \
-    --build-arg http_proxy="$PROXY"  \
-    --build-arg https_proxy="$PROXY" \
-    --build-arg no_proxy="$NO_PROXY" \
-    -t "${GO_IMAGE_NAME}" - <<'EOF'
+readonly GO_DOCKERFILE=$(cat <<'EOF'
 FROM golang:1.25.1
 ARG UID=1000
 ARG GID=1000
@@ -33,8 +22,24 @@ RUN useradd -m -u $UID -g $GID -o -s /bin/bash user
 USER user
 WORKDIR /app
 EOF
+)
+
+# Verifica se a imagem já existe localmente
+inspect() {
+docker image inspect "$1" &>/dev/null || {
+  echo "Imagem '$1' não encontrada. Construindo agora..."
+  docker build \
+    --build-arg UID=$(id -u) \
+    --build-arg GID=$(id -g) \
+    --build-arg http_proxy="$PROXY"  \
+    --build-arg https_proxy="$PROXY" \
+    --build-arg no_proxy="$NO_PROXY" \
+    -t "$1" - <<< "$GO_DOCKERFILE"
+}
 }
 
+gorun() {
+inspect "${GO_IMAGE_NAME}"
 # Executa o contêiner Docker com as configurações corretas
 docker run --rm -it \
   -v "${PWD}:/app" \
@@ -57,6 +62,8 @@ usage() {
   echo "  just (use '-i')"
   echo "Imagens disponíveis:"
   echo "  go"
+  echo "Para excluir imagens:"
+  echo "  ersatz [-r|--remove <imagem>]"
   exit 1
 }
 
@@ -69,17 +76,25 @@ ersatz() {
 
   case "$1" in
     -i|--image)
-      # Verifica se o nome da função foi fornecido após a flag
       if [ -z "$2" ]; then
-        echo "Erro: A opção '$1' requer um nome de comando como segundo argumento." >&2
+        echo "Erro: A opção '$1' requer um nome de comando como argumento." >&2
         usage
       fi
-      target="$2" # O nome da função é o segundo argumento
+      target="$2"
+      shift 2
+      ;;
+
+    -r|--remove)
+      if [ -z "$2" ]; then
+        echo "Erro: A opção '$1' requer um nome de imagem como argumento." >&2
+        usage
+      fi
+      remove "$2"
       shift 2
       ;;
 
     *)
-      target="$1" # O nome da função é o primeiro argumento
+      target="$1"
       ;;
   esac
 
@@ -89,6 +104,18 @@ ersatz() {
       ;;
     *)
       echo "Erro: Comando desconhecido '$target'." >&2
+      return 1
+      ;;
+  esac
+}
+
+remove() {
+  case "$1" in
+    go)
+    docker rmi "${GO_IMAGE_NAME}"
+      ;;
+    *)
+      echo "Erro: Imagem desconhecida '$1'." >&2
       return 1
       ;;
   esac
