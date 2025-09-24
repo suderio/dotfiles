@@ -48,3 +48,8 @@ export MANPAGER="less -X"
 
 # This allows git to find repos across filesystems
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+
+# EXPERIMENTAL
+# pacman -S mesa vulkan-dzn
+export GALLIUM_DRIVER=d3d12
+export LIBVA_DRIVER_NAME=d3d12
