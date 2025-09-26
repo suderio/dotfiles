@@ -73,9 +73,9 @@ command -v fzf &>/dev/null && eval "$(fzf --bash)"
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
-[ -f "$HOME/.local/share/bob/env/env.sh" ] && . "$HOME/.local/share/bob/env/env.sh"
-[[ -f "$HOME/.local/share/bob/env/env.sh" ]] && . "$HOME/.local/share/bob/env/env.sh"
+[ -f "$HOME/.local/bin/mise" ] && eval "$($HOME/.local/bin/mise activate bash)"
 
 # Add JBang to environment
 alias j!=jbang
 export PATH="$HOME/.jbang/bin:$PATH"
+

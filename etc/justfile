@@ -1,0 +1,106 @@
+distro := `[ -f /etc/os-release ] && . /etc/os-release && echo "$ID"`
+
+dotfiles:
+    alias config='git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
+    git clone --bare git@github.com:suderio/dotfiles "$HOME/.local/dotfiles"
+    config config --local status.showUntrackedFiles no
+    rm .bash_logout .profile .bashrc
+    config checkout
+
+update:
+    sudo apt update
+    sudo apt upgrade
+
+ssh:
+    apt install openssh-server
+    sudo systemctl enable ssh
+    sudo systemctl start ssh
+
+mise:
+    curl https://mise.run | sh
+    echo "eval \"\$(~/.local/bin/mise activate bash)\"" >> ~/.bashrc
+    /home/psude/.local/bin/mise activate bash
+
+basic:
+    just _check-os-and-install aspell git gnuplot hunspell hunspell-de hunspell-en_us hunspell-es_es hunspell-fr hunspell-pt-br zip unzip
+    just _check-os-and-install build-essential autoconf automake flex bison debian-keyring gettext gnu-standards
+    just _check-os-and-install base-devel
+    just _check-os-and-install re2c pkg-config zlib1g-dev # para php e ruby no debian
+    just _check-os-and-install libreadline-dev # para lua@51
+    just _check-os-and-install libzstd-dev # para sbcl
+    just _check-os-and-install libxml2-dev libssl-dev libsqlite3-dev libcurl4-openssl-dev libgd-dev libonig-dev libpq-dev libzip-dev # para php
+
+emacs:
+    sudo apt install -y emacs-pgtk
+# kotlin
+
+# Detecta o sistema operacional e chama a task de instalação correta
+_check-os-and-install pkgs:
+    #!/usr/bin/env bash
+    case "$distro" in
+      arch|manjaro|garuda)
+        just _aur_install-if-missing "{{pkgs}}"
+        ;;
+      debian|ubuntu)
+        just _apt_install-if-missing "{{pkgs}}"
+        ;;
+      *)
+        echo "⚠️ Distribuição '$distro' não implementada."
+        exit 1
+        ;;
+    esac
+
+# Instala pacotes ausentes, usando pacman ou AUR
+_aur_install-if-missing pkgs:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    missing=()
+    for pkg in {{pkgs}}; do
+      if ! pacman -Qi "$pkg" &>/dev/null; then
+        missing+=("$pkg")
+      fi
+    done
+
+    if [ "${#missing[@]}" -eq 0 ]; then
+      echo "✅ Todos os pacotes já estão instalados."
+      exit 0
+    fi
+
+    echo "📦 Instalando pacotes ausentes: ${missing[*]}"
+    for pkg in "${missing[@]}"; do
+      echo "→ Verificando: $pkg"
+      if pacman -Si "$pkg" &>/dev/null; then
+        echo "  → Instalando com pacman"
+        sudo pacman -S --noconfirm --needed "$pkg"
+      elif command -v paru &>/dev/null; then
+        echo "  → Instalando com paru (AUR)"
+        paru -S --noconfirm --needed "$pkg"
+      elif command -v yay &>/dev/null; then
+        echo "  → Instalando com yay (AUR)"
+        yay -S --noconfirm --needed "$pkg"
+      else
+        echo "  ✗ Nenhum helper AUR (paru/yay) encontrado para instalar '$pkg'."
+        exit 1
+      fi
+    done
+# Instala pacotes ausentes, usando apt
+_apt_install-if-missing pkgs:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    missing=()
+    for pkg in {{pkgs}}; do
+      if ! apt search "$pkg" &>/dev/null; then
+        missing+=("$pkg")
+      fi
+    done
+
+    if [ "${#missing[@]}" -eq 0 ]; then
+      echo "✅ Todos os pacotes já estão instalados."
+      exit 0
+    fi
+
+    echo "📦 Instalando pacotes ausentes: ${missing[*]}"
+    for pkg in "${missing[@]}"; do
+      echo "→ Instalando: $pkg"
+      sudo apt install -y "$pkg"
+    done
