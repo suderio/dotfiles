@@ -32,4 +32,5 @@ lua = "5.1.5"
 jq = "latest"
 sbcl = "latest"
 kotlin = "latest"
+ripgrep = "latest"
 
