@@ -1,18 +1,8 @@
-aspell ast-grep bash-language-server bat bob chafa clamav clang cljfmt-bin clojure-lsp-bin cmake composer cpanminus docker docker-compose dockerfile-language-server dust editorconfig-core-c eza fd fennel fzf ghostty git git-delta github-cli gnuplot gomodifytags gopls gore gotests graphviz hunspell hunspell-de hunspell-en_us hunspell-es_es hunspell-fr hunspell-pt-br imagemagick jdk-openjdk jdtls jq js-beautify jujutsu julia just kitty kotlin kotlin-language-server ktlint lazygit lua lua-language-server lua51 luarocks lynis maim maven mermaid-cli noto-fonts noto-fonts-emoji npm nushell pandoc-cli php phpactor procs pyright python-black python-isort python-nose python-pipenv python-pyflakes python-pynvim python-pytest ruby ruby-lsp rustup sbcl shellcheck shfmt sshfs starship stylelint texlive-basic texlive-bibtexextra texlive-binextra texlive-context texlive-fontsextra texlive-fontsrecommended texlive-fontutils texlive-formatsextra texlive-games texlive-humanities texlive-latex texlive-latexextra texlive-latexrecommended texlive-luatex texlive-mathscience texlive-metapost texlive-music texlive-pictures texlive-plaingeneric texlive-pstricks texlive-publishers texlive-xetex tidy tree-sitter-bash tree-sitter-cli tree-sitter-commonlisp tree-sitter-css tree-sitter-dockerfile-git tree-sitter-go tree-sitter-html tree-sitter-java tree-sitter-javascript tree-sitter-json tree-sitter-julia tree-sitter-kotlin tree-sitter-make tree-sitter-python tree-sitter-rust tree-sitter-sql tree-sitter-toml tree-sitter-typescript tree-sitter-zig ttf-firacode-nerd ttf-nerd-fonts-symbols ttf-nerd-fonts-symbols-mono typescript-language-server ueberzugpp uv viu vscode-json-languageserver vulkan-dzn vulkan-mesa-layers wget which wtype xdotool xorg-xwininfo yaml-language-server yq zathura zathura-cb zathura-djvu zathura-ps zellij zenith zig zls zshdb #
+# aspell ast-grep bash-language-server bat bob chafa clamav clang cljfmt-bin clojure-lsp-bin cmake composer cpanminus docker docker-compose dockerfile-language-server dust editorconfig-core-c eza fd fennel fzf ghostty git git-delta github-cli gnuplot gomodifytags gopls gore gotests graphviz hunspell hunspell-de hunspell-en_us hunspell-es_es hunspell-fr hunspell-pt-br imagemagick jdk-openjdk jdtls jq js-beautify jujutsu julia just kitty kotlin kotlin-language-server ktlint lazygit lua lua-language-server lua51 luarocks lynis maim maven mermaid-cli noto-fonts noto-fonts-emoji npm nushell pandoc-cli php phpactor procs pyright python-black python-isort python-nose python-pipenv python-pyflakes python-pynvim python-pytest ruby ruby-lsp rustup sbcl shellcheck shfmt sshfs starship stylelint texlive-basic texlive-bibtexextra texlive-binextra texlive-context texlive-fontsextra texlive-fontsrecommended texlive-fontutils texlive-formatsextra texlive-games texlive-humanities texlive-latex texlive-latexextra texlive-latexrecommended texlive-luatex texlive-mathscience texlive-metapost texlive-music texlive-pictures texlive-plaingeneric texlive-pstricks texlive-publishers texlive-xetex tidy tree-sitter-bash tree-sitter-cli tree-sitter-commonlisp tree-sitter-css tree-sitter-dockerfile-git tree-sitter-go tree-sitter-html tree-sitter-java tree-sitter-javascript tree-sitter-json tree-sitter-julia tree-sitter-kotlin tree-sitter-make tree-sitter-python tree-sitter-rust tree-sitter-sql tree-sitter-toml tree-sitter-typescript tree-sitter-zig ttf-firacode-nerd ttf-nerd-fonts-symbols ttf-nerd-fonts-symbols-mono typescript-language-server ueberzugpp uv viu vscode-json-languageserver vulkan-dzn vulkan-mesa-layers wget which wtype xdotool xorg-xwininfo yaml-language-server yq zathura zathura-cb zathura-djvu zathura-ps zellij zenith zig zls zshdb #
 
 
-#automake
-#base
-#base-devel
-#emacs-wayland
-#less
-#man-db
-#xclip
-#sudo
-#paru
-#paru-debug
-#openssh
-#pacman-contrib
-## nasm
-## zip
-## unzip
+#pacman basic
+base-devel less man-db xclip sudo openssh pacman-contrib nasm zip unzip
+
+# pacman other
+emacs-wayland paru paru-debug

@@ -46,6 +46,8 @@ export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
+[ -f "$HOME/.local/bin/mise" ] && eval "$($HOME/.local/bin/mise activate bash)"
+
 . "$HOME/.profile"
 
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do source "$f"; done
@@ -73,9 +75,5 @@ command -v fzf &>/dev/null && eval "$(fzf --bash)"
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
-[ -f "$HOME/.local/bin/mise" ] && eval "$($HOME/.local/bin/mise activate bash)"
 
-# Add JBang to environment
-alias j!=jbang
-export PATH="$HOME/.jbang/bin:$PATH"
 
