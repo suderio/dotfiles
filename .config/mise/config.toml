@@ -1,75 +1,121 @@
 [settings]
 experimental = true
 
+[settings.cargo]
+binstall = false
+
+[settings.erlang]
+compile = true
+
+[settings.node]
+compile = true
+gpg_verify = true
+
+[settings.python]
+compile = true
+
 [tools]
-"asdf:luizm/asdf-shfmt" = "latest"
+# languages
 "asdf:ouest/asdf-perl" = "latest"
-ast-grep = "latest"
-bat = "latest"
-bat-extras = "latest"
-bitwarden = "latest"
-black = "latest"
-btop = "latest"
 cabal = "latest"
 clang = "latest"
-clang-format = "latest"
 clojure = "latest"
-cmake = "latest"
+go = "latest"
+graalvm = "latest"
+java = "latest"
+julia = "latest"
+kotlin = "latest"
+lua = "5.1.5"
+php = "latest"
+python = "latest"
+ruby = "latest"
+rust = "latest"
+sbcl = "latest"
+zig = "latest"
+
+# basic
+bat = "latest"
+bat-extras = "latest"
 coreutils = "latest"
-ctop = "latest"
-delta = "latest"
-dust = "latest"
 eza = "latest"
 fd = "latest"
-ffmpeg = "latest"
 fzf = "latest"
+just = "latest"
+node = "latest"
+ripgrep = "latest"
+ripgrep-all = "latest"
+starship = "latest"
+uv = "latest"
+
+# devtools
+"asdf:luizm/asdf-shfmt" = "latest"
+ast-grep = "latest"
+black = "latest"
+clang-format = "latest"
+cmake = "latest"
 github-cli = "latest"
-go = "latest"
 goreleaser = "latest"
-graalvm = "latest"
-imagemagick = "latest"
-java = "latest"
 jj = "latest"
 jq = "latest"
 jreleaser = "latest"
-julia = "latest"
-just = "latest"
-jwt = "latest"
-kotlin = "latest"
 ktlint = "latest"
 lazygit = "latest"
 leiningen = "latest"
-lua = "5.1.5"
 lua-language-server = "latest"
 markdownlint-cli2 = "latest"
 maven = "latest"
-neovim = "latest"
 ninja = "latest"
-node = "latest"
-pandoc = "latest"
-php = "latest"
 prettier = "latest"
-python = "latest"
 quarkus = "latest"
-ripgrep = "latest"
-ripgrep-all = "latest"
 ripsecrets = "latest"
-ruby = "latest"
-rust = "latest"
 rust-analyzer = "latest"
-sbcl = "latest"
 shellcheck = "latest"
 spring-boot = "latest"
-starship = "latest"
 stylua = "latest"
 tinytex = "latest"
 tree-sitter = "latest"
-typst = "latest"
-uv = "latest"
 yamlfmt = "latest"
 yamllint = "latest"
 yj = "latest"
 yq = "latest"
-zellij = "latest"
-zig = "latest"
 zls = "latest"
+
+# go devtools
+"go:github.com/fatih/gomodifytags" = "latest"
+"go:github.com/cweill/gotests/gotests" = "latest"
+"go:golang.org/x/tools/gopls" = "latest"
+"go:github.com/x-motemen/gore/cmd/gore" = "latest"
+"go:github.com/jessfraz/dockfmt" = "latest"
+
+# python devtools
+"pipx:isort" = "latest"
+"pipx:pipenv" = "latest"
+"pipx:nose" = "latest"
+"pipx:nose2" = "latest"
+"pipx:pytest" = "latest"
+"pipx:pyflakes" = "latest"
+
+# npm devtools
+"npm:stylelint" = "latest"
+"npm:js-beautify" = "latest"
+
+# cargo devtools
+"cargo:cargo-upgrade-command" = "latest"
+
+# other
+bitwarden = "latest"
+btop = "latest"
+ctop = "latest"
+delta = "latest"
+dust = "latest"
+ffmpeg = "latest"
+imagemagick = "latest"
+jwt = "latest"
+neovim = "latest"
+pandoc = "latest"
+typst = "latest"
+zellij = "latest"
+
+
+
+

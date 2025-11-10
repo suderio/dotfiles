@@ -7,6 +7,7 @@ TMP_DIR := "$HOME/tmp"
 
 # Just list tasks
 default:
+  mkdir -p "{{TMP_DIR}}"
   @just --list --unsorted | more
 
 # Deletes tmp dir
@@ -19,7 +20,7 @@ clean:
 [group('main')]
 base-arch: clean
     sudo pacman -Syu
-    sudo pacman -S base-devel less man-db xclip sudo openssh pacman-contrib nasm zip unzip libxml2-utils maim
+    sudo pacman -S base-devel git less man-db xclip oniguruma openssh pacman-contrib plocate postgresql-libs nasm re2c zip unzip libxml2 libyaml libzip maim xorg-xwininfo xdotool
     # Install paru
     git clone https://aur.archlinux.org/paru.git {{TMP_DIR}}
     makepkg -si
@@ -79,7 +80,7 @@ FONTS := "FiraCode Noto NerdFontsSymbolsOnly" # DejaVuSansMono JetBrainsMono Sou
 # Nerd Fonts install
 [unix]
 [group('other')]
-install-fonts:
+fonts:
     for font in {{FONTS}}; do \
       just install-font $font; \
     done
@@ -88,7 +89,7 @@ install-fonts:
 # Font install
 [unix]
 [group('other')]
-install-font font:
+font font:
     mkdir -p "$XDG_DATA_HOME/fonts/{{font}}"
     curl -sL "{{NERD_FONTS_URL}}{{font}}.tar.xz" | unxz | tar -xvf - -C "$XDG_DATA_HOME/fonts/{{font}}"
     chmod -R "u=rwx,g=r,o=r" "$XDG_DATA_HOME/fonts/{{font}}"
@@ -115,11 +116,7 @@ install-lem:
 [group('spelling')]
 hunspell: clean
   git clone https://github.com/hunspell/hunspell.git {{TMP_DIR}}
-  autoreconf -vfi
-  ./configure --prefix=$HOME/.local
-  make
-  make install
-  sudo ldconfig
+  autoreconf -vfi && ./configure --prefix=$HOME/.local --with-readline && make && make install && sudo ldconfig
 
 # Hunspell dictionaries
 [unix]
@@ -137,17 +134,6 @@ hunspell-dicts: clean
   unzip -j "es.zip" "es/es_ES.*" -d "$HOME/.local/share/hunspell/"
   curl -O https://hunspell.memoq.com/en.zip
   unzip -j "en.zip" "en/en_US.*" -d "$HOME/.local/share/hunspell/"
-
-GO_PACKAGES := "github.com/fatih/gomodifytags@latest github.com/cweill/gotests/gotests@latest golang.org/x/tools/gopls@latest github.com/x-motemen/gore/cmd/gore@latest"
-
-# Go development tools
-[group('devtools')]
-go:
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  for pkg in {{GO_PACKAGES}}; do
-    go install "$pkg"
-  done
 
 # Install Julia Language Server
 [group('devtools')]
@@ -169,26 +155,6 @@ neovim:
   uv pip install pynvim -p "$HOME/.local/share/nvim/venv"
   npm install --global neovim
 
-PYTHON_PACKAGES := "isort pipenv nose nose2 pytest pyflakes"
-# Python development tools
-[group('devtools')]
-python:
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  for pkg in {{PYTHON_PACKAGES}}; do
-    uv tool install "$pkg"
-  done
-
-NPM_PACKAGES := "stylelint js-beautify"
-# Web development tools
-[group('devtools')]
-web: tidy
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  for pkg in {{NPM_PACKAGES}}; do
-    npm install --global "$pkg"
-  done
-
 [group('devtools')]
 tidy: clean
   git clone https://github.com/htacg/tidy-html5.git {{TMP_DIR}}
@@ -197,26 +163,11 @@ tidy: clean
     && make \
     && make install
 
-# Install dockfmt
-[group('devtools')]
-docker:
-    go install github.com/jessfraz/dockfmt@latest
-
 # install cljfmt
 [group('devtools')]
 clojure:
     curl -o cljfmt.tar.gz -sL "https://github.com/weavejester/cljfmt/releases/download/0.15.3/cljfmt-0.15.3-linux-amd64-static.tar.gz"
     tar -xzf cljfmt.tar.gz -C {{LOCAL_DIR}}/bin/
-
-# Install cargo-upgrade-command
-[group('update')]
-cargo:
-    cargo install cargo-upgrade-command
-
-# Install gup command
-[group('update')]
-gup:
-    go install github.com/nao1215/gup@latest
 
 # Updates all - this will take some time
 [unix]
