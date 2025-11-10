@@ -193,3 +193,7 @@ doctor:
 # TODO
 # https://github.com/fwcd/kotlin-language-server
 # ver .config/emacs/.local/etc/lsp/kotlin-language-server*
+
+# json, python treesitter
+
+

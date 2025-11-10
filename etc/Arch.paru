@@ -1,2 +1,0 @@
-cljfmt-bin gomodifytags gore gotests js-beautify tree-sitter-zig tree-sitter-typescript tree-sitter-toml tree-sitter-sql tree-sitter-make tree-sitter-kotlin tree-sitter-julia tree-sitter-json tree-sitter-java tree-sitter-html tree-sitter-go tree-sitter-css  tree-sitter-commonlisp kotlin-language-server clojure-lsp-bin dockerfile-language-server phpactor jdtls
-# tree-sitter-dockerfile-git tree-sitter-yaml tree-sitter-xml tree-sitter-php tree-sitter-latex tree-sitter-clojure-git tree-sitter-bibtex-git perl-perl-languageserver
