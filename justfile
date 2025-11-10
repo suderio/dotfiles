@@ -7,8 +7,16 @@ TMP_DIR := "$HOME/tmp"
 
 # Just list tasks
 default:
-  mkdir -p "{{TMP_DIR}}"
-  @just --list --unsorted | more
+    @echo "using {{cache_directory()}} as The user-specific cache directory."
+    @echo "using {{config_directory()}} as The user-specific configuration directory."
+    @echo "using {{config_local_directory()}} as The local user-specific configuration directory."
+    @echo "using {{data_directory()}} as The user-specific data directory."
+    @echo "using {{data_local_directory()}} as The local user-specific data directory."
+    @echo "using {{executable_directory()}} as The user-specific executable directory."
+    @echo "using {{home_directory()}} as Home directory"
+    @echo "using {{TMP_DIR}} as temp and working directory"
+    @mkdir -p "{{TMP_DIR}}"
+    @just --list --unsorted | more
 
 # Deletes tmp dir
 [group('main')]
@@ -36,9 +44,9 @@ base-deb:
 # Dotfiles
 [group('main')]
 dotfiles:
-    git clone --bare git@github.com:suderio/dotfiles "$HOME/.local/dotfiles"
-    git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME" config --local status.showUntrackedFiles no
-    git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME" checkout
+    git clone --bare git@github.com:suderio/dotfiles "{{LOCAL_DIR}}/dotfiles"
+    git --git-dir="{{LOCAL_DIR}}/dotfiles" --work-tree="$HOME" config --local status.showUntrackedFiles no
+    git --git-dir="{{LOCAL_DIR}}/dotfiles" --work-tree="$HOME" checkout
 
 # Mise install
 [unix]
@@ -63,7 +71,7 @@ emacs-src: clean
     git clone https://git.savannah.gnu.org/git/emacs.git/ {{TMP_DIR}}
     git checkout emacs-30.2
     ./autogen.sh
-    ./configure --prefix=/home/psude/.local --with-x-toolkit=gtk3 --with-mailutils --with-tree-sitter --with-pgtk --with-native-compilation=aot
+    ./configure --prefix={{LOCAL_DIR}} --with-x-toolkit=gtk3 --with-mailutils --with-tree-sitter --with-pgtk --with-native-compilation=aot
     make clean
     make -j8
     make install
@@ -72,8 +80,8 @@ emacs-src: clean
 [unix]
 [group('emacs')]
 doom:
-    git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.config/emacs
-    ~/.config/emacs/bin/doom install
+    git clone --depth 1 https://github.com/doomemacs/doomemacs "{{config_directory()}}/emacs"
+    {{config_directory()}}/emacs/bin/doom" install
 
 NERD_FONTS_URL := "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/"
 FONTS := "FiraCode Noto NerdFontsSymbolsOnly" # DejaVuSansMono JetBrainsMono SourceCodePro
@@ -116,29 +124,29 @@ install-lem:
 [group('spelling')]
 hunspell: clean
   git clone https://github.com/hunspell/hunspell.git {{TMP_DIR}}
-  autoreconf -vfi && ./configure --prefix=$HOME/.local --with-readline && make && make install && sudo ldconfig
+  autoreconf -vfi && ./configure --prefix={{LOCAL_DIR}} --with-readline && make && make install && sudo ldconfig
 
 # Hunspell dictionaries
 [unix]
 [group('spelling')]
 hunspell-dicts: clean
   curl -O https://hunspell.memoq.com/de.zip
-  unzip -j "de.zip" "de/de_DE*" -d "$HOME/.local/share/hunspell/"
+  unzip -j "de.zip" "de/de_DE*" -d "{{data_directory()}}/hunspell/"
   curl -O https://hunspell.memoq.com/fr_FR.zip
-  unzip -j "fr_FR.zip" "fr_FR/fr.*" -d "$HOME/.local/share/hunspell/"
+  unzip -j "fr_FR.zip" "fr_FR/fr.*" -d "{{data_directory()}}/hunspell/"
   curl -O https://hunspell.memoq.com/it_IT.zip
-  unzip -j "it_IT.zip" "it_IT/it_IT.*" -d "$HOME/.local/share/hunspell/"
+  unzip -j "it_IT.zip" "it_IT/it_IT.*" -d "{{data_directory()}}/hunspell/"
   curl -O https://hunspell.memoq.com/pt_BR.zip
-  unzip -j "pt_BR.zip" "pt_BR/pt_BR.*" -d "$HOME/.local/share/hunspell/"
+  unzip -j "pt_BR.zip" "pt_BR/pt_BR.*" -d "{{data_directory()}}/hunspell/"
   curl -O https://hunspell.memoq.com/es.zip
-  unzip -j "es.zip" "es/es_ES.*" -d "$HOME/.local/share/hunspell/"
+  unzip -j "es.zip" "es/es_ES.*" -d "{{data_directory()}}/hunspell/"
   curl -O https://hunspell.memoq.com/en.zip
-  unzip -j "en.zip" "en/en_US.*" -d "$HOME/.local/share/hunspell/"
+  unzip -j "en.zip" "en/en_US.*" -d "{{data_directory()}}/hunspell/"
 
 # Install Julia Language Server
 [group('devtools')]
 julia:
-    julia -- "$HOME/.config/julia/emacs.jl"
+    julia -- "{{config_directory()}}/julia/emacs.jl"
 
 # Graphviz (for org mode dot rendering)
 [unix]
@@ -151,8 +159,8 @@ graphviz: clean
 # pynvim and npm neovim (for python/js in neovim)
 [group('devtools')]
 neovim:
-  uv venv "$HOME/.local/share/nvim/venv"
-  uv pip install pynvim -p "$HOME/.local/share/nvim/venv"
+  uv venv "{{data_directory()}}/nvim/venv"
+  uv pip install pynvim -p "{{data_directory()}}/nvim/venv"
   npm install --global neovim
 
 [group('devtools')]
@@ -188,12 +196,11 @@ update:
 doctor:
     mise doctor
     doom doctor
-#NPM_PACKAGES := "markdownlint @mermaid-js/mermaid-cli"
 
 # TODO
+#NPM_PACKAGES := "markdownlint @mermaid-js/mermaid-cli"
 # https://github.com/fwcd/kotlin-language-server
 # ver .config/emacs/.local/etc/lsp/kotlin-language-server*
 
-# json, python treesitter
-
-
+# json, python, just treesitter
+# ver .config/emacs/.local/etc/tree-sitter/libtree-sitter-just.so
