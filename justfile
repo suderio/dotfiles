@@ -163,6 +163,7 @@ neovim:
   uv pip install pynvim -p "{{data_directory()}}/nvim/venv"
   npm install --global neovim
 
+# Install tidy
 [group('devtools')]
 tidy: clean
   git clone https://github.com/htacg/tidy-html5.git {{TMP_DIR}}
@@ -173,24 +174,65 @@ tidy: clean
 
 # install cljfmt
 [group('devtools')]
-clojure:
+clojure: clean
     curl -o cljfmt.tar.gz -sL "https://github.com/weavejester/cljfmt/releases/download/0.15.3/cljfmt-0.15.3-linux-amd64-static.tar.gz"
     tar -xzf cljfmt.tar.gz -C {{LOCAL_DIR}}/bin/
+
+# Install kotlin language server
+[group('lsp')]
+kotlin-lsp: clean
+  #!/usr/bin/env bash
+  git clone https://github.com/fwcd/kotlin-language-server.git
+  cd kotlin-language-server
+  . "$HOME/.sdkman/bin/sdkman-init.sh"
+  sdk install java 11.0.27-tem
+  ./gradlew :server:installDist
+  sdk uninstall java 11.0.27-tem
+  cp server/build/install/server/bin/kotlin-language-server "$HOME/.local/bin/"
+
+# Install perl language server
+[group('lsp')]
+perl-lsp:
+  cpanm --local-lib="$HOME/perl5" Perl::LanguageServer
+
+# Install clojure language server
+[group('devtools')]
+clojure-lsp: clean
+  curl -fsSLO https://raw.githubusercontent.com/clojure-lsp/clojure-lsp/master/install
+  chmod u+x install
+  ./install --dir "{{LOCAL_DIR}}/bin"
+
+# Install php language server
+[group('devtools')]
+php-lsp:
+  curl -fsSLo phpactor.phar --output-dir "{{LOCAL_DIR}}/bin" https://github.com/phpactor/phpactor/releases/latest/download/phpactor.phar
+  chmod u+x "{{LOCAL_DIR}}/bin/phpactor.phar"
+
+# Install ruby language server
+[group('devtools')]
+ruby-lsp:
+  gem install ruby-lsp
+
+# Install java language server
+[group('devtools')]
+java-lsp:
+  curl -fsSLo jdtls.tar.gz https://download.eclipse.org/jdtls/milestones/1.46.1/jdt-language-server-1.46.1-202504011455.tar.gz
+  mkdir -p "{{LOCAL_DIR}}/etc/eclipse.jdt.ls"
+  tar -xvf jdtls.tar.gz -C "{{LOCAL_DIR}}/etc/eclipse.jdt.ls/"
 
 # Updates all - this will take some time
 [unix]
 [group('update')]
 update:
-    sudo pacman -Syu || sudo apt update && sudo apt upgrade -y
-    config pull
+    git --git-dir="{{LOCAL_DIR}}/dotfiles/" --work-tree=$HOME pull
     mise self-update
     mise upgrade
     cargo upgrade
-    gup update
+    @# gup update # Não funciona com mise
     uv tool upgrade --all
     npm update --global
     doom upgrade
-    echo "cljfmt, tidy, paru cannot be automatically updated"
+    @echo "cljfmt, tidy, paru cannot be automatically updated"
 
 [group('diagnostic')]
 doctor:

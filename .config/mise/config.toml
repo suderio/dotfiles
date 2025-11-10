@@ -115,7 +115,12 @@ neovim = "latest"
 pandoc = "latest"
 typst = "latest"
 zellij = "latest"
-
-
-
-
+"npm:vscode-json-languageserver" = "latest"
+"npm:typescript" = "latest"
+"npm:typescript-language-server" = "latest"
+"cargo:https://github.com/latex-lsp/texlab" = "tag:v5.22.1"
+"npm:bash-language-server" = "latest"
+"pipx:citation-langserver" = "latest"
+"npm:dockerfile-language-server-nodejs" = "latest"
+"pipx:pyright" = "latest"
+"npm:yaml-language-server" = "latest"
