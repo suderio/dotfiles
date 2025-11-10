@@ -69,8 +69,8 @@ This determines the style of line numbers in effect. If set to `nil', line numbe
 *** Whitespaces
 This trims whitespaces at EOL with little intervention.
 #+begin_src emacs-lisp
-(use-package! ws-butler
-  :hook prog-mode-hook)
+;(use-package! ws-butler
+;  :hook prog-mode-hook)
 #+end_src
 *** Other
 #+begin_src emacs-lisp

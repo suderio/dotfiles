@@ -189,3 +189,7 @@ doctor:
     mise doctor
     doom doctor
 #NPM_PACKAGES := "markdownlint @mermaid-js/mermaid-cli"
+
+# TODO
+# https://github.com/fwcd/kotlin-language-server
+# ver .config/emacs/.local/etc/lsp/kotlin-language-server*

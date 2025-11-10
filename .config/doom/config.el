@@ -32,8 +32,8 @@
   (ispell-set-spellchecker-params)
   (ispell-hunspell-add-multi-dic "pt_BR,en_US"))
 
-(use-package! ws-butler
-  :hook prog-mode-hook)
+;(use-package! ws-butler
+;  :hook prog-mode-hook)
 
 (setq! browse-url-browser-function 'eww-browse-url)
 
