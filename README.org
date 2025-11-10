@@ -13,52 +13,22 @@ curl -fsS https://raw.githubusercontent.com/suderio/dotfiles/refs/heads/main/ins
 #+end_src
 The ~install.sh~ script is /literately/ made of the following code blocks in this page.
 ** Config in a new machine
-*** Use this alias to manage all configuration
-#+begin_src shell :tangle install.sh
-alias config='git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME"'
-#+end_src
 *** Clone, don't show untracked files and checkout
 #+begin_src shell :tangle install.sh
 git clone --bare git@github.com:suderio/dotfiles "$HOME/.local/dotfiles"
-config config --local status.showUntrackedFiles no
-config checkout
+git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME" config --local status.showUntrackedFiles no
+git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME" checkout
 #+end_src
-*** Install rustup and just
+*** Install mise and setup (this will take a long time)
 #+begin_src shell :tangle install.sh
-command -v cargo || (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh)
-command -v just || cargo install just
-#+end_src
-*** Create a tmp directory in ~
-#+begin_src shell :tangle install.sh
-mkdir -p "$HOME/tmp"
+curl https://mise.run | sh
+mise up
 #+end_src
 ** Justfile
-The justfile has all the tools, bells and whistles.
+The justfile has all the tools, bells and whistles that can't be installed with mise.
 
-Works well in arch distros, less so in others.
-*** Minimum requirements
-- base
-- base-devel
-- clang
-- fontconfig
-- git
-- less
-- ninja
-- openssh
-- pacman-contrib
-- php
-- sudo
-- unzip
-- vim
-- wget
-- zip
-*** Other requirements
-- maim
-- wl-clipboard
-- xclip
-- emacs-wayland
-- poppler-glib
-*** Nice to have
-- man-db
-- man-pages
-- reflector
+Works well in arch/debian distros, less so in others.
+
+#+begin_src shell :tangle install.sh
+just
+#+end_src
