@@ -94,13 +94,22 @@ zls = "latest"
 "pipx:nose2" = "latest"
 "pipx:pytest" = "latest"
 "pipx:pyflakes" = "latest"
+"pipx:citation-langserver" = "latest"
+"pipx:pyright" = "latest"
 
 # npm devtools
 "npm:stylelint" = "latest"
 "npm:js-beautify" = "latest"
+"npm:vscode-json-languageserver" = "latest"
+"npm:typescript" = "latest"
+"npm:typescript-language-server" = "latest"
+"npm:bash-language-server" = "latest"
+"npm:dockerfile-language-server-nodejs" = "latest"
+"npm:yaml-language-server" = "latest"
 
 # cargo devtools
 "cargo:cargo-upgrade-command" = "latest"
+"cargo:https://github.com/latex-lsp/texlab" = "tag:v5.22.1"
 
 # other
 bitwarden = "latest"
@@ -115,12 +124,227 @@ neovim = "latest"
 pandoc = "latest"
 typst = "latest"
 zellij = "latest"
-"npm:vscode-json-languageserver" = "latest"
-"npm:typescript" = "latest"
-"npm:typescript-language-server" = "latest"
-"cargo:https://github.com/latex-lsp/texlab" = "tag:v5.22.1"
-"npm:bash-language-server" = "latest"
-"pipx:citation-langserver" = "latest"
-"npm:dockerfile-language-server-nodejs" = "latest"
-"pipx:pyright" = "latest"
-"npm:yaml-language-server" = "latest"
+
+[env]
+LOCAL_DIR = '{{env.HOME}}/.local'
+BIN_DIR = '{{env.LOCAL_DIR}}/bin'
+CONFIG_DIR = '{{env.HOME}}/.config'
+TMP_DIR = "{{env.HOME}}/tmp"
+
+[tasks.default]
+quiet = true
+dir = '{{env.TMP_DIR}}'
+run = [
+  'echo $LOCAL_DIR is the local directory',
+  'echo $BIN_DIR is the bin directory',
+  'echo $CONFIG_DIR is the config directory',
+  'echo $TMP_DIR is the tmp directory',
+]
+[tasks.clean]
+description = 'Deletes tmp dir'
+run = [
+  'rm -rf "$TMP_DIR"/*',
+  'rm -rf "$TMP_DIR"/.[!.]*'
+]
+
+[tasks."base:arch"]
+depends = ["clean"]
+dir = '{{env.TMP_DIR}}'
+run = '''
+    sudo pacman -Syu
+    sudo pacman -S base-devel git less man-db xclip oniguruma openssh \
+          pacman-contrib plocate postgresql-libs nasm re2c zip unzip libxml2 \
+          libyaml libzip maim xorg-xwininfo xdotool
+    git clone https://aur.archlinux.org/paru.git $TMP_DIR
+    makepkg -si
+'''
+
+[tasks."base:debian"]
+run = '''
+    sudo apt update
+    sudo apt upgrade -y
+    sudo apt install -y openssh-server build-essential autoconf automake flex \
+         bison debian-keyring gettext gnu-standards re2c pkg-config \
+         libreadline-dev unzip zip libzstd-dev libxml2-dev libssl-dev \
+         libsqlite3-dev libcurl4-openssl-dev libgd-dev libonig-dev libzip-dev \
+         zlib1g-dev libffi-dev libyaml-dev xclip xdotool libxml2-utils maim
+'''
+
+[tasks."emacs:arch"]
+depends_post = ['emacs:doom']
+run = 'sudo pacman -S emacs-wayland'
+
+[tasks."emacs:debian"]
+depends_post = ['emacs:src', 'emacs:doom']
+run = 'sudo apt-get build-dep emacs'
+
+[tasks."emacs:src"]
+depends = ['clean']
+run = '''
+    git clone https://git.savannah.gnu.org/git/emacs.git/ $TMP_DIR
+    git checkout emacs-30.2
+    ./autogen.sh
+    ./configure --prefix=$LOCAL_DIR --with-x-toolkit=gtk3 --with-mailutils \
+                --with-tree-sitter --with-pgtk --with-native-compilation=aot
+    make clean
+    make -j8
+    make install
+'''
+
+[tasks."emacs:doom"]
+run = '''
+    git clone --depth 1 https://github.com/doomemacs/doomemacs "$CONFIG_DIR/emacs"
+    $CONFIG_DIR/emacs/bin/doom" install
+'''
+
+
+# Nerd Fonts install
+[tasks.fonts]
+env.NERD_FONTS_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/"
+env.FONTS = "FiraCode Noto NerdFontsSymbolsOnly" # DejaVuSansMono JetBrainsMono SourceCodePro
+run = '''
+    for font in $FONTS; do
+        mkdir -p "$XDG_DATA_HOME/fonts/$font"
+        curl -sL "$NERD_FONTS_URL$font.tar.xz" | unxz | tar -xvf - -C "$XDG_DATA_HOME/fonts/$font"
+        chmod -R "u=rwx,g=r,o=r" "$XDG_DATA_HOME/fonts/$font"
+    done
+    fc-cache -v
+'''
+
+[tasks.hunspell]
+depends = ['clean']
+env.HUNSPELL_URL = "https://hunspell.memoq.com"
+run = '''
+  git clone https://github.com/hunspell/hunspell.git $TMP_DIR
+  autoreconf -vfi
+  ./configure --prefix=$LOCAL_DIR --with-readline
+  make
+  make install
+  sudo ldconfig
+  curl -O $HUNSPELL_URL/de.zip
+  unzip -j "de.zip" "de/de_DE*" -d "$XDG_DATA_HOME/hunspell/"
+  curl -O $HUNSPELL_URL/fr_FR.zip
+  unzip -j "fr_FR.zip" "fr_FR/fr.*" -d "$XDG_DATA_HOME/hunspell/"
+  curl -O $HUNSPELL_URL/it_IT.zip
+  unzip -j "it_IT.zip" "it_IT/it_IT.*" -d "$XDG_DATA_HOME/hunspell/"
+  curl -O $HUNSPELL_URL/pt_BR.zip
+  unzip -j "pt_BR.zip" "pt_BR/pt_BR.*" -d "$XDG_DATA_HOME/hunspell/"
+  curl -O $HUNSPELL_URL/es.zip
+  unzip -j "es.zip" "es/es_ES.*" -d "$XDG_DATA_HOME/hunspell/"
+  curl -O $HUNSPELL_URL/en.zip
+  unzip -j "en.zip" "en/en_US.*" -d "$XDG_DATA_HOME/hunspell/"
+'''
+
+[tasks.julia]
+run = 'julia -- "$CONFIG_DIR/julia/emacs.jl"'
+
+[tasks.graphviz]
+depends = ['clean']
+env.GRAPHVIZ_URL = "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/14.0.2/graphviz-14.0.2.tar.gz"
+run = '''
+  curl -o graphviz.tar.gz -fsSL $GRAPHVIZ_URL
+  tar -xvf graphviz.tar.gz
+  cd graphviz
+  ./configure --prefix=$LOCAL_DIR --enable-static
+  make
+  make install
+'''
+
+[tasks.neovim]
+run = '''
+  uv venv "$XDG_DATA_HOME/nvim/venv"
+  uv pip install pynvim -p "$XDG_DATA_HOME/nvim/venv"
+  npm install --global neovim
+'''
+
+[tasks.tidy]
+depends = ['clean']
+dir = '{{env.TMP_DIR}}'
+run = '''
+  git clone https://github.com/htacg/tidy-html5.git $TMP_DIR
+  cd build/cmake
+  cmake ../.. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$LOCAL_DIR -DBUILD_SHARED_LIB:BOOL=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+  make
+  make install
+'''
+
+[tasks.clojure]
+depends = ['clean']
+dir = '{{env.TMP_DIR}}'
+run = '''
+    curl -o cljfmt.tar.gz -sL "https://github.com/weavejester/cljfmt/releases/download/0.15.3/cljfmt-0.15.3-linux-amd64-static.tar.gz"
+    tar -xzf cljfmt.tar.gz -C $BIN_DIR
+    curl -fsSLO https://raw.githubusercontent.com/clojure-lsp/clojure-lsp/master/install
+    chmod u+x install
+    ./install --dir "$BIN_DIR"
+'''
+
+[tasks.php]
+depends = ['clean']
+dir = '{{env.TMP_DIR}}'
+run = '''
+    curl -fsSLo phpactor.phar --output-dir "$BIN_DIR" https://github.com/phpactor/phpactor/releases/latest/download/phpactor.phar
+    chmod u+x "$BIN_DIR/phpactor.phar"
+'''
+
+[tasks.ruby]
+run = 'gem install ruby-lsp'
+
+[tasks.java]
+depends = ['clean']
+dir = '{{env.TMP_DIR}}'
+run = '''
+    curl -fsSLo jdtls.tar.gz https://download.eclipse.org/jdtls/milestones/1.46.1/jdt-language-server-1.46.1-202504011455.tar.gz
+    mkdir -p "$LOCAL_DIR/etc/eclipse.jdt.ls"
+    tar -xvf jdtls.tar.gz -C "$LOCAL_DIR/etc/eclipse.jdt.ls/"
+'''
+
+[tasks.update]
+run = '''
+    git --git-dir="$LOCAL_DIR/dotfiles/" --work-tree=$HOME pull
+    mise self-update
+    mise upgrade
+    cargo upgrade
+    uv tool upgrade --all
+    npm update --global
+    doom upgrade
+    echo "cljfmt, tidy, paru cannot be automatically updated"
+'''
+
+[tasks.doctor]
+run = [
+    'mise doctor',
+    'doom doctor'
+]
+
+# TODO
+#NPM_PACKAGES := "markdownlint @mermaid-js/mermaid-cli"
+# https://github.com/fwcd/kotlin-language-server
+# ver .config/emacs/.local/etc/lsp/kotlin-language-server*
+
+# json, python, just treesitter
+# ver .config/emacs/.local/etc/tree-sitter/libtree-sitter-just.so
+
+
+
+
+
+
+
+# TODO corrigir:
+
+[tasks.perl-lsp]
+run = 'cpanm --local-lib="$HOME/perl5" Perl::LanguageServer'
+
+[tasks.kotlin-lsp]
+depends = ['clean']
+run = '''
+  #!/usr/bin/env bash
+  git clone https://github.com/fwcd/kotlin-language-server.git
+  cd kotlin-language-server
+  . "$HOME/.sdkman/bin/sdkman-init.sh"
+  sdk install java 11.0.27-tem
+  ./gradlew :server:installDist
+  sdk uninstall java 11.0.27-tem
+  cp server/build/install/server/bin/kotlin-language-server "$HOME/.local/bin/"
+'''
