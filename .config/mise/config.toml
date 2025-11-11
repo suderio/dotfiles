@@ -180,8 +180,9 @@ run = 'sudo apt-get build-dep emacs'
 
 [tasks."emacs:src"]
 depends = ['clean']
+dir = '{{env.TMP_DIR}}'
 run = '''
-    git clone https://git.savannah.gnu.org/git/emacs.git/ $TMP_DIR
+    git clone https://git.savannah.gnu.org/git/emacs.git/ "$TMP_DIR"
     git checkout emacs-30.2
     ./autogen.sh
     ./configure --prefix=$LOCAL_DIR --with-x-toolkit=gtk3 --with-mailutils \
@@ -194,7 +195,7 @@ run = '''
 [tasks."emacs:doom"]
 run = '''
     git clone --depth 1 https://github.com/doomemacs/doomemacs "$CONFIG_DIR/emacs"
-    $CONFIG_DIR/emacs/bin/doom" install
+    "$CONFIG_DIR/emacs/bin/doom" install --no-config --env --install --no-fonts --force
 '''
 
 
@@ -213,10 +214,13 @@ run = '''
 
 [tasks.hunspell]
 depends = ['clean']
+dir = '{{env.TMP_DIR}}'
 env.HUNSPELL_URL = "https://hunspell.memoq.com"
 run = '''
   git clone https://github.com/hunspell/hunspell.git $TMP_DIR
+  cd $TMP_DIR
   autoreconf -vfi
+  cp ../ltmain.sh ./
   ./configure --prefix=$LOCAL_DIR --with-readline
   make
   make install
@@ -240,11 +244,12 @@ run = 'julia -- "$CONFIG_DIR/julia/emacs.jl"'
 
 [tasks.graphviz]
 depends = ['clean']
+dir = '{{env.TMP_DIR}}'
 env.GRAPHVIZ_URL = "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/14.0.2/graphviz-14.0.2.tar.gz"
 run = '''
   curl -o graphviz.tar.gz -fsSL $GRAPHVIZ_URL
   tar -xvf graphviz.tar.gz
-  cd graphviz
+  cd graphviz-14.0.2
   ./configure --prefix=$LOCAL_DIR --enable-static
   make
   make install
@@ -350,5 +355,5 @@ run = [
 [tasks.perl-lsp]
 run = '''
 #    perl -I ~/perl5/lib/perl5 -Mlocal::lib
-    cpanm --local-lib="$HOME/perl5" Perl::LanguageServer
+    cpanm --notest --local-lib="$HOME/perl5" Perl::LanguageServer
 '''
