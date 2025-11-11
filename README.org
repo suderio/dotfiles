@@ -24,11 +24,9 @@ git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME" checkout
 curl https://mise.run | sh
 mise up
 #+end_src
-** Justfile
-The justfile has all the tools, bells and whistles that can't be installed with mise.
-
-Works well in arch/debian distros, less so in others.
+*** Tasks
+Mise tasks with all the tools, bells and whistles that can't be installed with mise tools.
 
 #+begin_src shell :tangle install.sh
-just
+mise tasks ls
 #+end_src

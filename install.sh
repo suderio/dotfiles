@@ -5,4 +5,4 @@ git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME" checkout
 curl https://mise.run | sh
 mise up
 
-just
+mise tasks ls
