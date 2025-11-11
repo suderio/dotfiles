@@ -299,6 +299,22 @@ run = '''
     tar -xvf jdtls.tar.gz -C "$LOCAL_DIR/etc/eclipse.jdt.ls/"
 '''
 
+# Devido a um bug no gradle é preciso alterar a versão do java manualmente:
+#  mise use java@temurin-11
+#  ao final da execução voltar para a versão anterior:
+#  mise use java@25
+[tasks.kotlin]
+depends = ['clean']
+dir = '{{env.TMP_DIR}}'
+tools.java = "temurin-11"
+run = '''
+  git clone https://github.com/fwcd/kotlin-language-server.git
+  cd kotlin-language-server
+  ./gradlew :server:installDist
+  cp server/build/install/server/bin/kotlin-language-server "$BIN_DIR"
+  mise use java@25
+'''
+
 [tasks.update]
 run = '''
     git --git-dir="$LOCAL_DIR/dotfiles/" --work-tree=$HOME pull
@@ -326,33 +342,13 @@ run = [
 # ver .config/emacs/.local/etc/tree-sitter/libtree-sitter-just.so
 
 
-  # see https://langserver.org/
-  # see https://microsoft.github.io/language-server-protocol/implementors/servers/
-
-#install-perl-packages:
-  #!/usr/bin/env bash
-#  perl -I ~/perl5/lib/perl5 -Mlocal::lib
-#  for pkg in {{PERL_PACKAGES}}; do
-#    "$HOME/perl5/bin/cpanm" --local-lib="$HOME/perl5" "$pkg"
-#  done
-
-
-
+# see https://langserver.org/
+# see https://microsoft.github.io/language-server-protocol/implementors/servers/
 
 # TODO corrigir:
 
 [tasks.perl-lsp]
-run = 'cpanm --local-lib="$HOME/perl5" Perl::LanguageServer'
-
-[tasks.kotlin-lsp]
-depends = ['clean']
 run = '''
-  #!/usr/bin/env bash
-  git clone https://github.com/fwcd/kotlin-language-server.git
-  cd kotlin-language-server
-  . "$HOME/.sdkman/bin/sdkman-init.sh"
-  sdk install java 11.0.27-tem
-  ./gradlew :server:installDist
-  sdk uninstall java 11.0.27-tem
-  cp server/build/install/server/bin/kotlin-language-server "$HOME/.local/bin/"
+#    perl -I ~/perl5/lib/perl5 -Mlocal::lib
+    cpanm --local-lib="$HOME/perl5" Perl::LanguageServer
 '''
