@@ -11,6 +11,9 @@
       which-key-dont-use-unicode nil
       )
 
+(defvar wsl? (string-match-p "WSL"
+                 (shell-command-to-string "uname -a")))
+
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
 (map! :leader :desc "Fast Note" "n ." #'sud/org-roam-node-insert-immediate)
 (map! :leader :desc "Inbox Note" "n i" #'sud/org-roam-capture-inbox)

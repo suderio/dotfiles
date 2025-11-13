@@ -39,6 +39,12 @@ This determines the style of line numbers in effect. If set to `nil', line numbe
       which-key-dont-use-unicode nil
       )
 #+end_src
+This shows if we are inside WSL
+#+begin_src emacs-lisp
+(defvar wsl? (string-match-p "WSL"
+                 (shell-command-to-string "uname -a")))
+#+end_src
+
 *** Keybindings
 #+begin_src emacs-lisp
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
@@ -201,7 +207,7 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
   :init (add-hook 'org-mode-hook 'toc-org-enable)))
 #+end_src
 *** Org Level Headers
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp
 (after! org
 (custom-set-faces
  '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
