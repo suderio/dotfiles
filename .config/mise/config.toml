@@ -2,17 +2,17 @@
 experimental = true
 
 [settings.cargo]
-binstall = false
+binstall = true
 
 [settings.erlang]
-compile = true
+compile = false
 
 [settings.node]
-compile = true
+compile = false
 gpg_verify = true
 
 [settings.python]
-compile = true
+compile = false
 
 [tools]
 # languages
@@ -211,19 +211,11 @@ run = '''
     fc-cache -v
 '''
 
-[tasks.hunspell]
+[tasks.hunspell-dicts]
 depends = ['clean']
 dir = '{{env.TMP_DIR}}'
 env.HUNSPELL_URL = "https://hunspell.memoq.com"
 run = '''
-  git clone https://github.com/hunspell/hunspell.git $TMP_DIR
-  cd $TMP_DIR
-  autoreconf -vfi
-  cp ../ltmain.sh ./
-  ./configure --prefix=$LOCAL_DIR --with-readline
-  make
-  make install
-  sudo ldconfig
   curl -O $HUNSPELL_URL/de.zip
   unzip -j "de.zip" "de/de_DE*" -d "$XDG_DATA_HOME/hunspell/"
   curl -O $HUNSPELL_URL/fr_FR.zip
@@ -319,6 +311,12 @@ run = '''
   mise use java@25
 '''
 
+[tasks.perl]
+run = '''
+    cpanm local::lib
+    perl -I ~/perl5/lib/perl5 -Mlocal::lib
+    cpanm --notest --local-lib="$HOME/perl5" Perl::LanguageServer
+'''
 [tasks.update]
 run = '''
     git --git-dir="$LOCAL_DIR/dotfiles/" --work-tree=$HOME pull
@@ -351,8 +349,17 @@ run = [
 
 # TODO corrigir:
 
-[tasks.perl-lsp]
+
+[tasks.hunspell]
+depends = ['clean']
+dir = '{{env.TMP_DIR}}'
 run = '''
-#    perl -I ~/perl5/lib/perl5 -Mlocal::lib
-    cpanm --notest --local-lib="$HOME/perl5" Perl::LanguageServer
+  git clone https://github.com/hunspell/hunspell.git $TMP_DIR
+  cd $TMP_DIR
+  autoreconf -vfi
+  cp ../ltmain.sh ./
+  ./configure --prefix=$LOCAL_DIR --with-readline
+  make
+  make install
+  sudo ldconfig
 '''
