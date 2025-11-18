@@ -116,6 +116,7 @@ neovim = "latest"
 pandoc = "latest"
 typst = "latest"
 zellij = "latest"
+"cargo:procs" = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
