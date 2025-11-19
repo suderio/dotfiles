@@ -24,7 +24,7 @@ bold_font        FiraCode Nerd Font Mono Bold
 italic_font      FiraCode Nerd Font Mono Italic
 bold_italic_font FiraCode Nerd Font Mono SemBd
 
-font_size 9.0
+font_size 11.0
 
 #: Font size (in pts)
 
@@ -2466,9 +2466,3 @@ background_tint 0.2
 #: }}}
 
 #: }}}
-
-
-# BEGIN_KITTY_THEME
-# Modus Vivendi
-include current-theme.conf
-# END_KITTY_THEME
