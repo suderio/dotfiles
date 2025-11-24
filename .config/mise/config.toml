@@ -117,6 +117,7 @@ pandoc = "latest"
 typst = "latest"
 zellij = "latest"
 "cargo:procs" = "latest"
+imagemagick = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
