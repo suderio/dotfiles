@@ -89,6 +89,7 @@ zls = "latest"
 "pipx:pyflakes" = "latest"
 "pipx:citation-langserver" = "latest"
 "pipx:pyright" = "latest"
+"pipx:sqlfluff" = "latest"
 
 # npm devtools
 "npm:stylelint" = "latest"
