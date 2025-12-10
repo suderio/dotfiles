@@ -118,6 +118,10 @@ typst = "latest"
 zellij = "latest"
 "cargo:procs" = "latest"
 imagemagick = "latest"
+grpcurl = "latest"
+websocat = "latest"
+php = "latest"
+"go:github.com/go-delve/delve/cmd/dlv" = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
@@ -148,7 +152,7 @@ run = '''
     sudo pacman -Syu
     sudo pacman -S base-devel git less man-db xclip oniguruma openssh \
           pacman-contrib plocate postgresql-libs nasm re2c zip unzip libxml2 \
-          libyaml libzip maim xorg-xwininfo xdotool
+          libyaml libzip maim xorg-xwininfo xdotool wget
     git clone https://aur.archlinux.org/paru.git $TMP_DIR
     makepkg -si
 '''
@@ -161,7 +165,7 @@ run = '''
          bison debian-keyring gettext gnu-standards re2c pkg-config \
          libreadline-dev unzip zip libzstd-dev libxml2-dev libssl-dev \
          libsqlite3-dev libcurl4-openssl-dev libgd-dev libonig-dev libzip-dev \
-         zlib1g-dev libffi-dev libyaml-dev xclip xdotool libxml2-utils maim
+         zlib1g-dev libffi-dev libyaml-dev xclip xdotool libxml2-utils maim wget
 '''
 
 [tasks."emacs:arch"]
