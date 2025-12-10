@@ -122,6 +122,7 @@ grpcurl = "latest"
 websocat = "latest"
 php = "latest"
 "go:github.com/go-delve/delve/cmd/dlv" = "latest"
+gitleaks = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'

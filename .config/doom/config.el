@@ -35,9 +35,6 @@
   (ispell-set-spellchecker-params)
   (ispell-hunspell-add-multi-dic "pt_BR,en_US"))
 
-;(use-package! ws-butler
-;  :hook prog-mode-hook)
-
 (setq! browse-url-browser-function 'eww-browse-url)
 
 (setq! doom-theme 'modus-vivendi)
@@ -55,6 +52,8 @@
 (setq! ring-bell-function 'ignore)
 
 (setq! fancy-splash-image (file-name-concat doom-user-dir "emacs-logo.png"))
+
+(setq +doom-dashboard-ascii-banner-fn #'sud/dashboard-logo)
 
 (add-to-list '+doom-dashboard-menu-sections
     '("Open Journal"
