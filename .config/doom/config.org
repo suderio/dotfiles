@@ -27,22 +27,22 @@
 Some functionality uses this to identify you, e.g. GPG configuration, email clients, file templates and snippets. It is optional.
 #+begin_src emacs-lisp
 (setq! user-full-name "Paulo Suderio"
-      user-mail-address "paulo.suderio@gmail.com")
+       user-mail-address "paulo.suderio@gmail.com")
 #+end_src
 This determines the style of line numbers in effect. If set to `nil', line numbers are disabled. For relative line numbers, set this to `relative'.
 #+begin_src emacs-lisp
 (setq! display-line-numbers-type 'relative
-      evil-respect-visual-line-mode t
-      which-key-idle-delay 0.8
-      which-key-max-description-length 255
-      which-key-separator " → "
-      which-key-dont-use-unicode nil
-      )
+       evil-respect-visual-line-mode t
+       which-key-idle-delay 0.8
+       which-key-max-description-length 255
+       which-key-separator " → "
+       which-key-dont-use-unicode nil
+       )
 #+end_src
 This shows if we are inside WSL
 #+begin_src emacs-lisp
 (defvar wsl? (string-match-p "WSL"
-                 (shell-command-to-string "uname -a")))
+                             (shell-command-to-string "uname -a")))
 #+end_src
 
 *** Keybindings
@@ -50,27 +50,27 @@ This shows if we are inside WSL
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
 (map! :leader :desc "Fast Note" "n ." #'sud/org-roam-node-insert-immediate)
 (map! :leader :desc "Inbox Note" "n i" #'sud/org-roam-capture-inbox)
-;(map! :leader :desc "Eval" "e" nil)
+                                        ;(map! :leader :desc "Eval" "e" nil)
 (map! :leader :desc "Eval Last Expression" "e l" #'eval-last-sexp)
 (map! :leader :desc "Comment Line" "#" #'comment-line)
 #+end_src
 *** Dired
 #+begin_src emacs-lisp
 (setq! global-auto-revert-mode-text "󰀘"
-      global-auto-revert-non-file-buffers t)
+       global-auto-revert-non-file-buffers t)
 #+end_src
 *** Spell
 #+begin_src emacs-lisp
-  (setenv "LANG" "pt_BR,en_US")
-  (setq-default ispell-program-name "hunspell")
-  (with-eval-after-load "ispell"
-    (setq! ispell-really-hunspell t)
-    (setq! ispell-program-name "hunspell")
-    (setq! ispell-dictionary "pt_BR,en_US")
-    ;; ispell-set-spellchecker-params has to be called
-    ;; before ispell-hunspell-add-multi-dic will work
-    (ispell-set-spellchecker-params)
-    (ispell-hunspell-add-multi-dic "pt_BR,en_US"))
+(setenv "LANG" "pt_BR,en_US")
+(setq-default ispell-program-name "hunspell")
+(with-eval-after-load "ispell"
+  (setq! ispell-really-hunspell t)
+  (setq! ispell-program-name "hunspell")
+  (setq! ispell-dictionary "pt_BR,en_US")
+  ;; ispell-set-spellchecker-params has to be called
+  ;; before ispell-hunspell-add-multi-dic will work
+  (ispell-set-spellchecker-params)
+  (ispell-hunspell-add-multi-dic "pt_BR,en_US"))
 #+end_src
 *** Other
 #+begin_src emacs-lisp
@@ -104,22 +104,22 @@ Disables annoying bell
 (setq +doom-dashboard-ascii-banner-fn #'sud/dashboard-logo)
 
 (add-to-list '+doom-dashboard-menu-sections
-    '("Open Journal"
-     :icon (nerd-icons-octicon "nf-oct-note" :face 'doom-dashboard-menu-title)
-     :key "SPC n j o"
-     :when (featurep! :lang org +journal)
-     :face (:inherit (doom-dashboard-menu-title))
-     :action org-journal-open-current-journal-file)
-)
+             '("Open Journal"
+               :icon (nerd-icons-octicon "nf-oct-note" :face 'doom-dashboard-menu-title)
+               :key "SPC n j o"
+               :when (featurep! :lang org +journal)
+               :face (:inherit (doom-dashboard-menu-title))
+               :action org-journal-open-current-journal-file)
+             )
 #+end_src
 *** Fonts
 Doom exposes five (optional) variables for controlling fonts in Doom:
- - `doom-font' -- the primary font to use
- - `doom-variable-pitch-font' -- a non-monospace font (where applicable)
- - `doom-big-font' -- used for `doom-big-font-mode'; use this for
-   presentations or streaming.
- - `doom-symbol-font' -- for symbols
- - `doom-serif-font' -- for the `fixed-pitch-serif' face
+- `doom-font' -- the primary font to use
+- `doom-variable-pitch-font' -- a non-monospace font (where applicable)
+- `doom-big-font' -- used for `doom-big-font-mode'; use this for
+  presentations or streaming.
+- `doom-symbol-font' -- for symbols
+- `doom-serif-font' -- for the `fixed-pitch-serif' face
 See 'C-h v doom-font' for documentation and more examples of what they accept.
 #+begin_src emacs-lisp
 (if (sud/font-installed? "FiraCode Nerd Font")
@@ -134,17 +134,17 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
 (if (sud/font-installed? "NotoSerif Nerd Font")
     (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 12)))
 
- (if (sud/font-installed? "Symbols Nerd Font")
-     (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
-            doom-emoji-font (font-spec :family "Symbols Nerd Font")
-            doom-unicode-font (font-spec :family "Symbols Nerd Font")))
+(if (sud/font-installed? "Symbols Nerd Font")
+    (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
+           doom-emoji-font (font-spec :family "Symbols Nerd Font")
+           doom-unicode-font (font-spec :family "Symbols Nerd Font")))
 #+end_src
 
 *** Frame
 #+begin_src emacs-lisp
 (setq! frame-title-format
-    '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
-      (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
+       '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
+         (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
 #+end_src
 ** Org
 *** TODO Roamify everything? (https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam-hacks/)
@@ -156,16 +156,16 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
 
 ;; Default tags
 (setq! org-tag-alist '(
-                      ;; locale
-                      (:startgroup)
-                      ("personal" . ?h)
-                      ("work" . ?w)
-                      (:endgroup)
-                      (:newline)
-                      ;; misc
-                      ("writing")
-                      ("review")
-                      ("reading")))
+                       ;; locale
+                       (:startgroup)
+                       ("personal" . ?h)
+                       ("work" . ?w)
+                       (:endgroup)
+                       (:newline)
+                       ;; misc
+                       ("writing")
+                       ("review")
+                       ("reading")))
 
 ;; Org-refile: where should org-refile look?
 ;;(setq! org-refile-targets 'FIXME)
@@ -180,45 +180,45 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
 ;; This example is for linking a person's 7-character ID to their page on the
 ;; free genealogy website Family Search.
 (setq! org-link-abbrev-alist
-      '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")
-        ("tarefa" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=TMS%3ATask&server=itsm.bndes.net&eid=%s")
-        ("incidente" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=HPD%3AHelp+Desk&server=itsm.bndes.net&eid=%s")
-        ("google" . "https://www.google.com/#q=%s")
-        ("github" . "https://www.github.com/%s")
-))
+       '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")
+         ("tarefa" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=TMS%3ATask&server=itsm.bndes.net&eid=%s")
+         ("incidente" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=HPD%3AHelp+Desk&server=itsm.bndes.net&eid=%s")
+         ("google" . "https://www.google.com/#q=%s")
+         ("github" . "https://www.github.com/%s")
+         ))
 
 (add-hook 'org-ctrl-c-ctrl-c-hook 'orgsync)
 #+end_src
 *** UI Tweaks
 #+begin_src emacs-lisp
 (after! org
-(setq-default org-startup-indented t
-              org-pretty-entities t
-              org-use-sub-superscripts "{}"
-              org-hide-emphasis-markers t
-              org-startup-with-inline-images t
-              org-image-actual-width '(300))
-(use-package! toc-org
-  :commands toc-org-enable
-  :init (add-hook 'org-mode-hook 'toc-org-enable)))
+  (setq-default org-startup-indented t
+                org-pretty-entities t
+                org-use-sub-superscripts "{}"
+                org-hide-emphasis-markers t
+                org-startup-with-inline-images t
+                org-image-actual-width '(300))
+  (use-package! toc-org
+    :commands toc-org-enable
+    :init (add-hook 'org-mode-hook 'toc-org-enable)))
 #+end_src
 *** Org Level Headers
 #+begin_src emacs-lisp
 (after! org
-(custom-set-faces
- '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
- '(org-level-2 ((t (:inherit outline-2 :height 1.4))))
- '(org-level-3 ((t (:inherit outline-3 :height 1.3))))
- '(org-level-4 ((t (:inherit outline-4 :height 1.2))))
- '(org-level-5 ((t (:inherit outline-5 :height 1.1)))))
+  (custom-set-faces
+   '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
+   '(org-level-2 ((t (:inherit outline-2 :height 1.4))))
+   '(org-level-3 ((t (:inherit outline-3 :height 1.3))))
+   '(org-level-4 ((t (:inherit outline-4 :height 1.2))))
+   '(org-level-5 ((t (:inherit outline-5 :height 1.1)))))
 
-(custom-set-faces!
-  '(org-document-title :height 1.5 :bold t :underline nil)))
+  (custom-set-faces!
+    '(org-document-title :height 1.5 :bold t :underline nil)))
 #+end_src
 *** Journal
 #+begin_src emacs-lisp
 (setq! org-journal-dir "~/org/journal/"
-      org-journal-file-format "%Y%m.org")
+       org-journal-file-format "%Y%m.org")
 (after! org-journal
   (setq
    org-journal-date-format "%Y-%m-%d (%A)"
@@ -227,69 +227,69 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
    org-icalendar-store-UID t
    org-icalendar-include-todo "all"
    org-icalendar-combined-agenda-file "~/org/org-journal.ics" ;; export with (org-icalendar-combine-agenda-files)
-))
+   ))
 #+end_src
 *** DOING Capture
 #+begin_src emacs-lisp
 (after! org
-        (setq! org-capture-templates
-              '(("c" "Default Capture" entry (file "inbox.org")
-                 "* %?\n%U\n%i")
-                ;; Capture and keep an org-link to the thing we're currently working with
-                ("r" "Capture with Reference" entry (file "inbox.org")
-                 "* %?\n%U\n%i\n%a")
-                ;; Define a section
-                ("w" "Work")
-                ("wr" "Reuniões" entry (file+headline "work/2025.org" "Reuniões")
-                 "** %?\n%U\n%i\n%a" :clock-in t)
-                ("wt" "Tarefas" entry (file+headline "work/2025.org" "Tarefas")
-                 "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
-                ("wi" "Incidentes" entry (file+headline "work/2025.org" "Incidentes")
-                 "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
-                ("wa" "Ad Hoc" entry (file+headline "work/2025.org" "Ad hoc")
-                 "** TODO %?\n%U\n%i\n%a")
-                )))
+  (setq! org-capture-templates
+         '(("c" "Default Capture" entry (file "inbox.org")
+            "* %?\n%U\n%i")
+           ;; Capture and keep an org-link to the thing we're currently working with
+           ("r" "Capture with Reference" entry (file "inbox.org")
+            "* %?\n%U\n%i\n%a")
+           ;; Define a section
+           ("w" "Work")
+           ("wr" "Reuniões" entry (file+headline "work/2025.org" "Reuniões")
+            "** %?\n%U\n%i\n%a" :clock-in t)
+           ("wt" "Tarefas" entry (file+headline "work/2025.org" "Tarefas")
+            "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
+           ("wi" "Incidentes" entry (file+headline "work/2025.org" "Incidentes")
+            "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
+           ("wa" "Ad Hoc" entry (file+headline "work/2025.org" "Ad hoc")
+            "** TODO %?\n%U\n%i\n%a")
+           )))
 
 (after! org-roam
-        (setq! org-roam-capture-templates
-              '(("d" "default" plain "%?"
-                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
+  (setq! org-roam-capture-templates
+         '(("d" "default" plain "%?"
+            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
 
-                ("i" "ideas" plain "%?"
-                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
-                ))
-        (setq! org-roam-dailies-capture-templates
-              '(("d" "default" entry "* %<%I:%M %p>: %?"
-                 :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
-        )
+           ("i" "ideas" plain "%?"
+            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
+           ))
+  (setq! org-roam-dailies-capture-templates
+         '(("d" "default" entry "* %<%I:%M %p>: %?"
+            :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
+  )
 #+end_src
 *** Workflow
 #+begin_src emacs-lisp
 (after! org
-(setq! org-log-done 'time
-      org-todo-keywords '((sequence "TODO" "WAITING" "DOING" "|" "DONE(!)" "CANCELLED(!)"))
-;; Refile configuration
-      org-outline-path-complete-in-steps nil
-      org-refile-use-outline-path 'file))
+  (setq! org-log-done 'time
+         org-todo-keywords '((sequence "TODO" "WAITING" "DOING" "|" "DONE(!)" "CANCELLED(!)"))
+         ;; Refile configuration
+         org-outline-path-complete-in-steps nil
+         org-refile-use-outline-path 'file))
 #+end_src
 *** Agenda
 #+begin_src emacs-lisp
 (setq! org-agenda-custom-commands
-      '(("n" "Agenda and All Todos"
-         ((agenda)
-          (todo)))
-        ("w" "Work" agenda ""
-         ((org-agenda-files '("work/2025.org"))))))
+       '(("n" "Agenda and All Todos"
+          ((agenda)
+           (todo)))
+         ("w" "Work" agenda ""
+          ((org-agenda-files '("work/2025.org"))))))
 #+end_src
 *** DOING Export
 #+begin_src emacs-lisp
 ;; Make exporting quotes better
 (setq! org-export-with-smart-quotes t
-      org-export-with-drawers nil
-      org-export-with-todo-keywords nil
-      org-export-with-broken-links t
-      org-export-with-toc nil
-      org-export-date-timestamp-format "%d %B %Y")
+       org-export-with-drawers nil
+       org-export-with-todo-keywords nil
+       org-export-with-broken-links t
+       org-export-with-toc nil
+       org-export-date-timestamp-format "%d %B %Y")
 ;; Export ODT to MS-Word
 ;;(setq-default org-odt-preferred-output-format "docx")
 ;; Export ODT to PDF
@@ -313,12 +313,18 @@ Org-tempo is not a separate package but a module within org that can be enabled.
 #+begin_src emacs-lisp
 (require 'org-tempo)
 #+end_src
+*** Babel
+Runs every 10s formatting org code blocks
+#+begin_src emacs-lisp
+(run-at-time 1 10 'sud/indent-org-block-automatically)
+
+#+end_src
 ** Magit
 Obs.: diff-refine-hunk may be slow
 #+begin_src emacs-lisp
 (after! magit
   (setq! magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")
-        magit-diff-refine-hunk 'all))
+         magit-diff-refine-hunk 'all))
 #+end_src
 ** Languages
 *** Java
@@ -343,8 +349,8 @@ Obs.: diff-refine-hunk may be slow
 *** Just
 #+begin_src emacs-lisp
 (after! just-ts-mode
-;;(require 'just-ts-mode)
-;;Installs just grammar if not available
+  ;;(require 'just-ts-mode)
+  ;;Installs just grammar if not available
   (unless (treesit-language-available-p 'just)
     (just-ts-mode-install-grammar)))
 #+end_src
@@ -361,38 +367,38 @@ See https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 #+end_src
 **** Formatting
 #+begin_src emacs-lisp
- ;; Disable format-on-save behavior in Emacs Lisp buffers
- ;(setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
+;; Disable format-on-save behavior in Emacs Lisp buffers
+                                        ;(setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
 
- ;; To permenantly disable a formatter:
- (after! csharp-mode
-   (set-formatter! 'csharpier nil))
+;; To permenantly disable a formatter:
+(after! csharp-mode
+  (set-formatter! 'csharpier nil))
 
- ;; To define new formatters:
- ;; From modules/tools/docker/config.el:
- (after! dockerfile-mode
-   (set-formatter! 'dockfmt '("dockfmt" "fmt" filepath) :modes '(dockerfile-mode)))
+;; To define new formatters:
+;; From modules/tools/docker/config.el:
+(after! dockerfile-mode
+  (set-formatter! 'dockfmt '("dockfmt" "fmt" filepath) :modes '(dockerfile-mode)))
 
- ;; From modules/lang/sh/config.el:
- (after! sh-script
-   (set-formatter! 'shfmt '("shfmt" "-ci"
-                            (unless indent-tabs-mode
-                              (list "-i" (number-to-string tab-width))))))
+;; From modules/lang/sh/config.el:
+(after! sh-script
+  (set-formatter! 'shfmt '("shfmt" "-ci"
+                           (unless indent-tabs-mode
+                             (list "-i" (number-to-string tab-width))))))
 
 (setq! +format-on-save-disabled-modes
-      '(emacs-lisp-mode  ; elisp's mechanisms are good enough
-        sql-mode         ; sqlformat is currently broken
-        tex-mode         ; latexindent is broken
-        latex-mode
-        sh-mode))
+       '(emacs-lisp-mode  ; elisp's mechanisms are good enough
+         sql-mode         ; sqlformat is currently broken
+         tex-mode         ; latexindent is broken
+         latex-mode
+         sh-mode))
 
 
 #+end_src
 ** Biblio
 #+begin_src emacs-lisp
- (setq! org-cite-csl-styles-dir "~/org/biblio")
+(setq! org-cite-csl-styles-dir "~/org/biblio")
 
- (setq! citar-bibliography '("~/org/biblio/global.bib"))
+(setq! citar-bibliography '("~/org/biblio/global.bib"))
 
 #+end_src
 ** Latex
@@ -400,7 +406,7 @@ See https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 https://github.com/james-stoup/emacs-org-mode-tutorial
 
 #+begin_src emacs-lisp
-;(setq! reftex-default-bibliography "/your/bib/file.bib")
+                                        ;(setq! reftex-default-bibliography "/your/bib/file.bib")
 (use-package! ox-latex
   :ensure nil
   :demand t
@@ -427,9 +433,9 @@ https://github.com/james-stoup/emacs-org-mode-tutorial
 *** ABNT2
 #+begin_src emacs-lisp
 (after! ox-latex
-        (add-to-list 'org-latex-classes
-                     '("abntex2"
-"[NO-DEFAULT-PACKAGES]
+  (add-to-list 'org-latex-classes
+               '("abntex2"
+                 "[NO-DEFAULT-PACKAGES]
 \\documentclass{abntex2}
 \\usepackage{lmodern}
 \\usepackage[T1]{fontenc}
@@ -443,15 +449,15 @@ https://github.com/james-stoup/emacs-org-mode-tutorial
 \\usepackage[alf]{abntex2cite}
 \\usepackage{fourier}
 [EXTRA]"
-                       ("\\section{%s}" . "\\section*{%s}")
-                       ("\\subsection{%s}" . "\\subsection*{%s}")
-                       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                       ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
-                       )))
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 )))
 
 (setq! org-latex-hyperref-template
-"\\hypersetup{
+       "\\hypersetup{
  pdftitle={%t},
  pdfauthor={%a},
  pdfsubject={%d},
@@ -467,47 +473,44 @@ https://github.com/james-stoup/emacs-org-mode-tutorial
 ")
 #+end_src
 ** Tramp
-Check if this makes sense!
 #+begin_src emacs-lisp :tangle yes
 ;; Tramp (http://www.emacswiki.org/emacs/TrampMode) for remote files
-;(after! tramp
-;(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
-;(setq! tramp-default-method "ssh")
-;;; Backup (file~) disabled and auto-save (#file#) locally to prevent delays in editing remote files
-;(add-to-list 'backup-directory-alist
-;             (cons tramp-file-name-regexp nil))
-;(setq! tramp-auto-save-directory temporary-file-directory)
-;(setq! tramp-verbose 10))
+(after! tramp
+  ;; Backup (file~) disabled and auto-save (#file#) locally to prevent delays in editing remote files
+  (add-to-list 'backup-directory-alist
+               (cons tramp-file-name-regexp nil))
+  (setq! tramp-auto-save-directory temporary-file-directory)
+  (setq! tramp-verbose 10))
 #+end_src
 ** Remember
 Whenever you reconfigure a package, make sure to wrap your config in an
- `after!' block, otherwise Doom's defaults may override your settings. E.g.
+`after!' block, otherwise Doom's defaults may override your settings. E.g.
 #+begin_src emacs-lisp :tangle no
-   (after! PACKAGE
-     (setq! x y))
+(after! PACKAGE
+  (setq! x y))
 #+end_src
 
- The exceptions to this rule:
-   - Setting file/directory variables (like `org-directory')
-   - Setting variables which explicitly tell you to set them before their
-     package is loaded (see 'C-h v VARIABLE' to look up their documentation).
-   - Setting doom variables (which start with 'doom-' or '+').
+The exceptions to this rule:
+- Setting file/directory variables (like `org-directory')
+- Setting variables which explicitly tell you to set them before their
+  package is loaded (see 'C-h v VARIABLE' to look up their documentation).
+- Setting doom variables (which start with 'doom-' or '+').
 
- Here are some additional functions/macros that will help you configure Doom.
+  Here are some additional functions/macros that will help you configure Doom.
 
- - `load!' for loading external *.el files relative to this one
- - `use-package!' for configuring packages
- - `after!' for running code after a package has loaded
- - `add-load-path!' for adding directories to the `load-path', relative to
-   this file. Emacs searches the `load-path' when you load packages with
-   `require' or `use-package'.
- - `map!' for binding new keys
+  - `load!' for loading external *.el files relative to this one
+  - `use-package!' for configuring packages
+  - `after!' for running code after a package has loaded
+  - `add-load-path!' for adding directories to the `load-path', relative to
+    this file. Emacs searches the `load-path' when you load packages with
+    `require' or `use-package'.
+  - `map!' for binding new keys
 
- To get information about any of these functions/macros, move the cursor over
- the highlighted symbol at press 'K' (non-evil users must press 'C-c c k').
- This will open documentation for it, including demos of how they are used.
- Alternatively, use `C-h o' to look up a symbol (functions, variables, faces,
- etc).
+  To get information about any of these functions/macros, move the cursor over
+  the highlighted symbol at press 'K' (non-evil users must press 'C-c c k').
+  This will open documentation for it, including demos of how they are used.
+  Alternatively, use `C-h o' to look up a symbol (functions, variables, faces,
+  etc).
 
- You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
- they are implemented.
+  You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
+  they are implemented.

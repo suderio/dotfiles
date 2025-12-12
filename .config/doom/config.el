@@ -1,28 +1,28 @@
 (load! "functions")
 
 (setq! user-full-name "Paulo Suderio"
-      user-mail-address "paulo.suderio@gmail.com")
+       user-mail-address "paulo.suderio@gmail.com")
 
 (setq! display-line-numbers-type 'relative
-      evil-respect-visual-line-mode t
-      which-key-idle-delay 0.8
-      which-key-max-description-length 255
-      which-key-separator " → "
-      which-key-dont-use-unicode nil
-      )
+       evil-respect-visual-line-mode t
+       which-key-idle-delay 0.8
+       which-key-max-description-length 255
+       which-key-separator " → "
+       which-key-dont-use-unicode nil
+       )
 
 (defvar wsl? (string-match-p "WSL"
-                 (shell-command-to-string "uname -a")))
+                             (shell-command-to-string "uname -a")))
 
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
 (map! :leader :desc "Fast Note" "n ." #'sud/org-roam-node-insert-immediate)
 (map! :leader :desc "Inbox Note" "n i" #'sud/org-roam-capture-inbox)
-;(map! :leader :desc "Eval" "e" nil)
+                                        ;(map! :leader :desc "Eval" "e" nil)
 (map! :leader :desc "Eval Last Expression" "e l" #'eval-last-sexp)
 (map! :leader :desc "Comment Line" "#" #'comment-line)
 
 (setq! global-auto-revert-mode-text "󰀘"
-      global-auto-revert-non-file-buffers t)
+       global-auto-revert-non-file-buffers t)
 
 (setenv "LANG" "pt_BR,en_US")
 (setq-default ispell-program-name "hunspell")
@@ -56,13 +56,13 @@
 (setq +doom-dashboard-ascii-banner-fn #'sud/dashboard-logo)
 
 (add-to-list '+doom-dashboard-menu-sections
-    '("Open Journal"
-     :icon (nerd-icons-octicon "nf-oct-note" :face 'doom-dashboard-menu-title)
-     :key "SPC n j o"
-     :when (featurep! :lang org +journal)
-     :face (:inherit (doom-dashboard-menu-title))
-     :action org-journal-open-current-journal-file)
-)
+             '("Open Journal"
+               :icon (nerd-icons-octicon "nf-oct-note" :face 'doom-dashboard-menu-title)
+               :key "SPC n j o"
+               :when (featurep! :lang org +journal)
+               :face (:inherit (doom-dashboard-menu-title))
+               :action org-journal-open-current-journal-file)
+             )
 
 (if (sud/font-installed? "FiraCode Nerd Font")
     (setq! doom-font (font-spec :family "FiraCode Nerd Font" :size 12 :weight 'semi-light)))
@@ -76,30 +76,30 @@
 (if (sud/font-installed? "NotoSerif Nerd Font")
     (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 12)))
 
- (if (sud/font-installed? "Symbols Nerd Font")
-     (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
-            doom-emoji-font (font-spec :family "Symbols Nerd Font")
-            doom-unicode-font (font-spec :family "Symbols Nerd Font")))
+(if (sud/font-installed? "Symbols Nerd Font")
+    (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
+           doom-emoji-font (font-spec :family "Symbols Nerd Font")
+           doom-unicode-font (font-spec :family "Symbols Nerd Font")))
 
 (setq! frame-title-format
-    '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
-      (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
+       '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
+         (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
 
 (setq! org-directory "~/org/")
 (setq! org-agenda-files '("inbox.org" "work/2025.org"))
 
 ;; Default tags
 (setq! org-tag-alist '(
-                      ;; locale
-                      (:startgroup)
-                      ("personal" . ?h)
-                      ("work" . ?w)
-                      (:endgroup)
-                      (:newline)
-                      ;; misc
-                      ("writing")
-                      ("review")
-                      ("reading")))
+                       ;; locale
+                       (:startgroup)
+                       ("personal" . ?h)
+                       ("work" . ?w)
+                       (:endgroup)
+                       (:newline)
+                       ;; misc
+                       ("writing")
+                       ("review")
+                       ("reading")))
 
 ;; Org-refile: where should org-refile look?
 ;;(setq! org-refile-targets 'FIXME)
@@ -114,39 +114,39 @@
 ;; This example is for linking a person's 7-character ID to their page on the
 ;; free genealogy website Family Search.
 (setq! org-link-abbrev-alist
-      '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")
-        ("tarefa" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=TMS%3ATask&server=itsm.bndes.net&eid=%s")
-        ("incidente" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=HPD%3AHelp+Desk&server=itsm.bndes.net&eid=%s")
-        ("google" . "https://www.google.com/#q=%s")
-        ("github" . "https://www.github.com/%s")
-))
+       '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")
+         ("tarefa" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=TMS%3ATask&server=itsm.bndes.net&eid=%s")
+         ("incidente" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=HPD%3AHelp+Desk&server=itsm.bndes.net&eid=%s")
+         ("google" . "https://www.google.com/#q=%s")
+         ("github" . "https://www.github.com/%s")
+         ))
 
 (add-hook 'org-ctrl-c-ctrl-c-hook 'orgsync)
 
 (after! org
-(setq-default org-startup-indented t
-              org-pretty-entities t
-              org-use-sub-superscripts "{}"
-              org-hide-emphasis-markers t
-              org-startup-with-inline-images t
-              org-image-actual-width '(300))
-(use-package! toc-org
-  :commands toc-org-enable
-  :init (add-hook 'org-mode-hook 'toc-org-enable)))
+  (setq-default org-startup-indented t
+                org-pretty-entities t
+                org-use-sub-superscripts "{}"
+                org-hide-emphasis-markers t
+                org-startup-with-inline-images t
+                org-image-actual-width '(300))
+  (use-package! toc-org
+    :commands toc-org-enable
+    :init (add-hook 'org-mode-hook 'toc-org-enable)))
 
 (after! org
-(custom-set-faces
- '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
- '(org-level-2 ((t (:inherit outline-2 :height 1.4))))
- '(org-level-3 ((t (:inherit outline-3 :height 1.3))))
- '(org-level-4 ((t (:inherit outline-4 :height 1.2))))
- '(org-level-5 ((t (:inherit outline-5 :height 1.1)))))
+  (custom-set-faces
+   '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
+   '(org-level-2 ((t (:inherit outline-2 :height 1.4))))
+   '(org-level-3 ((t (:inherit outline-3 :height 1.3))))
+   '(org-level-4 ((t (:inherit outline-4 :height 1.2))))
+   '(org-level-5 ((t (:inherit outline-5 :height 1.1)))))
 
-(custom-set-faces!
-  '(org-document-title :height 1.5 :bold t :underline nil)))
+  (custom-set-faces!
+    '(org-document-title :height 1.5 :bold t :underline nil)))
 
 (setq! org-journal-dir "~/org/journal/"
-      org-journal-file-format "%Y%m.org")
+       org-journal-file-format "%Y%m.org")
 (after! org-journal
   (setq
    org-journal-date-format "%Y-%m-%d (%A)"
@@ -155,61 +155,61 @@
    org-icalendar-store-UID t
    org-icalendar-include-todo "all"
    org-icalendar-combined-agenda-file "~/org/org-journal.ics" ;; export with (org-icalendar-combine-agenda-files)
-))
+   ))
 
 (after! org
-        (setq! org-capture-templates
-              '(("c" "Default Capture" entry (file "inbox.org")
-                 "* %?\n%U\n%i")
-                ;; Capture and keep an org-link to the thing we're currently working with
-                ("r" "Capture with Reference" entry (file "inbox.org")
-                 "* %?\n%U\n%i\n%a")
-                ;; Define a section
-                ("w" "Work")
-                ("wr" "Reuniões" entry (file+headline "work/2025.org" "Reuniões")
-                 "** %?\n%U\n%i\n%a" :clock-in t)
-                ("wt" "Tarefas" entry (file+headline "work/2025.org" "Tarefas")
-                 "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
-                ("wi" "Incidentes" entry (file+headline "work/2025.org" "Incidentes")
-                 "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
-                ("wa" "Ad Hoc" entry (file+headline "work/2025.org" "Ad hoc")
-                 "** TODO %?\n%U\n%i\n%a")
-                )))
+  (setq! org-capture-templates
+         '(("c" "Default Capture" entry (file "inbox.org")
+            "* %?\n%U\n%i")
+           ;; Capture and keep an org-link to the thing we're currently working with
+           ("r" "Capture with Reference" entry (file "inbox.org")
+            "* %?\n%U\n%i\n%a")
+           ;; Define a section
+           ("w" "Work")
+           ("wr" "Reuniões" entry (file+headline "work/2025.org" "Reuniões")
+            "** %?\n%U\n%i\n%a" :clock-in t)
+           ("wt" "Tarefas" entry (file+headline "work/2025.org" "Tarefas")
+            "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
+           ("wi" "Incidentes" entry (file+headline "work/2025.org" "Incidentes")
+            "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
+           ("wa" "Ad Hoc" entry (file+headline "work/2025.org" "Ad hoc")
+            "** TODO %?\n%U\n%i\n%a")
+           )))
 
 (after! org-roam
-        (setq! org-roam-capture-templates
-              '(("d" "default" plain "%?"
-                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
+  (setq! org-roam-capture-templates
+         '(("d" "default" plain "%?"
+            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
 
-                ("i" "ideas" plain "%?"
-                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
-                ))
-        (setq! org-roam-dailies-capture-templates
-              '(("d" "default" entry "* %<%I:%M %p>: %?"
-                 :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
-        )
+           ("i" "ideas" plain "%?"
+            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
+           ))
+  (setq! org-roam-dailies-capture-templates
+         '(("d" "default" entry "* %<%I:%M %p>: %?"
+            :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
+  )
 
 (after! org
-(setq! org-log-done 'time
-      org-todo-keywords '((sequence "TODO" "WAITING" "DOING" "|" "DONE(!)" "CANCELLED(!)"))
-;; Refile configuration
-      org-outline-path-complete-in-steps nil
-      org-refile-use-outline-path 'file))
+  (setq! org-log-done 'time
+         org-todo-keywords '((sequence "TODO" "WAITING" "DOING" "|" "DONE(!)" "CANCELLED(!)"))
+         ;; Refile configuration
+         org-outline-path-complete-in-steps nil
+         org-refile-use-outline-path 'file))
 
 (setq! org-agenda-custom-commands
-      '(("n" "Agenda and All Todos"
-         ((agenda)
-          (todo)))
-        ("w" "Work" agenda ""
-         ((org-agenda-files '("work/2025.org"))))))
+       '(("n" "Agenda and All Todos"
+          ((agenda)
+           (todo)))
+         ("w" "Work" agenda ""
+          ((org-agenda-files '("work/2025.org"))))))
 
 ;; Make exporting quotes better
 (setq! org-export-with-smart-quotes t
-      org-export-with-drawers nil
-      org-export-with-todo-keywords nil
-      org-export-with-broken-links t
-      org-export-with-toc nil
-      org-export-date-timestamp-format "%d %B %Y")
+       org-export-with-drawers nil
+       org-export-with-todo-keywords nil
+       org-export-with-broken-links t
+       org-export-with-toc nil
+       org-export-date-timestamp-format "%d %B %Y")
 ;; Export ODT to MS-Word
 ;;(setq-default org-odt-preferred-output-format "docx")
 ;; Export ODT to PDF
@@ -217,9 +217,11 @@
 
 (require 'org-tempo)
 
+(run-at-time 1 10 'sud/indent-org-block-automatically)
+
 (after! magit
   (setq! magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")
-        magit-diff-refine-hunk 'all))
+         magit-diff-refine-hunk 'all))
 
 (setq! lsp-java-server-install-dir "~/.local/etc/eclipse.jdt.ls")
 
@@ -232,8 +234,8 @@
 
 
 (after! just-ts-mode
-;;(require 'just-ts-mode)
-;;Installs just grammar if not available
+  ;;(require 'just-ts-mode)
+  ;;Installs just grammar if not available
   (unless (treesit-language-available-p 'just)
     (just-ts-mode-install-grammar)))
 
@@ -243,29 +245,29 @@
 (setq! lsp-warn-no-matched-clients nil)
 
 ;; Disable format-on-save behavior in Emacs Lisp buffers
- ;(setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
+                                        ;(setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
 
- ;; To permenantly disable a formatter:
- (after! csharp-mode
-   (set-formatter! 'csharpier nil))
+;; To permenantly disable a formatter:
+(after! csharp-mode
+  (set-formatter! 'csharpier nil))
 
- ;; To define new formatters:
- ;; From modules/tools/docker/config.el:
- (after! dockerfile-mode
-   (set-formatter! 'dockfmt '("dockfmt" "fmt" filepath) :modes '(dockerfile-mode)))
+;; To define new formatters:
+;; From modules/tools/docker/config.el:
+(after! dockerfile-mode
+  (set-formatter! 'dockfmt '("dockfmt" "fmt" filepath) :modes '(dockerfile-mode)))
 
- ;; From modules/lang/sh/config.el:
- (after! sh-script
-   (set-formatter! 'shfmt '("shfmt" "-ci"
-                            (unless indent-tabs-mode
-                              (list "-i" (number-to-string tab-width))))))
+;; From modules/lang/sh/config.el:
+(after! sh-script
+  (set-formatter! 'shfmt '("shfmt" "-ci"
+                           (unless indent-tabs-mode
+                             (list "-i" (number-to-string tab-width))))))
 
 (setq! +format-on-save-disabled-modes
-      '(emacs-lisp-mode  ; elisp's mechanisms are good enough
-        sql-mode         ; sqlformat is currently broken
-        tex-mode         ; latexindent is broken
-        latex-mode
-        sh-mode))
+       '(emacs-lisp-mode  ; elisp's mechanisms are good enough
+         sql-mode         ; sqlformat is currently broken
+         tex-mode         ; latexindent is broken
+         latex-mode
+         sh-mode))
 
 (setq! org-cite-csl-styles-dir "~/org/biblio")
 
@@ -296,9 +298,9 @@
   :demand t)
 
 (after! ox-latex
-        (add-to-list 'org-latex-classes
-                     '("abntex2"
-"[NO-DEFAULT-PACKAGES]
+  (add-to-list 'org-latex-classes
+               '("abntex2"
+                 "[NO-DEFAULT-PACKAGES]
 \\documentclass{abntex2}
 \\usepackage{lmodern}
 \\usepackage[T1]{fontenc}
@@ -312,15 +314,15 @@
 \\usepackage[alf]{abntex2cite}
 \\usepackage{fourier}
 [EXTRA]"
-                       ("\\section{%s}" . "\\section*{%s}")
-                       ("\\subsection{%s}" . "\\subsection*{%s}")
-                       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                       ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
-                       )))
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 )))
 
 (setq! org-latex-hyperref-template
-"\\hypersetup{
+       "\\hypersetup{
  pdftitle={%t},
  pdfauthor={%a},
  pdfsubject={%d},
@@ -336,11 +338,9 @@
 ")
 
 ;; Tramp (http://www.emacswiki.org/emacs/TrampMode) for remote files
-;(after! tramp
-;(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
-;(setq! tramp-default-method "ssh")
-;;; Backup (file~) disabled and auto-save (#file#) locally to prevent delays in editing remote files
-;(add-to-list 'backup-directory-alist
-;             (cons tramp-file-name-regexp nil))
-;(setq! tramp-auto-save-directory temporary-file-directory)
-;(setq! tramp-verbose 10))
+(after! tramp
+  ;; Backup (file~) disabled and auto-save (#file#) locally to prevent delays in editing remote files
+  (add-to-list 'backup-directory-alist
+               (cons tramp-file-name-regexp nil))
+  (setq! tramp-auto-save-directory temporary-file-directory)
+  (setq! tramp-verbose 10))
