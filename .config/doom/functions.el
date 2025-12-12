@@ -304,6 +304,4 @@ estejam definidas:
 
 (defun sud/indent-org-block-automatically ()
     (when (and (derived-mode-p 'org-mode) (org-in-src-block-p))
-        (org-edit-special)
-        (indent-region (point-min) (point-max))
-        (org-edit-src-exit)))
+        (org-indent-block)))

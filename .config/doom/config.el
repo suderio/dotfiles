@@ -38,13 +38,13 @@
 (setq! browse-url-browser-function 'eww-browse-url)
 
 (setq! doom-theme 'modus-vivendi)
-(add-to-list 'default-frame-alist '(alpha-background . 85)) ; For all new frames henceforth
+(add-to-list 'default-frame-alist '(alpha-background . 80)) ; For all new frames henceforth
 (setq! modus-themes-bold-constructs t)
 (setq! modus-themes-italic-constructs t)
 (setq! modus-themes-prompts '(bold))
 ;; Important!
 (setq! modus-themes-scale-headings t)
-(setq!  modus-themes-variable-pitch-ui t)
+(setq! modus-themes-variable-pitch-ui t)
 
 (setq! lsp-modeline-code-action-fallback-icon "\N{HIGH VOLTAGE SIGN}")
 
@@ -273,8 +273,8 @@
 
 (setq! citar-bibliography '("~/org/biblio/global.bib"))
 
-;(setq! reftex-default-bibliography "/your/bib/file.bib")
-(use-package! ox-latex
+;;(setq! reftex-default-bibliography "/your/bib/file.bib")
+(after! ox-latex
   :ensure nil
   :demand t
   :custom
@@ -290,11 +290,11 @@
            "toc" "nav" "snm" "vrb" "dvi" "fdb_latexmk"
            "blg" "brf" "fls" "entoc" "ps" "spl" "bbl"
            "tex" "bcf"))))
-(use-package! latex-preview-pane
+(after! latex-preview-pane
   :defer t
   :commands  (latex-preview-pane-mode)
   :hook ((latex-mode . latex-preview-pane-mode)))
-(use-package! ox-epub
+(after! ox-epub
   :demand t)
 
 (after! ox-latex
