@@ -46,41 +46,41 @@ starship = "latest"
 uv = "latest"
 
 # devtools
-"asdf:luizm/asdf-shfmt" = "latest"
 ast-grep = "latest"
-black = "latest"
-clang-format = "21.1.5"
 cmake = "latest"
 github-cli = "latest"
 jj = "latest"
 jq = "latest"
-ktlint = "latest"
 lazygit = "latest"
 leiningen = "latest"
-lua-language-server = "latest"
+#lua-language-server = "latest"
 markdownlint-cli2 = "latest"
 ninja = "latest"
-prettier = "latest"
 ripsecrets = "latest"
-rust-analyzer = "latest"
-shellcheck = "latest"
-stylua = "latest"
+#rust-analyzer = "latest"
+#stylua = "latest"
 tinytex = "latest"
 tree-sitter = "latest"
-yamlfmt = "latest"
-yamllint = "latest"
+#yamlfmt = "latest"
+#yamllint = "latest"
 yj = "latest"
 yq = "latest"
-zls = "latest"
 
-# go devtools
+# emacs dependencies
+"asdf:luizm/asdf-shfmt" = "latest"
+black = "latest"
+clang-format = "21.1.5"
+ktlint = "latest"
+shellcheck = "latest"
+zls = "latest"
+## go devtools
 "go:github.com/fatih/gomodifytags" = "latest"
 "go:github.com/cweill/gotests/gotests" = "latest"
 "go:golang.org/x/tools/gopls" = "latest"
 "go:github.com/x-motemen/gore/cmd/gore" = "latest"
 "go:github.com/jessfraz/dockfmt" = "latest"
 
-# python devtools
+## python devtools
 "pipx:isort" = "latest"
 "pipx:pipenv" = "latest"
 "pipx:nose" = "latest"
@@ -91,15 +91,19 @@ zls = "latest"
 "pipx:pyright" = "latest"
 "pipx:sqlfluff" = "latest"
 
-# npm devtools
+## npm devtools
 "npm:stylelint" = "latest"
 "npm:js-beautify" = "latest"
-"npm:vscode-json-languageserver" = "latest"
-"npm:typescript" = "latest"
-"npm:typescript-language-server" = "latest"
-"npm:bash-language-server" = "latest"
-"npm:dockerfile-language-server-nodejs" = "latest"
-"npm:yaml-language-server" = "latest"
+#"npm:vscode-json-languageserver" = "latest"
+#"npm:typescript" = "latest"
+#"npm:typescript-language-server" = "latest"
+#"npm:bash-language-server" = "latest"
+#"npm:dockerfile-language-server-nodejs" = "latest"
+#"npm:yaml-language-server" = "latest"
+
+# neovim dependencies
+prettier = "latest"
+## npm devtools
 "npm:@mermaid-js/mermaid-cli" = "latest"
 
 # cargo devtools
@@ -124,6 +128,7 @@ websocat = "latest"
 php = "latest"
 "go:github.com/go-delve/delve/cmd/dlv" = "latest"
 gitleaks = "latest"
+github-markdown-toc = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'

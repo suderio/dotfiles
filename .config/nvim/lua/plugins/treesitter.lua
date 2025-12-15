@@ -23,6 +23,7 @@ return {
         "scss",
         "svelte",
         "vue",
+        "norg",
       })
     end,
   },
