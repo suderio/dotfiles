@@ -129,6 +129,7 @@ php = "8.5.0"
 "go:github.com/go-delve/delve/cmd/dlv" = "latest"
 gitleaks = "latest"
 github-markdown-toc = "latest"
+usql = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
