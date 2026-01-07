@@ -2,7 +2,7 @@
 #+AUTHOR: Paulo Suderio
 #+DESCRIPTION: My personal Emacs config.
 #+STARTUP: showeverything
-#+OPTIONS: toc:2
+#+OPTIONS: toc:4
 #+PROPERTY: header-args    :tangle yes
 
 

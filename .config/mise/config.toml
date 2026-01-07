@@ -112,7 +112,6 @@ prettier = "latest"
 
 # other
 bitwarden = "latest"
-btop = "latest"
 ctop = "latest"
 delta = "latest"
 dust = "latest"
@@ -130,6 +129,7 @@ php = "8.5.0"
 gitleaks = "latest"
 github-markdown-toc = "latest"
 usql = "latest"
+"go:github.com/pranshuparmar/witr/cmd/witr" = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
