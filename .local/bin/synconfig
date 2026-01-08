@@ -1,0 +1,119 @@
+#!/usr/bin/env bb
+
+(require '[babashka.process :refer [shell process]]
+         '[babashka.fs :as fs]
+         '[clojure.string :as str]
+         '[clojure.java.io :as io])
+
+;; --- Helpers ---
+
+(defn log [msg]
+  (println (str "\n🟢 \033[1;32m" msg "\033[0m")))
+
+(defn err [msg]
+  (println (str "\n🔴 \033[1;31m" msg "\033[0m")))
+
+(def home (str (fs/home)))
+
+;; --- Comandos Específicos ---
+
+(defn task-org []
+  (log "Iniciando sincronização do ORG mode...")
+  (let [org-dir (fs/file home "org")]
+    (if (fs/exists? org-dir)
+      (do
+        (shell {:dir org-dir} "git pull")
+        (shell {:dir org-dir} "git add --all")
+        ;; continue: true impede que o script pare se não houver nada para commitar
+        (shell {:dir org-dir :continue true} "git commit -m \"Mensagem Padrão\"")
+        (shell {:dir org-dir} "git push"))
+      (err (str "Diretório " org-dir " não encontrado!")))))
+
+(defn task-mise []
+  (log "Atualizando Mise...")
+  (shell "mise upgrade"))
+
+(defn task-doom []
+  (log "Atualizando Doom Emacs...")
+  ;; Assume que o binário doom está no PATH. Se não estiver, use o caminho absoluto.
+  (shell "doom upgrade"))
+
+(defn get-distro []
+  "Tenta detectar se é Arch ou Debian based lendo /etc/os-release"
+  (if (fs/exists? "/etc/os-release")
+    (let [content (slurp "/etc/os-release")]
+      (cond
+        (or (str/includes? content "ID=arch")
+            (str/includes? content "ID_LIKE=arch")) :arch
+        (or (str/includes? content "ID=debian")
+            (str/includes? content "ID_LIKE=debian")
+            (str/includes? content "ID=ubuntu")) :debian
+        :else :unknown))
+    :unknown))
+
+(defn task-os []
+  (log "Atualizando o Sistema Operacional...")
+  (case (get-distro)
+    :arch   (shell "sudo pacman -Syu")
+    :debian (shell "sudo apt update && sudo apt upgrade -y")
+    :unknown (err "Não foi possível identificar se é Arch ou Debian. Atualização manual necessária.")))
+
+(defn task-config []
+  (log "Sincronizando Dotfiles...")
+  (let [git-args ["--git-dir" (str home "/.local/dotfiles/")
+                  "--work-tree" home]
+        run-git (fn [& args] (apply shell "git" (concat git-args args)))]
+
+    ;; 1. Pull
+    (apply run-git ["pull"])
+
+    ;; 2. Identificar arquivos alterados (M) ou deletados (D)
+    (let [status-result (apply process "git" (concat git-args ["status" "--porcelain"]) {:out :string})
+          output (:out status-result)]
+
+      (if (str/blank? output)
+        (println "Nenhuma alteração nos dotfiles.")
+        (doseq [line (str/split-lines output)]
+          ;; O formato do porcelain é "XY ARQUIVO".
+          ;; O trim remove espaços iniciais, depois splitamos no espaço.
+          (let [parts (str/split (str/trim line) #"\s+" 2)
+                code  (first parts)
+                file  (second parts)]
+
+            ;; Verifica se contém M (Modified) ou D (Deleted)
+            (when (or (str/includes? code "M")
+                      (str/includes? code "D"))
+              (println (str "Adicionando: " file))
+              (apply run-git ["add" file]))))))
+
+    ;; 3. Commit e Push (apenas se houver mudanças no stage)
+    ;; Usamos continue true pois o commit falha se não houver nada no stage
+    (apply shell "git" (concat git-args ["commit" "-m" "Update dotfiles via script" {:continue true}]))
+    (apply run-git ["push"])))
+
+(defn task-all []
+  (log "Executando TODAS as tarefas...")
+  ;; Ordem solicitada: config, os, mise, doom, org
+  (task-config)
+  (task-os)
+  (task-mise)
+  (task-doom)
+  (task-org))
+
+(defn print-help []
+  (println "Uso: bb manage.clj [comando]")
+  (println "Comandos disponíveis: org, mise, doom, os, config, all"))
+
+;; --- Main ---
+
+(def command (first *command-line-args*))
+
+(case command
+  "org"    (task-org)
+  "mise"   (task-mise)
+  "doom"   (task-doom)
+  "os"     (task-os)
+  "config" (task-config)
+  "all"    (task-all)
+  (print-help))
+
