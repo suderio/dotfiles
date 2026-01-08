@@ -92,15 +92,15 @@
     ;;ansible
     biblio                              ; Writes a PhD for you (citation needed)
     ;;collab                                                       ; buffers with friends
-    (debugger +lsp)          ; FIXME stepping through code, to help you add bugs
+    debugger          ; FIXME stepping through code, to help you add bugs
     ;;direnv
     (docker +lsp)
     editorconfig                   ; let someone else argue about tabs vs spaces
     ein                            ; tame Jupyter notebooks with emacs
     (eval +overlay)                ; run code, run (also, repls)
-    lookup                         ; navigate your code and its documentation
+    (lookup +dictionary +offline)                         ; navigate your code and its documentation
     ;;llm               ; when I said you needed friends, I didn't mean...
-    lsp                                 ; M-x vscode
+    (lsp +booster +eglot)                                 ; M-x vscode
     magit                               ; a git porcelain for Emacs
     make                                ; run make tasks from Emacs
     ;;pass                                                         ; password manager for nerds

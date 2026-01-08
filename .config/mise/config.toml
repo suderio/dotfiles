@@ -130,6 +130,8 @@ gitleaks = "latest"
 github-markdown-toc = "latest"
 usql = "latest"
 "go:github.com/pranshuparmar/witr/cmd/witr" = "latest"
+tinymist = "latest"
+"cargo:emacs-lsp-booster" = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'

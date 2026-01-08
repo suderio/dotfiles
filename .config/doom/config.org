@@ -335,7 +335,7 @@ Obs.: diff-refine-hunk may be slow
 #+begin_src emacs-lisp
 (setq! lsp-julia-package-dir nil)
 (after! lsp-julia
-  (setq! lsp-julia-default-environment "~/.julia/environments/v1.11"))
+  (setq! lsp-julia-default-environment "~/.julia/environments/v1.12"))
 #+end_src
 *** Lua
 #+begin_src emacs-lisp
@@ -354,14 +354,26 @@ Obs.: diff-refine-hunk may be slow
   (unless (treesit-language-available-p 'just)
     (just-ts-mode-install-grammar)))
 #+end_src
+*** Typst
+#+begin_src emacs-lisp
+(with-eval-after-load 'eglot
+  (with-eval-after-load 'typst-ts-mode
+    (add-to-list 'eglot-server-programs
+                 `((typst-ts-mode) .
+                   ,(eglot-alternatives `(,typst-ts-lsp-download-path
+                                          "tinymist"
+                                          "typst-lsp"))))))
+(setq-default eglot-workspace-configuration
+              '(:tinymist (:exportPdf "onSave")))
+#+end_src
 *** TODO Install treesitter grammars
 https://www.masteringemacs.org/article/how-to-get-started-tree-sitter
 *** LSP
 See https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 
 #+begin_src emacs-lisp
-(use-package! lsp-ui
-  :hook (lsp-mode . lsp-ui-mode))
+;;(use-package! lsp-ui
+;;  :hook (lsp-mode . lsp-ui-mode))
 
 (setq! lsp-warn-no-matched-clients nil)
 #+end_src

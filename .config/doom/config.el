@@ -227,7 +227,7 @@
 
 (setq! lsp-julia-package-dir nil)
 (after! lsp-julia
-  (setq! lsp-julia-default-environment "~/.julia/environments/v1.11"))
+  (setq! lsp-julia-default-environment "~/.julia/environments/v1.12"))
 
 (setq! lsp-clients-lua-language-server-bin "~/.local/bin")
 
@@ -239,8 +239,18 @@
   (unless (treesit-language-available-p 'just)
     (just-ts-mode-install-grammar)))
 
-(use-package! lsp-ui
-  :hook (lsp-mode . lsp-ui-mode))
+(with-eval-after-load 'eglot
+  (with-eval-after-load 'typst-ts-mode
+    (add-to-list 'eglot-server-programs
+                 `((typst-ts-mode) .
+                   ,(eglot-alternatives `(,typst-ts-lsp-download-path
+                                          "tinymist"
+                                          "typst-lsp"))))))
+(setq-default eglot-workspace-configuration
+              '(:tinymist (:exportPdf "onSave")))
+
+;;(use-package! lsp-ui
+;;  :hook (lsp-mode . lsp-ui-mode))
 
 (setq! lsp-warn-no-matched-clients nil)
 
