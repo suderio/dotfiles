@@ -69,11 +69,11 @@
     word-wrap                         ; soft wrapping with language-aware indent
 
     :emacs
-    dired                ; making dired pretty [functional]
+    (dired +dirvish +icons)                ; making dired pretty [functional]
     electric             ; smarter, keyword-based electric-indent
     eww                  ; the internet is gross
     tramp                ; remote files at your arthritic fingertips
-    ibuffer              ; interactive buffer management
+    (ibuffer +icons)              ; interactive buffer management
     undo                 ; persistent, smarter undo for your inevitable mistakes
     vc                   ; version-control and Emacs, sitting in a tree
 
@@ -84,7 +84,7 @@
     vterm                               ; the best terminal emulation in Emacs
 
     :checkers
-    syntax                           ; tasing you for every semicolon you forget
+    (syntax +flymake +icons)                           ; tasing you for every semicolon you forget
     (spell +flyspell +hunspell)      ; tasing you for misspelling mispelling
     grammar                          ; tasing grammar mistake every you make
 
@@ -94,10 +94,11 @@
     ;;collab                                                       ; buffers with friends
     debugger          ; FIXME stepping through code, to help you add bugs
     ;;direnv
-    (docker +lsp)
+    (docker +lsp +tree-sitter)     ; docker
     editorconfig                   ; let someone else argue about tabs vs spaces
-    ein                            ; tame Jupyter notebooks with emacs
-    (eval +overlay)                ; run code, run (also, repls)
+    ;; ein                            ; tame Jupyter notebooks with emacs
+    (eval +overlay)
+                                        ; run code, run (also, repls)
     (lookup +dictionary +offline)                         ; navigate your code and its documentation
     ;;llm               ; when I said you needed friends, I didn't mean...
     (lsp +booster +eglot)                                 ; M-x vscode
@@ -148,21 +149,21 @@
     (java +lsp +tree-sitter)       ; the poster child for carpal tunnel syndrome
     (javascript +lsp +tree-sitter) ; all(hope(abandon(ye(who(enter(here))))))
     (julia +lsp +tree-sitter +snail)    ; a better, faster MATLAB
-    (kotlin +lsp)                       ; a better, slicker Java(Script)
+    (kotlin +lsp +tree-sitter)                       ; a better, slicker Java(Script)
     (latex +cdlatex +lsp)        ; writing papers in Emacs has never been so fun
     ;;lean                                                         ; for folks with too much to prove
     ;;ledger                                                       ; be audit you can be
     (lua +fennel +lsp +tree-sitter +moonscript) ; one-based indices? one-based indices
-    markdown                            ; writing docs for people to ignore
+    (markdown +grip +tree-sitter)                            ; writing docs for people to ignore
     ;;nim                                                          ; python + lisp at the speed of c
     ;;nix                                                          ; I hereby declare "nix geht mehr!"
     ;;ocaml                                                        ; an objective camel
-    (org +journal +pandoc +pretty +roam +jupyter +dragndrop) ; organize your plain life in plain text
-    ;; (php +lsp +tree-sitter)                                     ; perl's insecure younger brother
+    (org +journal +pandoc +pretty +roam +jupyter +dragndrop +crypt +gnuplot +present) ; organize your plain life in plain text
+    (php +lsp +tree-sitter)                                     ; perl's insecure younger brother
     ;;plantuml                                                     ; diagrams for confusing people more
     graphviz                         ; diagrams for confusing yourself even more
     ;;purescript                                                   ; javascript, but functional
-    (python +lsp +tree-sitter)          ; beautiful is better than ugly
+    (python +lsp +tree-sitter +uv)          ; beautiful is better than ugly
     ;;qt                                                           ; the 'cutest' gui framework ever
     ;;racket                                                       ; a DSL for DSLs
     ;;raku                                                         ; the artist formerly known as perl6
@@ -187,12 +188,12 @@
     ;;(wanderlust +gmail)
 
     :app
-    ;;calendar
+    calendar                            ; TODO configurar isso
     emms
     everywhere                          ; *leave* Emacs!? You must be joking
     irc                                 ; how neckbeards socialize
-    (rss +org)                          ; emacs as an RSS reader
+    (rss +org +youtube)                          ; emacs as an RSS reader
 
     :config
     literate
-    (default +bindings +smartparens))
+    (default +bindings +smartparens +gnupg))
