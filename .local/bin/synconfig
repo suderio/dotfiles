@@ -135,6 +135,23 @@
 
     (println "✅ Sincronização finalizada.")))
 
+(defn task-status
+  "Retorna o status de todas as tarefas."
+  []
+  (log "Verificando Config...")
+  (let [opts {:git-dir (str home "/.local/dotfiles/")
+              :work-tree home}]
+    (git :status-porcelain opts))
+
+  (log "Verificando Mise...")
+  (shell "mise upgrade -n")
+
+  (log "Verificando Org...")
+  (let [org-dir (fs/file home "org")]
+    (if (fs/exists? org-dir)
+      (shell {:dir org-dir} "git status --porcelain")
+      (err (str "Diretório " org-dir " não encontrado!")))))
+
 (defn task-all []
   (log "Executando TODAS as tarefas...")
   ;; Ordem solicitada: config, os, mise, doom, org
@@ -159,4 +176,5 @@
   "os"     (task-os)
   "config" (task-config)
   "all"    (task-all)
+  "status" (task-status)
   (print-help))
