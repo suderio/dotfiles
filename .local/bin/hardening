@@ -300,7 +300,6 @@
               (System/exit 1))))))))
 
 ; AUTH-9282: Set password expiration dates for accounts
-
 (defn get-users-without-expiry
   "Lê o shadow e retorna uma lista de maps {:user ...} que precisam de correção."
   []
@@ -446,6 +445,30 @@
       (catch Exception e
         (println (str "?? Erro ao processar arquivo: " (.getMessage e)))
         (System/exit 1)))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ;; Entrypoint
