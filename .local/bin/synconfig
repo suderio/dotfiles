@@ -87,8 +87,9 @@
   ;; Assume que o binário doom está no PATH. Se não estiver, use o caminho absoluto.
   (shell "doom sync -u --gc --rebuild --aot"))
 
-(defn get-distro []
+(defn get-distro
   "Tenta detectar se é Arch ou Debian based lendo /etc/os-release"
+  []
   (if (fs/exists? "/etc/os-release")
     (let [content (slurp "/etc/os-release")]
       (cond
@@ -113,9 +114,6 @@
   (let [opts {:git-dir (str home "/.local/dotfiles/")
               :work-tree home}]
 
-    ;; ALTERADO: Adicionamos :continue true.
-    ;; Se o pull falhar (conflito), o script NÃO para.
-    ;; Ele vai tentar rodar o status e salvar suas mudanças locais mesmo assim.
     (println "⬇️ Tentando atualizar (git pull)...")
     (let [pull-res (git :pull (assoc opts :continue true))]
       (when (not= 0 (:exit pull-res))
@@ -125,16 +123,17 @@
           files-to-add (->> (str/split-lines status-out)
                             (map str/trim)
                             (filter #(re-find #"^[MD]" %)) ;; Modified ou Deleted
-                            (map #(second (str/split % #"\s+" 2))))]
+                            (map #(second (str/split % #"\s+" 2)))
+                            (map #(str home "/"  %)))]
 
       (if (seq files-to-add)
         (do
           (git :add opts files-to-add)
           (git :commit opts "Update dotfiles via script")
           (git :push opts))
-        (println "✨ Nada para commitar nos dotfiles."))))
+        (println "✨ Nada para commitar nos dotfiles.")))
 
-    (println "✅ Sincronização finalizada."))
+    (println "✅ Sincronização finalizada.")))
 
 (defn task-all []
   (log "Executando TODAS as tarefas...")
@@ -161,4 +160,3 @@
   "config" (task-config)
   "all"    (task-all)
   (print-help))
-
