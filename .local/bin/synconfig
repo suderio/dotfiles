@@ -105,10 +105,11 @@
   (log "Atualizando o Sistema Operacional...")
   (case (get-distro)
     :arch   (shell "sudo pacman -Syu")
-    :debian (shell "sudo apt update && sudo apt upgrade -y")
+    :debian (do (shell "sudo apt update")
+                (shell "sudo apt upgrade -y"))
     :unknown (err "Não foi possível identificar se é Arch ou Debian. Atualização manual necessária.")))
 
-(defn task-config []
+(defn task-dotfiles []
   (println "\n🛠️  Sincronizando Dotfiles...")
 
   (let [opts {:git-dir (str home "/.local/dotfiles/")
@@ -138,7 +139,7 @@
 (defn task-status
   "Retorna o status de todas as tarefas."
   []
-  (log "Verificando Config...")
+  (log "Verificando Dotfiles...")
   (let [opts {:git-dir (str home "/.local/dotfiles/")
               :work-tree home}]
     (git :status-porcelain opts))
@@ -154,8 +155,8 @@
 
 (defn task-all []
   (log "Executando TODAS as tarefas...")
-  ;; Ordem solicitada: config, os, mise, doom, org
-  (task-config)
+  ;; Ordem solicitada: dotfiles, os, mise, doom, org
+  (task-dotfiles)
   (task-os)
   (task-mise)
   (task-doom)
@@ -163,18 +164,18 @@
 
 (defn print-help []
   (println "Uso: synconfig [comando]")
-  (println "Comandos disponíveis: org, mise, doom, os, config, all"))
+  (println "Comandos disponíveis: org, mise, doom, os, dotfiles, all"))
 
 ;; --- Main ---
 
 (def command (first *command-line-args*))
 
 (case command
-  "org"    (task-org)
-  "mise"   (task-mise)
-  "doom"   (task-doom)
-  "os"     (task-os)
-  "config" (task-config)
-  "all"    (task-all)
-  "status" (task-status)
+  "org"      (task-org)
+  "mise"     (task-mise)
+  "doom"     (task-doom)
+  "os"       (task-os)
+  "dotfiles" (task-dotfiles)
+  "all"      (task-all)
+  "status"   (task-status)
   (print-help))
