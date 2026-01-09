@@ -85,7 +85,7 @@
 (defn task-doom []
   (log "Atualizando Doom Emacs...")
   ;; Assume que o binário doom está no PATH. Se não estiver, use o caminho absoluto.
-  (shell "doom sync -u --gc --rebuild --aot"))
+  (shell "doom sync -u --gc --aot"))
 
 (defn get-distro
   "Tenta detectar se é Arch ou Debian based lendo /etc/os-release"
