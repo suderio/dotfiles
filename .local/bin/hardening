@@ -3,48 +3,50 @@
 (require '[babashka.process :refer [shell process]]
           '[babashka.fs :as fs]
           '[clojure.string :as str])
+;;
+;; Reference: https://cisofy.com/lynis/controls/<CODE-NNNN>/
 
 ;; --- Configuração do Registro ---
 ;; Aqui unificamos a descrição e o mapeamento.
 ;; As funções (:fix e :check) serão resolvidas dinamicamente baseadas na chave.
 (def registry
-  {"boot_5264"           {:desc "Análise de segurança dos serviços systemd"}
-   "krnl_5820"           {:desc "Desativa core dumps via limits.conf"}
-   "auth_9230"           {:desc "Configura hashing rounds para senhas"}
-   "auth_9262"           {:desc "Instala módulo PAM de força de senha"}
-   "auth_9282"           {:desc "Define data de expiração para contas"}
-   "auth_9286"           {:desc "Configura idade mínima/máxima de senha"}
-   "auth_9328"           {:desc "Define umask padrão mais restrito (027)"}
-   "file_6354"           {:desc "Verifica arquivos antigos em /tmp"}
-   "usb_1000"            {:desc "Desativa armazenamento USB"}
-   "usb_1000_restore"    {:desc "Reativa armazenamento USB"}
-   "strg_1846"           {:desc "Desativa suporte a FireWire"}
-   "name_4028"           {:desc "Verifica e ajusta domínio DNS do sistema"}
-   "pkgs_7312"           {:desc "Atualiza pacotes (rolling updates)"}
-   "pkgs_7320"           {:desc "Instala `arch-audit` para vulnerabilidades"}
-   "netw_3200"           {:desc "Desativa protocolos desnecessários (dccp, etc)"}
-   "unblock_net_protocols" {:desc "Reativa protocolos desativados"}
-   "ssh_7408"            {:desc "Aplica hardening na configuração do SSH"}
-   "php_2372"            {:desc "Desativa expose_php no php.ini"}
-   "php_2376"            {:desc "Desativa allow_url_fopen no php.ini"}
-   "logg_2146"           {:desc "Configura rotação de logs em /var/log"}
-   "bann_7126"           {:desc "Adiciona banner legal ao /etc/issue e issue.net"}
-   "acct_9622"           {:desc "Ativa process accounting (accton)"}
-   "acct_9626"           {:desc "Ativa coleta com sysstat (sar, iostat)"}
-   "acct_9628"           {:desc "Ativa auditd e regras básicas"}
-   "acct_report"         {:desc "Relatório de contabilidade de processos"}
-   "audit_report"        {:desc "Relatório dos eventos de auditd"}
-   "time_3104"           {:desc "Ativa sincronização com systemd-timesyncd"}
-   "cryp_7902"           {:desc "Verifica expiração de certificados SSL"}
-   "fint_4350"           {:desc "Instala AIDE e inicializa integridade de arquivos"}
-   "fint_schedule"       {:desc "Agendamento de verificação do AIDE"}
-   "tool_5002"           {:desc "Verifica presença de ferramentas de automação"}
-   "file_7524"           {:desc "Corrige permissões inseguras de arquivos"}
-   "krnl_6000"           {:desc "Aplica sysctl seguros e gera backup"}
-   "krnl_6000_restore"   {:desc "Restaura sysctl a partir de backup salvo"}
-   "hrdn_7222"           {:desc "Restringe uso de compiladores por usuários"}
-   "hrdn_7222_prune"     {:desc "Remove compiladores não autorizados"}
-   "hrdn_7230"           {:desc "Instala e agenda scanner com rkhunter"}})
+  {"boot-5264"           {:desc "Análise de segurança dos serviços systemd"}
+   "krnl-5820"           {:desc "Desativa core dumps via limits.conf"}
+   "auth-9230"           {:desc "Configura hashing rounds para senhas"}
+   "auth-9262"           {:desc "Instala módulo PAM de força de senha"}
+   "auth-9282"           {:desc "Define data de expiração para contas"}
+   "auth-9286"           {:desc "Configura idade mínima/máxima de senha"}
+   "auth-9328"           {:desc "Define umask padrão mais restrito (027)"}
+   "file-6354"           {:desc "Verifica arquivos antigos em /tmp"}
+   "usb-1000"            {:desc "Desativa armazenamento USB"}
+   "usb-1000_restore"    {:desc "Reativa armazenamento USB"}
+   "strg-1846"           {:desc "Desativa suporte a FireWire"}
+   "name-4028"           {:desc "Verifica e ajusta domínio DNS do sistema"}
+   "pkgs-7312"           {:desc "Atualiza pacotes (rolling updates)"}
+   "pkgs-7320"           {:desc "Instala `arch-audit` para vulnerabilidades"}
+   "netw-3200"           {:desc "Desativa protocolos desnecessários (dccp, etc)"}
+   "unblock-net_protocols" {:desc "Reativa protocolos desativados"}
+   "ssh-7408"            {:desc "Aplica hardening na configuração do SSH"}
+   "php-2372"            {:desc "Desativa expose_php no php.ini"}
+   "php-2376"            {:desc "Desativa allow_url_fopen no php.ini"}
+   "logg-2146"           {:desc "Configura rotação de logs em /var/log"}
+   "bann-7126"           {:desc "Adiciona banner legal ao /etc/issue e issue.net"}
+   "acct-9622"           {:desc "Ativa process accounting (accton)"}
+   "acct-9626"           {:desc "Ativa coleta com sysstat (sar, iostat)"}
+   "acct-9628"           {:desc "Ativa auditd e regras básicas"}
+   "acct-report"         {:desc "Relatório de contabilidade de processos"}
+   "audit-report"        {:desc "Relatório dos eventos de auditd"}
+   "time-3104"           {:desc "Ativa sincronização com systemd-timesyncd"}
+   "cryp-7902"           {:desc "Verifica expiração de certificados SSL"}
+   "fint-4350"           {:desc "Instala AIDE e inicializa integridade de arquivos"}
+   "fint-schedule"       {:desc "Agendamento de verificação do AIDE"}
+   "tool-5002"           {:desc "Verifica presença de ferramentas de automação"}
+   "file-7524"           {:desc "Corrige permissões inseguras de arquivos"}
+   "krnl-6000"           {:desc "Aplica sysctl seguros e gera backup"}
+   "krnl-6000_restore"   {:desc "Restaura sysctl a partir de backup salvo"}
+   "hrdn-7222"           {:desc "Restringe uso de compiladores por usuários"}
+   "hrdn-7222_prune"     {:desc "Remove compiladores não autorizados"}
+   "hrdn-7230"           {:desc "Instala e agenda scanner com rkhunter"}})
 
 ;; --- Helpers de Resolução ---
 
