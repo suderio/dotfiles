@@ -20,6 +20,7 @@
                                         ;(map! :leader :desc "Eval" "e" nil)
 (map! :leader :desc "Eval Last Expression" "e l" #'eval-last-sexp)
 (map! :leader :desc "Comment Line" "#" #'comment-line)
+(map! :leader :desc "Switch to last buffer" ">" #'evil-switch-to-windows-last-buffer)
 
 (setq! global-auto-revert-mode-text "󰀘"
        global-auto-revert-non-file-buffers t)

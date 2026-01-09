@@ -68,7 +68,7 @@
 
 (defn print-help []
   (println "\n🔐 Arch Linux Hardening Script (Babashka Port)")
-  (println "Uso: bb main.clj <ação> [--dry-run] [--auto] [--check-only]\n")
+  (println "Uso: hardening <ação> [--dry-run] [--auto] [--check-only]\n")
   (println "Ações disponíveis:")
   (doseq [k (sort (keys registry))]
     (println (format "  %-25s %s" k (get-in registry [k :desc]))))
@@ -188,8 +188,6 @@
 
 ; KRNL-5820: Disable core dumps via limits.conf
 ; https://linux-audit.com/software/understand-and-configure-core-dumps-work-on-linux/
-
-
 (def limits-conf "/etc/security/limits.conf")
 
 ;; Strings exatas para escrita (mantendo a formatação bonita do original)
@@ -301,10 +299,153 @@
               (println (str "?? Erro ao escrever no arquivo: " (.getMessage e)))
               (System/exit 1))))))))
 
+; AUTH-9282: Set password expiration dates for accounts
 
+(defn get-users-without-expiry
+  "Lê o shadow e retorna uma lista de maps {:user ...} que precisam de correção."
+  []
+  ;; 'sudo getent shadow' é necessário pois usuários normais não leem os hashes/expiração
+  (let [res (shell {:out :string :continue true} "sudo getent shadow")]
 
+    (if (not= 0 (:exit res))
+      (do
+        (println "??  Erro ao ler banco de dados shadow (permissão negada?).")
+        []) ;; Retorna lista vazia em caso de erro para não quebrar o fluxo
 
+      (->> (str/split-lines (:out res))
+           ;; Parseia a linha do shadow (user:pass:last:min:max:warn:inact:expire:flag)
+           (keep (fn [line]
+                   (let [parts (str/split line #":")
+                         user  (nth parts 0 nil)
+                         pass  (nth parts 1 nil)
+                         max   (nth parts 4 nil)] ;; Campo 5 é o MAX days
+                     (when (and user pass)
+                       {:user user :pass pass :max max}))))
 
+           ;; 1. Filtro de Segurança (lógica do Perl: next if $pass =~ /^[*!]/)
+           ;; Remove contas travadas (!) ou sem login (*)
+           (remove (fn [{:keys [pass]}]
+                     (re-find #"^[\*\!]" pass)))
+
+           ;; 2. Filtro de Auditoria (lógica do Perl: expire undef, '' ou 99999)
+           (filter (fn [{:keys [max]}]
+                     (or (str/blank? max)
+                         (= "99999" max))))))))
+
+(defn auth-9282-check [_opts]
+  (println "[AUTH-9282] Verificando expiração de senhas de usuários...")
+
+  (let [vulnerable-users (get-users-without-expiry)]
+    (if (seq vulnerable-users)
+      (do
+        (println (str "? Encontrados " (count vulnerable-users) " usuários com senha sem expiração:"))
+        (doseq [u vulnerable-users]
+          (println (str "   - " (:user u))))
+        false) ;; Falha o check
+      (do
+        (println "??  Todas as contas ativas possuem expiração definida.")
+        true))))
+
+(defn auth-9282 [opts]
+  ;; Só executa se o check falhar
+  (when-not (auth-9282-check opts)
+    (let [targets (get-users-without-expiry)]
+
+      (doseq [{:keys [user]} targets]
+        (if (:dry-run opts)
+          (println (str "?? [DRY-RUN] Executaria: sudo chage -M 90 " user))
+
+          (do
+            (println (str "??  Aplicando expiração (90 dias) para: " user))
+            (let [res (shell {:continue true} "sudo chage -M 90" user)]
+              (if (= 0 (:exit res))
+                (println "   ? Sucesso.")
+                (println (str "   ?? Erro ao alterar usuário " user))))))))
+
+    (println "? Processo de expiração de senhas concluído.")))
+
+; AUTH-9286: Configure min/max password age in /etc/login.defs
+(def login-defs "/etc/login.defs")
+(def min-conf "PASS_MIN_DAYS\t1")  ; Usando \t para manter padrão comum do Linux
+(def max-conf "PASS_MAX_DAYS\t90")
+
+(defn get-login-defs-value
+  "Busca o valor atual de uma chave no arquivo (ex: PASS_MAX_DAYS -> 99999)"
+  [content key-name]
+  (let [pattern (re-pattern (str "^\\s*" key-name "\\s+(\\d+)"))]
+    (some->> (str/split-lines content)
+             (keep #(second (re-find pattern %)))
+             (first))))
+
+(defn auth-9286-check [_opts]
+  (println "[AUTH-9286] Verificando política de idade de senha em /etc/login.defs...")
+
+  (if-not (fs/exists? login-defs)
+    (do (println "??  Arquivo não encontrado.") false)
+
+    (let [content (slurp login-defs)
+          cur-min (get-login-defs-value content "PASS_MIN_DAYS")
+          cur-max (get-login-defs-value content "PASS_MAX_DAYS")]
+
+      (cond
+        (and (= cur-min "1") (= cur-max "90"))
+        (do (println "??  Política correta (Min: 1, Max: 90).") true)
+
+        :else
+        (do
+          (println (str "? Configuração incorreta ou ausente. (Atual -> Min: " (or cur-min "N/A") ", Max: " (or cur-max "N/A") ")"))
+          false)))))
+
+(defn process-login-defs
+  "Recebe linhas originais, retorna [linhas-modificadas, flags-encontradas]"
+  [lines]
+  (let [result (reduce (fn [acc line]
+                         (cond
+                           (re-find #"^\s*PASS_MIN_DAYS\s+" line)
+                           (-> acc
+                               (update :lines conj min-conf)
+                               (update :found-min (constantly true)))
+
+                           (re-find #"^\s*PASS_MAX_DAYS\s+" line)
+                           (-> acc
+                               (update :lines conj max-conf)
+                               (update :found-max (constantly true)))
+
+                           :else
+                           (update acc :lines conj line)))
+                       {:lines [] :found-min false :found-max false}
+                       lines)]
+
+    ;; Se não encontrou as chaves durante o loop, adiciona no final
+    (cond-> result
+      (not (:found-min result)) (update :lines conj min-conf)
+      (not (:found-max result)) (update :lines conj max-conf))))
+
+(defn auth-9286 [opts]
+  (when-not (auth-9286-check opts)
+    (println (str "?? Aplicando correções em " login-defs "..."))
+
+    (try
+      (let [content (slurp login-defs)
+            lines   (str/split-lines content)
+            processed (process-login-defs lines)
+            new-content (str/join "\n" (:lines processed))]
+
+        (if (:dry-run opts)
+          (do
+            (println "??  [DRY-RUN] O arquivo seria alterado para:")
+            (println "--- INICIO ---")
+            (println new-content)
+            (println "--- FIM ---"))
+
+          (do
+            ;; Escreve o novo conteúdo (com uma quebra de linha final para ser educado)
+            (spit login-defs (str new-content "\n"))
+            (println "? Política de idade de senha aplicada com sucesso."))))
+
+      (catch Exception e
+        (println (str "?? Erro ao processar arquivo: " (.getMessage e)))
+        (System/exit 1)))))
 
 
 ;; Entrypoint

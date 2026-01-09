@@ -53,6 +53,7 @@ This shows if we are inside WSL
                                         ;(map! :leader :desc "Eval" "e" nil)
 (map! :leader :desc "Eval Last Expression" "e l" #'eval-last-sexp)
 (map! :leader :desc "Comment Line" "#" #'comment-line)
+(map! :leader :desc "Switch to last buffer" ">" #'evil-switch-to-windows-last-buffer)
 #+end_src
 *** Dired
 #+begin_src emacs-lisp
