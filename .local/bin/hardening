@@ -1,8 +1,8 @@
 #!/usr/bin/env bb
 
-(require '[clojure.string :as str])
 (require '[babashka.process :refer [shell process]]
-         '[clojure.string :as str])
+          '[babashka.fs :as fs]
+          '[clojure.string :as str])
 
 ;; --- Configuração do Registro ---
 ;; Aqui unificamos a descrição e o mapeamento.
@@ -48,14 +48,16 @@
 
 ;; --- Helpers de Resolução ---
 
-(defn to-symbol [action-name suffix]
+(defn to-symbol
   "Converte 'boot_5264' em symbol 'boot-5264' (ou 'boot-5264-check')."
+  [action-name suffix]
   (let [kebab-name (str/replace action-name "_" "-")
         full-name (if suffix (str kebab-name "-" suffix) kebab-name)]
     (symbol full-name)))
 
-(defn resolve-fn [action-name type]
+(defn resolve-fn
   "Tenta encontrar a função no namespace atual."
+  [action-name type]
   (let [func-sym (to-symbol action-name (when (= type :check) "check"))
         f (resolve func-sym)]
     (if f
@@ -115,17 +117,22 @@
             ;; Fluxo padrão: Executar a correção
             (fn-fix options)))
 
-      (catch Exception e
-        (println (str "\n🔴 Erro crítico: " (.getMessage e)))
-        ;; (println (ex-data e)) ;; Descomente para debug
-        (System/exit 1))))))
+       (catch Exception e
+         (println (str "\n🔴 Erro crítico: " (.getMessage e)))
+         ;; (println (ex-data e)) ;; Descomente para debug
+         (System/exit 1))))))
 
-(defn get-running-services []
+
+; BOOT-5264: Consider hardening system services
+; Run '/usr/bin/systemd-analyze security SERVICE' for each service
+
+(defn get-running-services
   "Retorna uma lista de nomes de serviços ativos (ex: sshd.service)."
+  []
   (let [res (shell {:out :string} "systemctl list-units --type=service --state=running --no-legend --plain")
         lines (str/split-lines (:out res))]
     (->> lines
-         (map #(first (str/split % #"\s+"))) ;; Pega a primeira coluna
+         (map #(first (str/split % #"\s+")))        ;; Pega a primeira coluna
          (filter #(str/ends-with? % ".service"))))) ;; Garante que é .service
 
 (defn boot-5264-check [_opts]
@@ -177,11 +184,120 @@
   (println "👉 Ação recomendada: Revise os serviços acima com pontuação 'UNSAFE' e adicione diretivas de sandboxing (ex: ProtectSystem, PrivateTmp) nos unit files."))
 
 
+; KRNL-5820: Disable core dumps via limits.conf
+; https://linux-audit.com/software/understand-and-configure-core-dumps-work-on-linux/
 
 
+(def limits-conf "/etc/security/limits.conf")
 
+;; Strings exatas para escrita (mantendo a formatação bonita do original)
+(def line1 "* hard    core            0")
+(def line2 "root            hard    core            0")
+(def marker "# Added by krnl_5820 hardening script")
 
+(defn krnl-5820-check [_opts]
+  (println "[KRNL-5820] Verificando configuração de core dumps...")
 
+  (if-not (fs/exists? limits-conf)
+    (do
+      (println (str "⚠️  Arquivo " limits-conf " não encontrado."))
+      false)
+
+    (let [content (slurp limits-conf)]
+      ;; Usamos Regex para ser flexível com espaços em branco (\s+)
+      ;; O Perl usava string exata, o que falha se alguém editou manualmente com menos espaços.
+      (let [has-wildcard (re-find #"^\s*\*\s+hard\s+core\s+0" content)
+            has-root     (re-find #"^root\s+hard\s+core\s+0" content)]
+
+        (if (and has-wildcard has-root)
+          (do
+            (println "✔️  Core dumps já desabilitados.")
+            true)
+          (do
+            (println "❌ Core dumps habilitados ou configuração incompleta.")
+            false))))))
+
+(defn krnl-5820 [opts]
+  ;; Só executamos a correção se o check falhar
+  (when-not (krnl-5820-check opts)
+    (println (str "🔒 Desativando core dumps em " limits-conf "..."))
+
+    (if (:dry-run opts)
+      (println "ℹ️  [DRY-RUN] Adicionaria as linhas de restrição ao" limits-conf)
+
+      (try
+        ;; spit com :append true adiciona ao final do arquivo
+        (spit limits-conf (str "\n" marker "\n" line1 "\n" line2 "\n") :append true)
+        (println "✅ Core dumps desativados com sucesso.")
+
+        (catch Exception e
+          (println (str "🔴 Erro ao escrever no arquivo: " (.getMessage e)))
+          (System/exit 1))))))
+
+; AUTH-9262: Install a PAM module for password strength testing
+(def auth-pkg "pam") ;; Nota: No Arch moderno, este módulo geralmente vem no pacote 'passwdqc'
+(def pam-file "/etc/pam.d/passwd")
+(def pam-marker "# Added by auth_9262 hardening script")
+(def pam-line "password    requisite      pam_passwdqc.so")
+
+(defn package-installed?
+  "Verifica se um pacote está instalado usando pacman -Q"
+  [pkg]
+  (let [res (shell {:out :null :err :null :continue true} "pacman -Q" pkg)]
+    (= 0 (:exit res))))
+
+(defn auth-9262-check [_opts]
+  (println "[AUTH-9262] Verificando módulo PAM de força de senha...")
+
+  (let [pkg-ok (package-installed? auth-pkg)]
+    (if-not pkg-ok
+      (do
+        (println (str "? Pacote " auth-pkg " não está instalado."))
+        false)
+
+      ;; Se o pacote existe, checamos o arquivo
+      (if-not (fs/exists? pam-file)
+        (do
+          (println (str "??  Arquivo " pam-file " não encontrado."))
+          false)
+
+        (let [content (slurp pam-file)]
+          (if (str/includes? content "pam_passwdqc.so")
+            (do
+              (println (str "??  pam_passwdqc já configurado em " pam-file))
+              true)
+            (do
+              (println (str "? pam_passwdqc ausente em " pam-file))
+              false)))))))
+
+(defn auth-9262 [opts]
+  ;; O check falhou, então vamos corrigir
+  (when-not (auth-9262-check opts)
+
+    ;; 1. Instalação do Pacote
+    (when-not (package-installed? auth-pkg)
+      (if (:dry-run opts)
+        (println (str "?? [DRY-RUN] Instalaria o pacote: " auth-pkg))
+        (do
+          (println (str "?? Instalando " auth-pkg "..."))
+          (let [res (shell {:continue true} "sudo pacman -Sy --noconfirm" auth-pkg)]
+            (if (not= 0 (:exit res))
+              (throw (ex-info "Falha ao instalar pacote" {:pkg auth-pkg}))
+              (println "? Pacote instalado."))))))
+
+    ;; 2. Configuração do Arquivo
+    ;; Lemos o conteúdo novamente para garantir (caso o arquivo tenha sido criado na instalação do pacote)
+    (let [content (if (fs/exists? pam-file) (slurp pam-file) "")]
+      (when-not (str/includes? content "pam_passwdqc.so")
+        (if (:dry-run opts)
+          (println (str "?? [DRY-RUN] Adicionaria configuração ao " pam-file))
+          (try
+            (println (str "?? Escrevendo configuração em " pam-file "..."))
+            (spit pam-file (str "\n" pam-marker "\n" pam-line "\n") :append true)
+            (println "? pam_passwdqc ativado com sucesso.")
+            (catch Exception e
+              (println (str "?? Erro ao escrever no arquivo: " (.getMessage e)))
+              (System/exit 1))))))))
 
 
 
