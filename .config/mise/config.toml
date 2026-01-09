@@ -341,6 +341,12 @@ run = '''
     doom upgrade
     echo "cljfmt, tidy, paru cannot be automatically updated"
 '''
+[tasks.ansi]
+run = [
+    'curl -OL git.io/ansi',
+    'chmod 755 ansi',
+    'mv ansi "$LOCAL_DIR/bin/"'
+]
 
 [tasks.doctor]
 run = [
