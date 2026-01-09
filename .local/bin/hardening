@@ -447,9 +447,147 @@
         (System/exit 1)))))
 
 
+; AUTH-9230: Configure password hashing rounds in /etc/login.defs
+; https://linux-audit.com/authentication/configure-the-minimum-password-length-on-linux-systems/
+(def rounds-target "65536")
+(def rounds-line (str "SHA_CRYPT_ROUNDS " rounds-target))
+(def rounds-marker "# Added by auth_9230 hardening script")
 
+(defn get-current-rounds
+  "Extrai o valor atual de SHA_CRYPT_ROUNDS do conteúdo do arquivo."
+  [content]
+  (let [pattern #"^\s*SHA_CRYPT_ROUNDS\s+(\d+)"]
+    (some->> (str/split-lines content)
+             (keep #(second (re-find pattern %))) ;; Extrai o grupo de captura (\d+)
+             (first))))
 
+(defn auth-9230-check [_opts]
+  (println "[AUTH-9230] Verificando rounds de hash de senha...")
 
+  (if-not (fs/exists? login-defs)
+    (do (println "??  Arquivo não encontrado.") false)
+
+    (let [content (slurp login-defs)
+          current (get-current-rounds content)]
+
+      (if (= current rounds-target)
+        (do
+          (println (str "??  SHA_CRYPT_ROUNDS já está configurado corretamente (" rounds-target ")."))
+          true)
+        (do
+          (println (str "? Configuração incorreta. Valor atual: " (or current "Não definido") " (Esperado: " rounds-target ")"))
+          false)))))
+
+(defn process-rounds-config
+  "Substitui a linha existente ou indica que precisa adicionar no final."
+  [lines]
+  (reduce (fn [acc line]
+            (if (re-find #"^\s*SHA_CRYPT_ROUNDS\s+" line)
+              ;; Se encontrou, substitui pela linha correta e marca flag found
+              (-> acc
+                  (update :lines conj rounds-line)
+                  (assoc :found true))
+              ;; Se não, mantém a linha original
+              (update :lines conj line)))
+          {:lines [] :found false}
+          lines))
+
+(defn auth-9230 [opts]
+  (when-not (auth-9230-check opts)
+    (println (str "?? Ajustando SHA_CRYPT_ROUNDS em " login-defs "..."))
+
+    (try
+      (let [content (slurp login-defs)
+            lines   (str/split-lines content)
+            result  (process-rounds-config lines)
+
+            ;; Se não encontrou a chave no loop, adiciona o marcador e a linha no final
+            final-lines (if (:found result)
+                          (:lines result)
+                          (concat (:lines result) ["" rounds-marker rounds-line]))]
+
+        (if (:dry-run opts)
+          (do
+            (println "??  [DRY-RUN] O arquivo seria atualizado para conter:")
+            (println (str/join "\n" (filter #(str/includes? % "SHA_CRYPT_ROUNDS") final-lines))))
+
+          (do
+            (spit login-defs (str (str/join "\n" final-lines) "\n"))
+            (println "? SHA_CRYPT_ROUNDS ajustado para 65536 com sucesso."))))
+
+      (catch Exception e
+        (println (str "?? Erro ao manipular arquivo: " (.getMessage e)))
+        (System/exit 1)))))
+
+; AUTH-9328: Enforce umask 027 in /etc/login.defs
+(def target-umask "027")
+(def umask-line (str "UMASK " target-umask))
+
+(defn get-current-umask
+  "Extrai o valor atual do UMASK do conteúdo do arquivo."
+  [content]
+  (let [pattern #"^\s*UMASK\s+(\d+)"]
+    (some->> (str/split-lines content)
+             (keep #(second (re-find pattern %))) ;; Pega o valor capturado
+             (first))))
+
+(defn auth-9328-check [_opts]
+  (println "[AUTH-9328] Verificando configuração de umask padrão...")
+
+  (if-not (fs/exists? login-defs)
+    (do (println "??  Arquivo /etc/login.defs não encontrado.") false)
+
+    (let [content (slurp login-defs)
+          current (get-current-umask content)]
+
+      (if (= current target-umask)
+        (do
+          (println (str "??  UMASK já configurado como " target-umask "."))
+          true)
+        (do
+          (println (str "? Configuração incorreta. Valor atual: " (or current "Não definido") " (Esperado: " target-umask ")"))
+          false)))))
+
+(defn process-umask-config
+  "Processa as linhas substituindo UMASK se existir."
+  [lines]
+  (reduce (fn [acc line]
+            (if (re-find #"^\s*UMASK\s+" line)
+              ;; Se encontrar, substitui e marca flag
+              (-> acc
+                  (update :lines conj umask-line)
+                  (assoc :found true))
+              ;; Se não, mantém a linha
+              (update :lines conj line)))
+          {:lines [] :found false}
+          lines))
+
+(defn auth-9328 [opts]
+  (when-not (auth-9328-check opts)
+    (println (str "?? Ajustando UMASK em " login-defs "..."))
+
+    (try
+      (let [content (slurp login-defs)
+            lines   (str/split-lines content)
+            result  (process-umask-config lines)
+
+            ;; Se não encontrou no loop, adiciona ao final
+            final-lines (if (:found result)
+                          (:lines result)
+                          (conj (:lines result) umask-line))]
+
+        (if (:dry-run opts)
+          (do
+            (println "??  [DRY-RUN] O arquivo seria atualizado para conter:")
+            (println (str/join "\n" (filter #(str/includes? % "UMASK") final-lines))))
+
+          (do
+            (spit login-defs (str (str/join "\n" final-lines) "\n"))
+            (println "? umask padrão ajustado para 027 com sucesso."))))
+
+      (catch Exception e
+        (println (str "?? Erro ao manipular arquivo: " (.getMessage e)))
+        (System/exit 1)))))
 
 
 
