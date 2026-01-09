@@ -15,6 +15,55 @@
 
 (def home (str (fs/home)))
 
+;; --- 1. Criando nossa própria "Lib" Git (Wrapper) ---
+
+(defn git-cmd [opts & args]
+  (let [base-cmd ["git"]
+        base-cmd (if (:git-dir opts)
+                   (concat base-cmd ["--git-dir" (:git-dir opts)])
+                   base-cmd)
+        base-cmd (if (:work-tree opts)
+                   (concat base-cmd ["--work-tree" (:work-tree opts)])
+                   base-cmd)
+        full-cmd (concat base-cmd args)
+
+        proc-opts (merge {:out :string :err :string :continue true}
+                         (select-keys opts [:dir]))]
+
+    (let [res (apply shell proc-opts full-cmd)]
+
+      (when (not (str/blank? (:err res)))
+        (println (str "⚠️  Git output: " (str/trim (:err res)))))
+
+      (when (and (not (:continue opts))
+                 (not= 0 (:exit res)))
+        (throw (ex-info "Erro Crítico no Git" {:cmd full-cmd :error (:err res)})))
+
+      res)))
+
+(defmulti git (fn [action & _] action))
+
+(defmethod git :pull [_ opts]
+  (println "⬇️ Git Pull...")
+  (git-cmd opts "pull"))
+
+(defmethod git :push [_ opts]
+  (println "⬆️ Git Push...")
+  (git-cmd opts "push"))
+
+(defmethod git :add [_ opts files]
+  (when (seq files)
+    (println (str "➕ Adicionando: " (str/join ", " files)))
+    (apply git-cmd opts "add" files)))
+
+(defmethod git :commit [_ opts msg]
+  (println "💾 Git Commit...")
+  ;; :continue true pois o commit falha se nada mudou
+  (git-cmd (assoc opts :continue true) "commit" "-m" msg))
+
+(defmethod git :status-porcelain [_ opts]
+  (let [res (git-cmd opts "status" "--porcelain")]
+    (:out res)))
 ;; --- Comandos Específicos ---
 
 (defn task-org []
@@ -36,7 +85,7 @@
 (defn task-doom []
   (log "Atualizando Doom Emacs...")
   ;; Assume que o binário doom está no PATH. Se não estiver, use o caminho absoluto.
-  (shell "doom upgrade"))
+  (shell "doom sync -u --gc --rebuild --aot"))
 
 (defn get-distro []
   "Tenta detectar se é Arch ou Debian based lendo /etc/os-release"
@@ -59,37 +108,33 @@
     :unknown (err "Não foi possível identificar se é Arch ou Debian. Atualização manual necessária.")))
 
 (defn task-config []
-  (log "Sincronizando Dotfiles...")
-  (let [git-args ["--git-dir" (str home "/.local/dotfiles/")
-                  "--work-tree" home]
-        run-git (fn [& args] (apply shell "git" (concat git-args args)))]
+  (println "\n🛠️  Sincronizando Dotfiles...")
 
-    ;; 1. Pull
-    (apply run-git ["pull"])
+  (let [opts {:git-dir (str home "/.local/dotfiles/")
+              :work-tree home}]
 
-    ;; 2. Identificar arquivos alterados (M) ou deletados (D)
-    (let [status-result (apply process "git" (concat git-args ["status" "--porcelain"]) {:out :string})
-          output (:out status-result)]
+    ;; ALTERADO: Adicionamos :continue true.
+    ;; Se o pull falhar (conflito), o script NÃO para.
+    ;; Ele vai tentar rodar o status e salvar suas mudanças locais mesmo assim.
+    (println "⬇️ Tentando atualizar (git pull)...")
+    (let [pull-res (git :pull (assoc opts :continue true))]
+      (when (not= 0 (:exit pull-res))
+        (println "⚠️ Falha no pull (provavelmente conflitos locais). Continuando para o commit...")))
 
-      (if (str/blank? output)
-        (println "Nenhuma alteração nos dotfiles.")
-        (doseq [line (str/split-lines output)]
-          ;; O formato do porcelain é "XY ARQUIVO".
-          ;; O trim remove espaços iniciais, depois splitamos no espaço.
-          (let [parts (str/split (str/trim line) #"\s+" 2)
-                code  (first parts)
-                file  (second parts)]
+    (let [status-out (git :status-porcelain opts)
+          files-to-add (->> (str/split-lines status-out)
+                            (map str/trim)
+                            (filter #(re-find #"^[MD]" %)) ;; Modified ou Deleted
+                            (map #(second (str/split % #"\s+" 2))))]
 
-            ;; Verifica se contém M (Modified) ou D (Deleted)
-            (when (or (str/includes? code "M")
-                      (str/includes? code "D"))
-              (println (str "Adicionando: " file))
-              (apply run-git ["add" file]))))))
+      (if (seq files-to-add)
+        (do
+          (git :add opts files-to-add)
+          (git :commit opts "Update dotfiles via script")
+          (git :push opts))
+        (println "✨ Nada para commitar nos dotfiles."))))
 
-    ;; 3. Commit e Push (apenas se houver mudanças no stage)
-    ;; Usamos continue true pois o commit falha se não houver nada no stage
-    (apply shell "git" (concat git-args ["commit" "-m" "Update dotfiles via script" {:continue true}]))
-    (apply run-git ["push"])))
+    (println "✅ Sincronização finalizada."))
 
 (defn task-all []
   (log "Executando TODAS as tarefas...")
@@ -101,7 +146,7 @@
   (task-org))
 
 (defn print-help []
-  (println "Uso: bb manage.clj [comando]")
+  (println "Uso: synconfig [comando]")
   (println "Comandos disponíveis: org, mise, doom, os, config, all"))
 
 ;; --- Main ---

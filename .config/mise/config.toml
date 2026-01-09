@@ -135,6 +135,7 @@ tinymist = "latest"
 babashka = "latest"
 youtube-dl = "latest"
 "go:github.com/chrishrb/go-grip" = "latest"
+jwt = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
@@ -171,6 +172,7 @@ run = '''
 '''
 
 [tasks."base:debian"]
+# languagetool is missing
 run = '''
     sudo apt update
     sudo apt upgrade -y
@@ -179,9 +181,8 @@ run = '''
          libreadline-dev unzip zip libzstd-dev libxml2-dev libssl-dev \
          libsqlite3-dev libcurl4-openssl-dev libgd-dev libonig-dev libzip-dev \
          zlib1g-dev libffi-dev libyaml-dev xclip xdotool libxml2-utils maim wget \
-         languagetool mpv gnuplot
+         mpv gnuplot
 '''
-
 [tasks."emacs:arch"]
 depends_post = ['emacs:doom']
 run = 'sudo pacman -S emacs-wayland'

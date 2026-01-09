@@ -167,7 +167,10 @@ keybinds clear-defaults=true {
         bind "Alt n" { NewPane; }
         bind "Alt o" { MoveTab "right"; }
         bind "Alt p" { TogglePaneInGroup; }
+        bind "Alt s" { SwitchToMode "scroll"; }
         bind "Alt Shift p" { ToggleGroupMarking; }
+        bind "PageDown" { PageScrollDown; }
+        bind "PageUp" { PageScrollUp; }
     }
     shared_except "locked" "renametab" "renamepane" {
         bind "Ctrl g" { SwitchToMode "locked"; }
