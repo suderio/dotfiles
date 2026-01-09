@@ -1,0 +1,194 @@
+#!/usr/bin/env bb
+
+(require '[clojure.string :as str])
+(require '[babashka.process :refer [shell process]]
+         '[clojure.string :as str])
+
+;; --- Configuração do Registro ---
+;; Aqui unificamos a descrição e o mapeamento.
+;; As funções (:fix e :check) serão resolvidas dinamicamente baseadas na chave.
+(def registry
+  {"boot_5264"           {:desc "Análise de segurança dos serviços systemd"}
+   "krnl_5820"           {:desc "Desativa core dumps via limits.conf"}
+   "auth_9230"           {:desc "Configura hashing rounds para senhas"}
+   "auth_9262"           {:desc "Instala módulo PAM de força de senha"}
+   "auth_9282"           {:desc "Define data de expiração para contas"}
+   "auth_9286"           {:desc "Configura idade mínima/máxima de senha"}
+   "auth_9328"           {:desc "Define umask padrão mais restrito (027)"}
+   "file_6354"           {:desc "Verifica arquivos antigos em /tmp"}
+   "usb_1000"            {:desc "Desativa armazenamento USB"}
+   "usb_1000_restore"    {:desc "Reativa armazenamento USB"}
+   "strg_1846"           {:desc "Desativa suporte a FireWire"}
+   "name_4028"           {:desc "Verifica e ajusta domínio DNS do sistema"}
+   "pkgs_7312"           {:desc "Atualiza pacotes (rolling updates)"}
+   "pkgs_7320"           {:desc "Instala `arch-audit` para vulnerabilidades"}
+   "netw_3200"           {:desc "Desativa protocolos desnecessários (dccp, etc)"}
+   "unblock_net_protocols" {:desc "Reativa protocolos desativados"}
+   "ssh_7408"            {:desc "Aplica hardening na configuração do SSH"}
+   "php_2372"            {:desc "Desativa expose_php no php.ini"}
+   "php_2376"            {:desc "Desativa allow_url_fopen no php.ini"}
+   "logg_2146"           {:desc "Configura rotação de logs em /var/log"}
+   "bann_7126"           {:desc "Adiciona banner legal ao /etc/issue e issue.net"}
+   "acct_9622"           {:desc "Ativa process accounting (accton)"}
+   "acct_9626"           {:desc "Ativa coleta com sysstat (sar, iostat)"}
+   "acct_9628"           {:desc "Ativa auditd e regras básicas"}
+   "acct_report"         {:desc "Relatório de contabilidade de processos"}
+   "audit_report"        {:desc "Relatório dos eventos de auditd"}
+   "time_3104"           {:desc "Ativa sincronização com systemd-timesyncd"}
+   "cryp_7902"           {:desc "Verifica expiração de certificados SSL"}
+   "fint_4350"           {:desc "Instala AIDE e inicializa integridade de arquivos"}
+   "fint_schedule"       {:desc "Agendamento de verificação do AIDE"}
+   "tool_5002"           {:desc "Verifica presença de ferramentas de automação"}
+   "file_7524"           {:desc "Corrige permissões inseguras de arquivos"}
+   "krnl_6000"           {:desc "Aplica sysctl seguros e gera backup"}
+   "krnl_6000_restore"   {:desc "Restaura sysctl a partir de backup salvo"}
+   "hrdn_7222"           {:desc "Restringe uso de compiladores por usuários"}
+   "hrdn_7222_prune"     {:desc "Remove compiladores não autorizados"}
+   "hrdn_7230"           {:desc "Instala e agenda scanner com rkhunter"}})
+
+;; --- Helpers de Resolução ---
+
+(defn to-symbol [action-name suffix]
+  "Converte 'boot_5264' em symbol 'boot-5264' (ou 'boot-5264-check')."
+  (let [kebab-name (str/replace action-name "_" "-")
+        full-name (if suffix (str kebab-name "-" suffix) kebab-name)]
+    (symbol full-name)))
+
+(defn resolve-fn [action-name type]
+  "Tenta encontrar a função no namespace atual."
+  (let [func-sym (to-symbol action-name (when (= type :check) "check"))
+        f (resolve func-sym)]
+    (if f
+      f
+      (throw (ex-info (str "Função não implementada: " func-sym) {:fn func-sym})))))
+
+(defn print-help []
+  (println "\n🔐 Arch Linux Hardening Script (Babashka Port)")
+  (println "Uso: bb main.clj <ação> [--dry-run] [--auto] [--check-only]\n")
+  (println "Ações disponíveis:")
+  (doseq [k (sort (keys registry))]
+    (println (format "  %-25s %s" k (get-in registry [k :desc]))))
+  (println "\nUse --dry-run para simular e --auto para execução sem perguntas.")
+  (System/exit 0))
+
+;; --- Função Main ---
+
+(defn -main [& args]
+  (let [args-set (set args)
+        ;; Identifica a ação (o primeiro argumento que não começa com --)
+        action (first (remove #(str/starts-with? % "--") args))
+
+        options {:dry-run    (contains? args-set "--dry-run")
+                 :auto       (contains? args-set "--auto")
+                 :check-only (contains? args-set "--check-only")}]
+
+    (cond
+      (or (nil? action)
+          (contains? args-set "--help")
+          (contains? args-set "-h"))
+      (print-help)
+
+      (not (contains? registry action))
+      (do
+        (println (str "❌ Ação desconhecida: " action))
+        (println "Use --help para listar as ações disponíveis.")
+        (System/exit 1))
+
+      :else
+      (try
+        (println (str "🚀 Iniciando módulo: " action))
+
+        ;; Lógica da nova arquitetura:
+        ;; 1. Resolvemos as funções baseadas no nome da string (snake -> kebab)
+        (let [fn-fix   (resolve-fn action :fix)
+              fn-check (resolve-fn action :check)]
+
+          ;; Se o usuário pediu apenas check, ou se estamos rodando o fix normal
+          ;; Aqui você pode decidir a lógica. Por exemplo:
+          ;; O padrão do script Perl era rodar a correção.
+
+          (if (:check-only options)
+            (if (fn-check options)
+              (println "✅ Verificação OK")
+              (println "⚠️  Verificação FALHOU (Ação necessária)"))
+
+            ;; Fluxo padrão: Executar a correção
+            (fn-fix options)))
+
+      (catch Exception e
+        (println (str "\n🔴 Erro crítico: " (.getMessage e)))
+        ;; (println (ex-data e)) ;; Descomente para debug
+        (System/exit 1))))))
+
+(defn get-running-services []
+  "Retorna uma lista de nomes de serviços ativos (ex: sshd.service)."
+  (let [res (shell {:out :string} "systemctl list-units --type=service --state=running --no-legend --plain")
+        lines (str/split-lines (:out res))]
+    (->> lines
+         (map #(first (str/split % #"\s+"))) ;; Pega a primeira coluna
+         (filter #(str/ends-with? % ".service"))))) ;; Garante que é .service
+
+(defn boot-5264-check [_opts]
+  (println "🔍 [BOOT-5264] Verificando pontuação de segurança global...")
+
+  ;; systemd-analyze security sem argumentos lista todos os serviços com score
+  ;; Formato: UNIT EXPOSURE PREDICATE HAPPY
+  (let [res (shell {:out :string :continue true} "systemd-analyze security --no-pager")
+        lines (drop 1 (str/split-lines (:out res))) ;; Remove cabeçalho
+        threshold 5.0] ;; Defina seu limiar de tolerância aqui
+
+    (if (not= 0 (:exit res))
+      (do
+        (println "⚠️  systemd-analyze não encontrado ou falhou.")
+        false) ;; Falha se não conseguir rodar
+
+      (let [risky-services (->> lines
+                                (map (fn [line]
+                                       (let [parts (str/split (str/trim line) #"\s+")
+                                             unit  (first parts)
+                                             score (try (Double/parseDouble (nth parts 1))
+                                                        (catch Exception _ 0.0))]
+                                         {:unit unit :score score})))
+                                (filter #(> (:score %) threshold)))]
+
+        (if (seq risky-services)
+          (do
+            (println (str "❌ Encontrados " (count risky-services) " serviços com exposição > " threshold))
+            ;; Retorna false para indicar que a verificação falhou e o 'fix' deve rodar
+            false)
+          (do
+            (println "✅ Todos os serviços estão dentro dos limites de segurança.")
+            true))))))
+
+(defn boot-5264 [opts]
+  (println "\n[BOOT-5264] Iniciando análise detalhada (Hardening System Services)...")
+
+  (let [services (get-running-services)]
+    (println (str "ℹ️  Serviços identificados: " (count services)))
+
+    (doseq [service services]
+      (println (str "\n🔍 Analisando segurança detalhada de: " service))
+      ;; Aqui replicamos o comportamento do Perl: rodar a análise detalhada por serviço
+      ;; Usamos :continue true pois alguns serviços podem dar erro de permissão ou não suportar análise
+      (let [res (shell {:out :string :continue true} "systemd-analyze" "security" service)]
+        (println (:out res)))))
+
+  (println "\n[BOOT-5264] Análise concluída.")
+  (println "👉 Ação recomendada: Revise os serviços acima com pontuação 'UNSAFE' e adicione diretivas de sandboxing (ex: ProtectSystem, PrivateTmp) nos unit files."))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;; Entrypoint
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))

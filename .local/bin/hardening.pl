@@ -4,27 +4,6 @@ use warnings;
 
 # Reference: https://cisofy.com/lynis/controls/<CODE-NNNN>/
 
-# BOOT-5264: Consider hardening system services
-# Run '/usr/bin/systemd-analyze security SERVICE' for each service
-
-sub boot_5264 {
-    print "[BOOT-5264] Verificando o nível de segurança dos serviços systemd...\n";
-
-    # Lista todos os serviços ativos
-    my @services = `systemctl list-units --type=service --state=running --no-legend`;
-    chomp @services;
-
-    foreach my $line (@services) {
-        my ($service) = split /\s+/, $line;
-        next unless defined $service && $service =~ /\.service\$/;
-
-        print "\n🔍 Analisando segurança de $service:\n";
-        my $output = `systemd-analyze security $service 2>&1`;
-        print "$output\n";
-    }
-
-    print "\n[BOOT-5264] Análise concluída. Revise os serviços com baixa pontuação e ajuste seus arquivos unitários.\n";
-}
 
 # KRNL-5820: Disable core dumps via limits.conf
 # https://linux-audit.com/software/understand-and-configure-core-dumps-work-on-linux/
