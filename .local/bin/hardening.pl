@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 
-# Reference: https://cisofy.com/lynis/controls/<CODE-NNNN>/
 
 
 
