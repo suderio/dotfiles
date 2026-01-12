@@ -127,7 +127,6 @@ websocat = "latest"
 php = "8.5.0"
 "go:github.com/go-delve/delve/cmd/dlv" = "latest"
 gitleaks = "latest"
-github-markdown-toc = "latest"
 usql = "latest"
 "go:github.com/pranshuparmar/witr/cmd/witr" = "latest"
 tinymist = "latest"
@@ -136,6 +135,8 @@ babashka = "latest"
 youtube-dl = "latest"
 "go:github.com/chrishrb/go-grip" = "latest"
 jwt = "latest"
+typstyle = "latest"
+"pipx:pylatexenc" = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
@@ -159,30 +160,6 @@ run = [
   'rm -rf "$TMP_DIR"/.[!.]*'
 ]
 
-[tasks."base:arch"]
-depends = ["clean"]
-dir = '{{env.TMP_DIR}}'
-run = '''
-    sudo pacman -Syu
-    sudo pacman -S base-devel git less man-db xclip oniguruma openssh \
-          pacman-contrib plocate postgresql-libs nasm re2c zip unzip libxml2 \
-          libyaml libzip maim xorg-xwininfo xdotool wget languagetool mpv gnuplot
-    git clone https://aur.archlinux.org/paru.git $TMP_DIR
-    makepkg -si
-'''
-
-[tasks."base:debian"]
-# languagetool is missing
-run = '''
-    sudo apt update
-    sudo apt upgrade -y
-    sudo apt install -y openssh-server build-essential autoconf automake flex \
-         bison debian-keyring gettext gnu-standards re2c pkg-config \
-         libreadline-dev unzip zip libzstd-dev libxml2-dev libssl-dev \
-         libsqlite3-dev libcurl4-openssl-dev libgd-dev libonig-dev libzip-dev \
-         zlib1g-dev libffi-dev libyaml-dev xclip xdotool libxml2-utils maim wget \
-         mpv gnuplot
-'''
 [tasks."emacs:arch"]
 depends_post = ['emacs:doom']
 run = 'sudo pacman -S emacs-wayland'
