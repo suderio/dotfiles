@@ -1,65 +1,156 @@
-* Arch Linux Hardening - Script de Segurança Automatizado
-:PROPERTIES:
-:CUSTOM_ID: arch-linux-hardening---script-de-segurança-automatizado
-:END:
-Este script Perl aplica verificações e correções de segurança baseadas
-em recomendações do *Lynis*. Ele realiza hardening de kernel,
-autenticação, arquivos, serviços e protocolos.
+#+TITLE: Documentação de Hardening do Sistema (Arch Linux / Babashka)
+#+AUTHOR: Paulo Suderio
+#+DATE: 2026-01-09
+#+OPTIONS: toc:2 num:nil
 
---------------
+* Visão Geral
+Este documento detalha os controles de segurança implementados no script de hardening baseado em Babashka. O objetivo é reduzir a superfície de ataque, garantir conformidade com boas práticas (CIS/NIST) e aumentar a auditabilidade do sistema.
 
-** 🔧 Uso
-:PROPERTIES:
-:CUSTOM_ID: uso
-:END:
-#+begin_src sh
-perl hardening.pl <ação> [--dry-run] [--auto]
-#+end_src
+** Modos de Uso
+O script suporta os seguintes argumentos de linha de comando para controlar a execução das funções listadas abaixo:
 
-- --dry-run → Mostra o que seria feito, mas não altera o sistema
+- =--dry-run=: *Modo Simulação*. Não faz alterações no sistema. Apenas imprime o que seria feito (arquivos editados, comandos executados).
+- =--auto=: *Modo Automático*. Tenta aplicar correções sem solicitar confirmação interativa do usuário (útil para CI/CD ou provisionamento).
+- =--port=XXXX=: Específico para o módulo SSH, define a porta a ser configurada.
 
-- --auto → Executa sem interação do usuário
+Exemplo de execução:
+#+BEGIN_SRC bash
+hardening --dry-run
+hardening --auto
+#+END_SRC
 
-** 📜 Ações disponíveis
-:PROPERTIES:
-:CUSTOM_ID: ações-disponíveis
-:END:
-| Ação                  | Descrição                                                           |
-|-----------------------+---------------------------------------------------------------------|
-| boot_5264             | Verifica segurança dos serviços systemd ativos                      |
-| krnl_5820             | Desativa core dumps pelo /etc/security/limits.conf                  |
-| auth_9230             | Configura rounds de hashing em /etc/login.defs                      |
-| auth_9262             | Instala módulo PAM de força de senha (pam_passwdqc)                 |
-| auth_9282             | Define datas de expiração para senhas                               |
-| auth_9286             | Define idade mínima/máxima de senha em /etc/login.defs              |
-| auth_9328             | Ajusta umask para 027 em /etc/login.defs                            |
-| file_6354             | Lista arquivos com mais de 90 dias em /tmp                          |
-| usb_1000              | Desabilita driver de armazenamento USB (usb-storage)                |
-| usb_1000_restore      | Reverte desativação do USB                                          |
-| strg_1846             | Desabilita suporte a FireWire                                       |
-| name_4028             | Verifica e define domínio DNS do sistema                            |
-| pkgs_7312             | Atualiza todos os pacotes do sistema (pacman -Syu)                  |
-| pkgs_7320             | Instala arch-audit para detectar pacotes vulneráveis                |
-| netw_3200             | Desativa protocolos desnecessários: dccp, sctp, rds, tipc           |
-| unblock_net_protocols | Reverte bloqueio de protocolos de rede                              |
-| ssh_7408              | Hardening completo de sshd_config                                   |
-| php_2372              | Desativa expose_php no php.ini                                      |
-| php_2376              | Desativa allow_url_fopen no php.ini                                 |
-| logg_2146             | Configura rotação de logs para arquivos não gerenciados             |
-| bann_7126             | Adiciona banner legal em /etc/issue e /etc/issue.net                |
-| acct_9622             | Ativa accton para rastrear execuções                                |
-| acct_report           | Relatório de contabilidade de processos (sa, lastcomm)              |
-| acct_9626             | Ativa coleta de estatísticas com sysstat (sar, etc)                 |
-| acct_9628             | Ativa auditd com regras básicas (/etc/audit/rules.d)                |
-| audit_report          | Relatório do auditd com análise do /var/log/audit/audit.log         |
-| time_3104             | Ativa sincronização de tempo com systemd-timesyncd                  |
-| cryp_7902             | Verifica expiração de certificados (/.crt, /.pem, etc)              |
-| fint_4350             | Instala e inicializa AIDE                                           |
-| fint_schedule         | Agenda verificações do AIDE via cron ou systemd timer               |
-| tool_5002             | Verifica presença de ferramentas como Ansible, Puppet, etc.         |
-| file_7524             | Verifica permissões inseguras e corrige com chmod                   |
-| krnl_6000             | Aplica sysctl seguro e salva backup                                 |
-| krnl_6000_restore     | Restaura sysctl anterior de backup                                  |
-| hrdn_7222             | Verifica permissões e donos de compiladores                         |
-| hrdn_7222_prune       | Remove compiladores órfãos ou fora da whitelist                     |
-| hrdn_7230             | Instala rkhunter, executa verificação inicial e agenda escaneamento |
+* Kernel e Sistema de Arquivos
+
+** KRNL-5820: Desativar Core Dumps
+- *Função:* =krnl_5820=
+- *Ação:* Configura =limits.conf= para definir o limite de core dumps como 0.
+- *Motivação de Segurança:* Quando um programa falha, ele pode despejar o conteúdo da memória RAM no disco (core dump). Essa memória pode conter dados sensíveis, como chaves de criptografia, senhas em texto claro ou dados de usuários, que ficariam acessíveis no disco.
+
+** KRNL-6000: Hardening de Parâmetros Sysctl
+- *Função:* =krnl_6000=
+- *Ação:* Ajusta parâmetros de rede e kernel em =/etc/sysctl.d/=. Cria backup antes de aplicar.
+- *Motivação de Segurança:*
+  - =kernel.kptr_restrict=: Esconde ponteiros do kernel para dificultar exploits.
+  - =net.ipv4.conf.*.accept_redirects= / =source_route=: Previne ataques de "Man-in-the-Middle" e redirecionamento de tráfego malicioso.
+  - =kernel.randomize_va_space=: Ativa ASLR completo, dificultando ataques de buffer overflow.
+
+** USB-1000: Bloquear Armazenamento USB
+- *Função:* =usb_1000=
+- *Ação:* Adiciona blacklist ao módulo =usb-storage=.
+- *Motivação de Segurança:* Impede a exfiltração de dados via pendrives e reduz o risco de infecção por malwares que se propagam via USB (BadUSB).
+
+** STRG-1846: Bloquear FireWire
+- *Função:* =strg_1846=
+- *Ação:* Adiciona blacklist aos módulos FireWire (=firewire-core=, etc.).
+- *Motivação de Segurança:* A interface FireWire permite acesso direto à memória (DMA). Um atacante com acesso físico pode ler/escrever na RAM do sistema ignorando as proteções do SO.
+
+** FILE-6354: Limpeza de Arquivos Temporários Antigos
+- *Função:* =file_6354=
+- *Ação:* Remove arquivos em =/tmp= com mais de 90 dias.
+- *Motivação de Segurança:* Reduz o acúmulo de "lixo" que pode conter dados residuais de sessões antigas, além de mitigar riscos de DoS por enchimento de disco.
+
+** FILE-7524: Permissões de Arquivos Perigosas
+- *Função:* =file_7524=
+- *Ação:* Escaneia diretórios críticos (=/etc=, =/home=, etc.) por arquivos com permissão 777 (escrita global).
+- *Motivação de Segurança:* Permissões 777 permitem que qualquer usuário (ou malware rodando com privilégios baixos) modifique arquivos críticos, levando a escalada de privilégio ou persistência no sistema.
+
+* Autenticação e Usuários
+
+** AUTH-9262: Módulo PAM de Força de Senha
+- *Função:* =auth_9262=
+- *Ação:* Instala/Configura =pam_passwdqc= (ou similar) no =/etc/pam.d/passwd=.
+- *Motivação de Segurança:* Garante que os usuários não definam senhas fracas (curtas, baseadas em dicionário), que são triviais de quebrar.
+
+** AUTH-9282: Expiração de Senhas
+- *Função:* =auth_9282=
+- *Ação:* Identifica usuários sem data de expiração de senha e define para 90 dias.
+- *Motivação de Segurança:* Limita a janela de tempo que uma senha comprometida pode ser usada. Força a rotação regular de credenciais.
+
+** AUTH-9286 / AUTH-9230 / AUTH-9328: Configurações do login.defs
+- *Função:* =auth_9286= (Idade Min/Max), =auth_9230= (Rounds), =auth_9328= (Umask).
+- *Ação:* Edita =/etc/login.defs=.
+- *Motivação de Segurança:*
+  - *Idade Mínima:* Impede que o usuário mude a senha e volte imediatamente para a antiga.
+  - *Rounds (SHA_CRYPT):* Aumenta o custo computacional do hash (65536 rounds), tornando ataques de força bruta offline impraticáveis.
+  - *Umask 027:* Garante que novos arquivos criados não sejam legíveis por "outros" usuários por padrão.
+
+* Rede e Serviços
+
+** NETW-3200: Protocolos de Rede Obsoletos
+- *Função:* =netw_3200=
+- *Ação:* Desabilita =dccp=, =sctp=, =rds=, =tipc= usando =install /bin/true=.
+- *Motivação de Segurança:* Estes protocolos são raramente usados em servidores web/app comuns e possuem histórico de vulnerabilidades no kernel. Desativá-los reduz a superfície de ataque.
+
+** SSH-7408: Hardening do SSH
+- *Função:* =ssh_7408=
+- *Ação:* Configura =sshd_config= (Porta, Protocolo, RootLogin, X11Forwarding, etc.).
+- *Motivação de Segurança:*
+  - *PermitRootLogin no:* Obriga o atacante a adivinhar dois usuários (login e su/sudo).
+  - *X11Forwarding no:* Previne ataques onde um servidor malicioso controla a interface gráfica do cliente.
+  - *MaxAuthTries:* Mitiga ataques de força bruta online.
+
+** NAME-4028: Configuração de FQDN
+- *Função:* =name_4028=
+- *Ação:* Garante que hostname e FQDN estejam consistentes em =/etc/hosts=.
+- *Motivação de Segurança:* Evita problemas de spoofing de DNS local e garante que serviços de log e autenticação (Kerberos, certificados SSL) funcionem corretamente.
+
+** TIME-3104: Sincronização NTP
+- *Função:* =time_3104=
+- *Ação:* Ativa =systemd-timesyncd=.
+- *Motivação de Segurança:* Essencial para correlação de logs. Se o relógio estiver errado, é impossível reconstruir a linha do tempo de um incidente de segurança (forense).
+
+** PHP-2372 / PHP-2376: Hardening do PHP
+- *Função:* =php_2372= (Expose PHP), =php_2376= (URL Fopen).
+- *Ação:* Edita =php.ini=.
+- *Motivação de Segurança:*
+  - *expose_php = Off:* Evita vazar a versão exata do PHP, dificultando a busca por exploits específicos.
+  - *allow_url_fopen = Off:* Previne ataques de RFI (Remote File Inclusion), onde o atacante faz o PHP baixar e executar um script malicioso de outro site.
+
+** CRYP-7902: Monitoramento de Certificados SSL
+- *Função:* =cryp_7902=
+- *Ação:* Verifica data de validade de certificados locais.
+- *Motivação de Segurança:* Certificados expirados causam interrupção de serviço (Disponibilidade) e avisos de segurança que treinam os usuários a ignorar alertas reais.
+
+* Integridade e Auditoria
+
+** PKGS-7312 / PKGS-7320: Gestão de Pacotes
+- *Função:* =pkgs_7312= (Updates), =pkgs_7320= (Arch Audit).
+- *Ação:* Verifica/Aplica updates e roda =arch-audit= para achar CVEs.
+- *Motivação de Segurança:* Sistemas desatualizados são o vetor de ataque #1. O =arch-audit= cruza pacotes instalados com o banco de dados de vulnerabilidades do Arch Linux.
+
+** FINT-4350: AIDE (Integridade de Arquivos)
+- *Função:* =fint_4350=
+- *Ação:* Instala AIDE, gera banco de dados inicial.
+- *Motivação de Segurança:* Detecta alterações não autorizadas em binários e configs do sistema. É um "tripwire" que avisa se um rootkit alterou o =/bin/ls= ou =/etc/passwd=.
+
+** HRDN-7230: Detecção de Rootkits
+- *Função:* =hrdn_7230=
+- *Ação:* Instala e roda =rkhunter=. Configura cron diário.
+- *Motivação de Segurança:* Detecta assinaturas conhecidas de rootkits, backdoors e alterações suspeitas em arquivos de sistema.
+
+** ACCT-9622 / ACCT-9626 / ACCT-9628: Auditoria e Contabilidade
+- *Função:* =acct_9622= (Process Acct), =acct_9626= (Sysstat), =acct_9628= (Auditd).
+- *Ação:* Ativa logs de execução de comandos e monitoramento de sistema.
+- *Motivação de Segurança:*
+  - *Auditd:* Fornece logs detalhados (quem, o quê, quando) essenciais para conformidade (PCI-DSS, GDPR) e investigação forense.
+  - *Process Accounting:* Registra todo comando executado por qualquer usuário.
+
+** LOGG-2146: Rotação de Logs
+- *Função:* =logg_2146=
+- *Ação:* Garante que todos os arquivos em =/var/log= tenham rotação.
+- *Motivação de Segurança:* Previne Negação de Serviço (DoS) causada por disco cheio devido a logs de ataque volumosos.
+
+** HRDN-7222: Restrição de Compiladores
+- *Função:* =hrdn_7222=
+- *Ação:* Restringe permissões de execução de =gcc=, =javac=, etc.
+- *Motivação de Segurança:* Dificulta a técnica "Living off the Land", onde o atacante sobe o código fonte de um exploit e o compila na própria máquina da vítima para contornar assinaturas de antivírus.
+
+** TOOL-5002: Ferramentas de Automação
+- *Função:* =tool_5002=
+- *Ação:* Verifica presença de Ansible/Puppet.
+- *Motivação de Segurança:* Garante que a infraestrutura como código (IaC) possa ser usada para remediar configurações inseguras em escala.
+
+** BANN-7126: Banner Legal
+- *Função:* =bann_7126=
+- *Ação:* Configura =/etc/issue=.
+- *Motivação de Segurança:* Aspecto jurídico. Em muitos países, processar um invasor é difícil se o sistema não exibir um aviso explícito de que o acesso é monitorado e restrito.

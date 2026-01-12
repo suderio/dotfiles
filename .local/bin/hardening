@@ -1,14 +1,14 @@
 #!/usr/bin/env bb
 
-(require '[babashka.process :refer [shell process]]
-          '[babashka.fs :as fs]
-          '[clojure.string :as str])
+(require '[babashka.process :refer [shell]]
+         '[babashka.fs :as fs]
+         '[clojure.string :as str]
+         '[clojure.java.io]
+         '[clojure.set])
 (import '[java.time ZonedDateTime]
         '[java.time.format DateTimeFormatter]
-        '[java.time.temporal ChronoUnit]
         '[java.util Locale]
         '[java.nio.file Files LinkOption]
-        '[java.nio.file.attribute PosixFilePermissions]
         '[java.time LocalDateTime]
         '[java.nio.file Files LinkOption])
 ;;
@@ -177,7 +177,7 @@
             (println "✅ Todos os serviços estão dentro dos limites de segurança.")
             true))))))
 
-(defn boot-5264 [opts]
+(defn boot-5264 []
   (println "\n[BOOT-5264] Iniciando análise detalhada (Hardening System Services)...")
 
   (let [services (get-running-services)]
@@ -496,7 +496,8 @@
                   (update :lines conj rounds-line)
                   (assoc :found true))
               ;; Se não, mantém a linha original
-              (update :lines conj line)))
+              ;; CORREÇÃO: Adicionado 'acc' como primeiro argumento
+              (update acc :lines conj line)))
           {:lines [] :found false}
           lines))
 
@@ -566,7 +567,7 @@
                   (update :lines conj umask-line)
                   (assoc :found true))
               ;; Se não, mantém a linha
-              (update :lines conj line)))
+              (update acc :lines conj line)))
           {:lines [] :found false}
           lines))
 
@@ -598,8 +599,9 @@
         (System/exit 1)))))
 
 ; FILE-6354: Check and optionally delete files in /tmp older than 90 days
-(defn get-old-tmp-files []
+(defn get-old-tmp-files
   "Executa o find para localizar arquivos com mtime +90 em /tmp."
+  []
   ;; Equivalente ao `find /tmp ... 2>/dev/null` do Perl
   (let [res (shell {:out :string :err :null :continue true}
                    "find /tmp -type f -mtime +90")]
@@ -663,15 +665,17 @@
 (def usb-conf-file "/etc/modprobe.d/usb-storage.conf")
 (def blacklist-line "blacklist usb-storage")
 
-(defn usb-storage-loaded? []
+(defn usb-storage-loaded?
   "Verifica se o módulo está carregado na memória (lsmod)."
+  []
   (let [res (shell {:out :string :continue true} "lsmod")]
     (if (not= 0 (:exit res))
       false ;; Se lsmod falhar, assumimos que não conseguimos verificar
       (re-find #"^usb_storage\b" (:out res)))))
 
-(defn usb-config-ok? []
+(defn usb-config-ok?
   "Verifica se o arquivo de configuração existe e contém o blacklist."
+  []
   (if-not (fs/exists? usb-conf-file)
     false
     (let [content (slurp usb-conf-file)]
@@ -735,16 +739,18 @@
 (def fw-conf-file "/etc/modprobe.d/firewire.conf")
 (def fw-modules ["firewire-core" "firewire-ohci" "firewire-sbp2"])
 
-(defn firewire-loaded? []
+(defn firewire-loaded?
   "Verifica se algum módulo firewire está carregado via lsmod."
+  []
   ;; grep genérico por 'firewire' pega firewire_core, firewire_ohci, etc.
   (let [res (shell {:out :string :continue true} "lsmod")]
     (if (not= 0 (:exit res))
       false
       (boolean (re-find #"firewire" (:out res))))))
 
-(defn get-missing-blacklists []
+(defn get-missing-blacklists
   "Retorna lista de módulos que ainda NÃO estão no arquivo de conf."
+  []
   (if-not (fs/exists? fw-conf-file)
     fw-modules ;; Se arquivo não existe, todos faltam
     (let [content (slurp fw-conf-file)]
@@ -820,8 +826,9 @@
 
 ; NAME-4028: Verifica e corrige a configuração do nome DNS (FQDN)
 
-(defn get-dns-info []
+(defn get-dns-info
   "Coleta hostname, fqdn e domain name do sistema."
+  []
   ;; Usamos :continue true para não estourar erro se o comando falhar (comum se mal configurado)
   (let [sh-val (fn [cmd]
                  (-> (shell {:out :string :err :null :continue true} cmd)
@@ -832,8 +839,9 @@
         domain   (sh-val "dnsdomainname")]
     {:hostname hostname :fqdn fqdn :domain domain}))
 
-(defn valid-fqdn? [{:keys [hostname fqdn domain]}]
+(defn valid-fqdn?
   "Replica a lógica de validação do Perl."
+  [{:keys [hostname fqdn domain]}]
   (cond
     (str/blank? fqdn) false
     (= fqdn hostname) false
@@ -858,8 +866,9 @@
         (println "⚠️  FQDN ou domínio DNS ausente ou incorreto.")
         false))))
 
-(defn update-hosts-file [fqdn hostname]
+(defn update-hosts-file
   "Lê /etc/hosts, remove linhas antigas de 127.0.1.1 e adiciona a nova."
+  [fqdn hostname]
   (let [hosts-file "/etc/hosts"
         content    (slurp hosts-file)
         lines      (str/split-lines content)
@@ -924,8 +933,9 @@
 
 ; PKGS-7312: Atualizar sistema rolling release (ex: Arch Linux)
 
-(defn get-pending-updates []
+(defn get-pending-updates
   "Retorna lista de atualizações. Retorna nil se checkupdates falhar/não existir."
+  []
   (if-not (fs/which "checkupdates")
     (do (println "⚠️  'checkupdates' não encontrado (instale pacman-contrib).") nil)
 
@@ -1035,23 +1045,26 @@
 (def netw-protocols ["dccp" "sctp" "rds" "tipc"])
 (def netw-conf-file "/etc/modprobe.d/block-protocols.conf")
 
-(defn is-module-loaded? [proto]
+(defn is-module-loaded?
   "Verifica se o módulo está carregado na memória (lsmod)."
+  [proto]
   (let [res (shell {:out :string :continue true} "lsmod")]
     (if (not= 0 (:exit res))
       false
       (boolean (re-find (re-pattern (str "^" proto "\\b")) (:out res))))))
 
-(defn is-module-disabled-in-file? [proto]
+(defn is-module-disabled-in-file?
   "Verifica se existe a linha 'install proto /bin/true' no arquivo de conf."
+  [proto]
   (if-not (fs/exists? netw-conf-file)
     false
     (let [content (slurp netw-conf-file)
           pattern (re-pattern (str "(?m)^\\s*install\\s+" proto "\\s+/bin/true"))]
       (boolean (re-find pattern content)))))
 
-(defn verify-kernel-config [proto]
+(defn verify-kernel-config
   "Roda modprobe --showconfig para ver se o kernel reconhece o bloqueio."
+  [proto]
   (let [res (shell {:out :string :err :null :continue true} "modprobe --showconfig")]
     (if (not= 0 (:exit res))
       false
@@ -1133,12 +1146,13 @@
         (println (str "⚠️  " proto ": bloqueio não detectado no showconfig. Talvez precise reiniciar ou rodar 'depmod'."))))))
 
 ; PHP-2372: Desativa exposição de versão do PHP via expose_php = Off
-# PHP-2376: Desativa allow_url_fopen para evitar downloads remotos via PHP
+; PHP-2376: Desativa allow_url_fopen para evitar downloads remotos via PHP
 
 ;; --- Helpers Genéricos para PHP ---
 
-(defn get-php-ini-path []
+(defn get-php-ini-path
   "Localiza o php.ini ativo via comando 'php --ini'."
+  []
   (if-not (fs/which "php")
     nil
     (let [res (shell {:out :string :err :null :continue true} "php --ini")]
@@ -1146,19 +1160,22 @@
         (some->> (str/split-lines (:out res))
                  (filter #(str/includes? % "Loaded Configuration File"))
                  (first)
-                 (str/split #":\s+")
+                 ;; CORREÇÃO: Usamos #(...) para colocar o argumento '%' na primeira posição
+                 (#(str/split % #":\s+"))
                  (second)
                  (str/trim))))))
 
-(defn get-php-setting [ini-path key-name]
+(defn get-php-setting
   "Lê o valor de uma configuração no arquivo ini."
+  [ini-path key-name]
   (let [pattern (re-pattern (str "(?i)^\\s*" key-name "\\s*=\\s*(\\w+)"))]
     (some->> (str/split-lines (slurp ini-path))
              (keep #(second (re-find pattern %))) ;; Pega o valor capturado
              (first))))
 
-(defn restart-web-service [opts]
+(defn restart-web-service
   "Tenta reiniciar o serviço web, perguntando ao usuário qual é."
+  [opts]
   (println "🔁 Deseja reiniciar o servidor web (ex: apache/nginx/php-fpm)? [s/N] ")
   (flush)
 
@@ -1181,8 +1198,9 @@
                   (println (str "✅ Serviço " svc " reiniciado."))
                   (println (str "❌ Falha ao reiniciar " svc ".")))))))))))
 
-(defn apply-php-fix [opts key-name target-value desc-id]
+(defn apply-php-fix
   "Lógica comum para aplicar correções no php.ini."
+  [opts key-name target-value desc-id]
   (let [ini-path (get-php-ini-path)]
     (if-not ini-path
       (println "❌ Não foi possível localizar o arquivo php.ini (PHP instalado?).")
@@ -1200,7 +1218,7 @@
                                    (-> acc
                                        (update :lines conj target-line)
                                        (assoc :found true))
-                                   (update :lines conj line)))
+                                   (update acc :lines conj line)))
                                {:lines [] :found false}
                                lines)
 
@@ -1252,8 +1270,9 @@
 
 (def custom-logrotate-conf "/etc/logrotate.d/custom-unmanaged-logs")
 
-(defn get-all-log-files []
+(defn get-all-log-files
   "Encontra todos os arquivos .log em /var/log recursivamente."
+  []
   (try
     (->> (fs/glob "/var/log" "**/*.log")
          (map str) ;; Converte Path object para String
@@ -1263,8 +1282,9 @@
       (println (str "⚠️  Erro ao listar arquivos em /var/log: " (.getMessage e)))
       #{})))
 
-(defn get-managed-logs []
+(defn get-managed-logs
   "Lê configs do logrotate e retorna um set de caminhos configurados."
+  []
   (let [configs (concat ["/etc/logrotate.conf"]
                         (map str (fs/glob "/etc/logrotate.d" "*")))
 
@@ -1282,8 +1302,9 @@
          (keep extract-path)
          set)))
 
-(defn get-unmanaged-logs []
+(defn get-unmanaged-logs
   "Retorna lista de logs que existem no disco mas não nas configs."
+  []
   (let [all-logs (get-all-log-files)
         managed  (get-managed-logs)]
     ;; Remove do set 'all-logs' aqueles que estão em 'managed'
@@ -1372,8 +1393,9 @@
 
 (def full-banner (str/join "\n" banner-lines))
 
-(defn has-legal-banner? [file]
+(defn has-legal-banner?
   "Verifica se o arquivo contém palavras-chave do banner."
+  [file]
   (if-not (fs/exists? file)
     false
     (let [content (slurp file)]
@@ -1434,10 +1456,6 @@
 
 ; ACCT-9622: Habilita process accounting no sistema
 ;; --- Helpers de Pacotes e Serviços ---
-
-(defn package-installed? [pkg]
-  (let [res (shell {:out :null :err :null :continue true} "pacman -Q" pkg)]
-    (= 0 (:exit res))))
 
 (defn install-package [pkg opts]
   (cond
@@ -1590,8 +1608,9 @@
                 (println (str "🔴 Erro ao escrever regras: " (.getMessage e)))))))))))
 
 ; TIME-3104: Ativa sincronização de tempo com NTP (systemd-timesyncd)
-(defn get-ntp-status []
+(defn get-ntp-status
   "Obtém propriedades NTP do timedatectl de forma estruturada."
+  []
   (let [res (shell {:out :string :err :null :continue true}
                    "timedatectl show -p NTP -p NTPSynchronized")]
     (if (not= 0 (:exit res))
@@ -1667,8 +1686,9 @@
 (def openssl-date-fmt
   (DateTimeFormatter/ofPattern "MMM d HH:mm:ss yyyy z" Locale/US))
 
-(defn find-cert-files []
+(defn find-cert-files
   "Busca arquivos .crt, .pem, .cer recursivamente nos caminhos definidos."
+  []
   (let [extensions #{".crt" ".pem" ".cer"}]
     (->> cert-paths
          (filter fs/exists?) ;; Ignora diretórios que não existem
@@ -1679,8 +1699,9 @@
          (map str) ;; Converte Path object para String
          (distinct)))) ;; Evita duplicatas (links simbólicos podem causar isso)
 
-(defn get-cert-end-date [cert-file]
+(defn get-cert-end-date
   "Extrai a data de expiração usando openssl."
+  [cert-file]
   (let [res (shell {:out :string :err :null :continue true}
                    "openssl x509 -enddate -noout -in" cert-file)]
     (when (= 0 (:exit res))
@@ -1696,8 +1717,9 @@
               (println (str "⚠️  Erro ao parsear data de " cert-file ": " date-str))
               nil)))))))
 
-(defn check-cert-status [cert-file now warn-date]
+(defn check-cert-status
   "Retorna :expired, :expiring ou :ok"
+  [cert-file now warn-date]
   (if-let [end-date (get-cert-end-date cert-file)]
     (cond
       (.isBefore end-date now) :expired
@@ -1747,32 +1769,6 @@
   (cryp-7902-check opts))
 
 ; FINT-4350: Instala e inicializa AIDE para verificação de integridade de arquivos
-
-;; --- Helpers Comuns ---
-
-(defn package-installed? [pkg]
-  (let [res (shell {:out :null :err :null :continue true} "pacman -Q" pkg)]
-    (= 0 (:exit res))))
-
-(defn install-package [pkg opts]
-  (cond
-    (:dry-run opts)
-    (do (println (str "🔍 [DRY-RUN] Instalaria pacote " pkg ".")) true)
-
-    (or (:auto opts)
-        (do
-          (print (str "Deseja instalar o pacote " pkg " agora? [s/N] "))
-          (flush)
-          (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
-    (do
-      (println (str "⚙️  Instalando " pkg "..."))
-      (let [res (shell {:continue true} "sudo pacman -Sy --noconfirm" pkg)]
-        (if (= 0 (:exit res))
-          (do (println (str "✅ " pkg " instalado.")) true)
-          (do (println (str "❌ Falha ao instalar " pkg ".")) false))))
-
-    :else
-    (do (println "❎ Instalação cancelada.") false)))
 
 ;; --- FINT-4350: AIDE ---
 
@@ -1838,33 +1834,24 @@
 
 ; FILE-7524: Verifica e restringe permissões perigosas de arquivos
 
-(defn get-file-mode [path]
-  "Retorna permissão octal como string (ex: '777')."
+(defn get-file-mode
+  "Retorna permissão octal como string (ex: '755')."
+  [path]
   (try
-    (let [perms (Files/getPosixFilePermissions (fs/path path) (make-array LinkOption 0))
-          ;; Converte Set<PosixFilePermission> para rwxrwxrwx
-          perm-str (PosixFilePermissions/toString perms)
-          ;; Converte rwxrwxrwx para octal (ex: 755)
-          octal (reduce (fn [acc [i char]]
-                          (if (= char \-)
-                            acc
-                            (let [bit (mod (- 8 i) 3) ;; 0, 1, 2
-                                  val (case (mod i 3) 0 4, 1 2, 2 1)
-                                  shift (* 3 (quot (- 8 i) 3))]
-                              ;; Este cálculo manual é complexo, vamos simplificar:
-                              ;; É mais fácil usar fs/posix->int se disponível ou lógica simples
-                              ;; Mas como babashka expõe Java, vamos usar bibliotecas se possível.
-                              acc)))) ;; Placeholder
-          ;; Na verdade, o fs/posix-file-permissions do babashka retorna um set.
-          ;; O jeito mais fácil de pegar octal no babashka fs:
-          path-obj (fs/path path)
+    (let [path-obj (fs/path path)
+          ;; Lê o atributo 'unix:mode' diretamente do sistema de arquivos
+          ;; Isso retorna um inteiro contendo tipo do arquivo + permissões
           attr (Files/getAttribute path-obj "unix:mode" (make-array LinkOption 0))
+
+          ;; Fazemos um bit-and com 0777 (octal) para pegar apenas os bits de permissão (rwx)
+          ;; e ignorar os bits que dizem se é arquivo, diretório ou link.
           octal (format "%o" (bit-and attr 0777))]
       octal)
     (catch Exception _ nil)))
 
-(defn get-risky-files []
+(defn get-risky-files
   "Busca arquivos com permissões 777, 666."
+  []
   ;; Limitamos a busca para evitar scan do disco inteiro
   ;; e usamos max-depth para não travar em /var/lib/docker e afins.
   (let [base-dirs ["/etc" "/home" "/opt" "/srv"] ;; Removi /var pois é muito grande/ruidoso
@@ -2050,8 +2037,9 @@
       (format "%o" (bit-and attr 0777))) ;; Máscara para pegar apenas permissões
     (catch Exception _ nil)))
 
-(defn find-compilers []
+(defn find-compilers
   "Busca compiladores no PATH e em diretórios específicos."
+  []
   (let [found (atom #{})]
     ;; 1. Check PATH
     (doseq [c compilers]
@@ -2135,32 +2123,6 @@
 
 ; HRDN-7230: Instala scanner de malware (rkhunter) e executa verificação inicial
 
-;; --- Helpers (Reutilizados para contexto) ---
-
-(defn package-installed? [pkg]
-  (let [res (shell {:out :null :err :null :continue true} "pacman -Q" pkg)]
-    (= 0 (:exit res))))
-
-(defn install-package [pkg opts]
-  (cond
-    (:dry-run opts)
-    (do (println (str "🔍 [DRY-RUN] Instalaria pacote " pkg ".")) true)
-
-    (or (:auto opts)
-        (do
-          (print (str "Deseja instalar o pacote " pkg " agora? [s/N] "))
-          (flush)
-          (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
-    (do
-      (println (str "⚙️  Instalando " pkg "..."))
-      (let [res (shell {:continue true} "sudo pacman -Sy --noconfirm" pkg)]
-        (if (= 0 (:exit res))
-          (do (println (str "✅ " pkg " instalado.")) true)
-          (do (println (str "❌ Falha ao instalar " pkg ".")) false))))
-
-    :else
-    (do (println "❎ Instalação cancelada.") false)))
-
 ;; --- HRDN-7230: Rkhunter ---
 
 (defn hrdn-7230-check [_opts]
@@ -2214,7 +2176,8 @@
     (when-not (install-package "rkhunter" opts)
       ;; Se falhar ou cancelar instalação, aborta o resto da função
       (println "🛑 Abortando configuração do rkhunter.")
-      (return))) ;; return não existe em clojure como statement, o when-not cuida do fluxo
+      ()))
+        ;; return não existe em clojure como statement, o when-not cuida do fluxo
 
   ;; Se chegamos aqui, rkhunter está instalado (ou estava, ou acabamos de instalar)
   ;; Mas precisamos garantir que ele está instalado para rodar os comandos, caso o check tenha passado por causa do chkrootkit
@@ -2252,8 +2215,9 @@
    "X11Forwarding"        "no"
    "AllowAgentForwarding" "no"})
 
-(defn ask-for-port [opts]
+(defn ask-for-port
   "Determina se a porta deve ser alterada baseada em args ou input."
+  [opts]
   ;; 1. Se foi passado via flag --port no main (opts)
   (if-let [cli-port (:port opts)]
     cli-port
@@ -2275,9 +2239,10 @@
                 p
                 (do (println "❌ Porta inválida. Mantendo a atual.") nil)))))))))
 
-(defn apply-ssh-changes [content settings]
+(defn apply-ssh-changes
   "Recebe o conteúdo do arquivo e um mapa de configurações.
    Retorna o novo conteúdo do arquivo."
+  [content settings]
   (let [lines (str/split-lines content)
 
         ;; Passo 1: Substituir linhas existentes
@@ -2297,7 +2262,7 @@
                                     (update :lines conj (str matched-key " " (get settings matched-key)))
                                     (update :found conj matched-key))
                                 ;; Se não, mantém a linha original
-                                (update :lines conj line))))
+                                (update acc :lines conj line))))
                           {:lines [] :found #{}}
                           lines)
 
@@ -2366,13 +2331,6 @@
                     (println "✅ Serviço sshd reiniciado.")
                     (println "❌ Falha ao reiniciar sshd."))))
               (println "⏭️  Restart ignorado."))))))))
-
-
-
-
-
-
-
 
 ;; Entrypoint
 (when (= *file* (System/getProperty "babashka.file"))
