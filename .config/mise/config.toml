@@ -160,111 +160,9 @@ run = [
   'rm -rf "$TMP_DIR"/.[!.]*'
 ]
 
-[tasks."emacs:arch"]
-depends_post = ['emacs:doom']
-run = 'sudo pacman -S emacs-wayland'
-
-[tasks."emacs:debian"]
-depends_post = ['emacs:src', 'emacs:doom']
-run = 'sudo apt-get build-dep emacs'
-
-[tasks."emacs:src"]
-depends = ['clean']
-dir = '{{env.TMP_DIR}}'
-run = '''
-    git clone https://git.savannah.gnu.org/git/emacs.git/ "$TMP_DIR"
-    git checkout emacs-30.2
-    ./autogen.sh
-    ./configure --prefix=$LOCAL_DIR --with-x-toolkit=gtk3 --with-mailutils \
-                --with-tree-sitter --with-pgtk --with-native-compilation=aot
-    make clean
-    make -j8
-    make install
-'''
-
-[tasks."emacs:doom"]
-run = '''
-    git clone --depth 1 https://github.com/doomemacs/doomemacs "$CONFIG_DIR/emacs"
-    "$CONFIG_DIR/emacs/bin/doom" install --no-config --env --install --force
-'''
-
-
-# Nerd Fonts install
-[tasks.fonts]
-env.NERD_FONTS_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/"
-env.FONTS = "FiraCode Noto NerdFontsSymbolsOnly" # DejaVuSansMono JetBrainsMono SourceCodePro
-run = '''
-    for font in $FONTS; do
-        mkdir -p "$XDG_DATA_HOME/fonts/$font"
-        curl -sL "$NERD_FONTS_URL$font.tar.xz" | unxz | tar -xvf - -C "$XDG_DATA_HOME/fonts/$font"
-        chmod -R "u=rwx,g=r,o=r" "$XDG_DATA_HOME/fonts/$font"
-    done
-    fc-cache -v
-'''
-
-[tasks.hunspell-dicts]
-depends = ['clean']
-dir = '{{env.TMP_DIR}}'
-env.HUNSPELL_URL = "https://hunspell.memoq.com"
-run = '''
-  curl -O $HUNSPELL_URL/de.zip
-  unzip -j "de.zip" "de/de_DE*" -d "$XDG_DATA_HOME/hunspell/"
-  curl -O $HUNSPELL_URL/fr_FR.zip
-  unzip -j "fr_FR.zip" "fr_FR/fr.*" -d "$XDG_DATA_HOME/hunspell/"
-  curl -O $HUNSPELL_URL/it_IT.zip
-  unzip -j "it_IT.zip" "it_IT/it_IT.*" -d "$XDG_DATA_HOME/hunspell/"
-  curl -O $HUNSPELL_URL/pt_BR.zip
-  unzip -j "pt_BR.zip" "pt_BR/pt_BR.*" -d "$XDG_DATA_HOME/hunspell/"
-  curl -O $HUNSPELL_URL/es.zip
-  unzip -j "es.zip" "es/es_ES.*" -d "$XDG_DATA_HOME/hunspell/"
-  curl -O $HUNSPELL_URL/en.zip
-  unzip -j "en.zip" "en/en_US.*" -d "$XDG_DATA_HOME/hunspell/"
-'''
 
 [tasks.julia]
 run = 'julia -- "$CONFIG_DIR/julia/emacs.jl"'
-
-[tasks.graphviz]
-depends = ['clean']
-dir = '{{env.TMP_DIR}}'
-env.GRAPHVIZ_URL = "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/14.0.2/graphviz-14.0.2.tar.gz"
-run = '''
-  curl -o graphviz.tar.gz -fsSL $GRAPHVIZ_URL
-  tar -xvf graphviz.tar.gz
-  cd graphviz-14.0.2
-  ./configure --prefix=$LOCAL_DIR --enable-static
-  make
-  make install
-'''
-
-[tasks.neovim]
-run = '''
-  uv venv "$XDG_DATA_HOME/nvim/venv"
-  uv pip install pynvim -p "$XDG_DATA_HOME/nvim/venv"
-  npm install --global neovim
-'''
-
-[tasks.tidy]
-depends = ['clean']
-dir = '{{env.TMP_DIR}}'
-run = '''
-  git clone https://github.com/htacg/tidy-html5.git $TMP_DIR
-  cd build/cmake
-  cmake ../.. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$LOCAL_DIR -DBUILD_SHARED_LIB:BOOL=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-  make
-  make install
-'''
-
-[tasks.clojure]
-depends = ['clean']
-dir = '{{env.TMP_DIR}}'
-run = '''
-    curl -o cljfmt.tar.gz -sL "https://github.com/weavejester/cljfmt/releases/download/0.15.3/cljfmt-0.15.3-linux-amd64-static.tar.gz"
-    tar -xzf cljfmt.tar.gz -C $BIN_DIR
-    curl -fsSLO https://raw.githubusercontent.com/clojure-lsp/clojure-lsp/master/install
-    chmod u+x install
-    ./install --dir "$BIN_DIR"
-'''
 
 [tasks.php]
 depends = ['clean']
@@ -325,12 +223,6 @@ run = [
     'mv ansi "$LOCAL_DIR/bin/"'
 ]
 
-[tasks.doctor]
-run = [
-    'mise doctor',
-    'doom doctor'
-]
-
 # TODO
 #NPM_PACKAGES := "markdownlint @mermaid-js/mermaid-cli"
 # https://github.com/fwcd/kotlin-language-server
@@ -342,20 +234,3 @@ run = [
 
 # see https://langserver.org/
 # see https://microsoft.github.io/language-server-protocol/implementors/servers/
-
-# TODO corrigir:
-
-
-[tasks.hunspell]
-depends = ['clean']
-dir = '{{env.TMP_DIR}}'
-run = '''
-  git clone https://github.com/hunspell/hunspell.git $TMP_DIR
-  cd $TMP_DIR
-  autoreconf -vfi
-  cp ../ltmain.sh ./
-  ./configure --prefix=$LOCAL_DIR --with-readline
-  make
-  make install
-  sudo ldconfig
-'''
