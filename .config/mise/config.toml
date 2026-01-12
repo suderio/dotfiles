@@ -185,7 +185,7 @@ run = '''
 [tasks."emacs:doom"]
 run = '''
     git clone --depth 1 https://github.com/doomemacs/doomemacs "$CONFIG_DIR/emacs"
-    "$CONFIG_DIR/emacs/bin/doom" install --no-config --env --install --no-fonts --force
+    "$CONFIG_DIR/emacs/bin/doom" install --no-config --env --install --force
 '''
 
 
