@@ -1498,6 +1498,7 @@
       ;; mas em outras imprime "Turning on process accounting...".
       ;; A maneira mais segura de checar no Linux é ver se o arquivo de log está sendo usado
       ;; ou se existe o flag no kernel, mas vamos confiar na existência do arquivo de log ativo.
+       (println res)
       (if (fs/exists? "/var/log/pacct")
         (do (println "✔️  Pacote instalado e log /var/log/pacct existe.") true)
         (do (println "⚠️  Pacote instalado mas log não encontrado.") false)))
@@ -1713,7 +1714,7 @@
             ;; Vamos normalizar espaços simples
             (let [clean-date (str/join " " (str/split date-str #"\s+"))]
               (ZonedDateTime/parse clean-date openssl-date-fmt))
-            (catch Exception e
+            (catch Exception _
               (println (str "⚠️  Erro ao parsear data de " cert-file ": " date-str))
               nil)))))))
 
@@ -1923,7 +1924,7 @@
               (try
                 (fs/set-posix-file-permissions (:path f) new-mode)
                 (println (str "✅ " (:path f) " -> " new-mode))
-                (catch Exception e
+                (catch Exception _
                   ;; Tenta com sudo se falhar (fs/set-posix usa Java API que roda como usuário atual)
                   (let [res (shell {:continue true} "sudo chmod" new-mode (:path f))]
                     (if (= 0 (:exit res))
