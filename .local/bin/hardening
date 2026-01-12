@@ -3,6 +3,14 @@
 (require '[babashka.process :refer [shell process]]
           '[babashka.fs :as fs]
           '[clojure.string :as str])
+(import '[java.time ZonedDateTime]
+        '[java.time.format DateTimeFormatter]
+        '[java.time.temporal ChronoUnit]
+        '[java.util Locale]
+        '[java.nio.file Files LinkOption]
+        '[java.nio.file.attribute PosixFilePermissions]
+        '[java.time LocalDateTime]
+        '[java.nio.file Files LinkOption])
 ;;
 ;; Reference: https://cisofy.com/lynis/controls/<CODE-NNNN>/
 
@@ -589,18 +597,1775 @@
         (println (str "?? Erro ao manipular arquivo: " (.getMessage e)))
         (System/exit 1)))))
 
+; FILE-6354: Check and optionally delete files in /tmp older than 90 days
+(defn get-old-tmp-files []
+  "Executa o find para localizar arquivos com mtime +90 em /tmp."
+  ;; Equivalente ao `find /tmp ... 2>/dev/null` do Perl
+  (let [res (shell {:out :string :err :null :continue true}
+                   "find /tmp -type f -mtime +90")]
+    (if (not= 0 (:exit res))
+      []
+      (->> (str/split-lines (:out res))
+           (remove str/blank?)))))
+
+(defn file-6354-check [_opts]
+  (println "[FILE-6354] Verificando arquivos em /tmp com mais de 90 dias...")
+
+  (let [files (get-old-tmp-files)]
+    (if (empty? files)
+      (do
+        (println "✅ Nenhum arquivo antigo encontrado em /tmp.")
+        true)
+      (do
+        (println (str "⚠️  Encontrados " (count files) " arquivo(s) com mais de 90 dias:"))
+        (doseq [f (take 10 files)] ;; Mostra apenas os 10 primeiros para não poluir
+          (println (str "   - " f)))
+        (when (> (count files) 10)
+          (println (str "   ... e mais " (- (count files) 10) " arquivos.")))
+        false))))
+
+(defn confirm-deletion? []
+  (print "\nDeseja remover todos os arquivos listados acima? [s/N] ")
+  (flush) ;; Garante que o print apareça antes de pedir input
+  (let [input (str/trim (or (read-line) ""))]
+    (= "s" (str/lower-case input))))
+
+(defn file-6354 [opts]
+  ;; Se o check retornar true (sem arquivos), não fazemos nada.
+  (when-not (file-6354-check opts)
+    (let [files (get-old-tmp-files)]
+
+      ;; Lógica de decisão: Deletar ou não?
+      (cond
+        (:dry-run opts)
+        (println (str "🧹 [DRY-RUN] " (count files) " arquivos seriam removidos."))
+
+        ;; Se for auto, deleta direto. Se não, pergunta.
+        (or (:auto opts) (confirm-deletion?))
+        (let [deleted-count (atom 0)]
+          (println "\n🗑️  Removendo arquivos...")
+
+          (doseq [f files]
+            (try
+              (fs/delete f)
+              (swap! deleted-count inc)
+              (catch Exception e
+                (println (str "🔴 Erro ao remover " f ": " (.getMessage e))))))
+
+          (println (str "🧹 " @deleted-count " arquivo(s) removido(s) com sucesso.")))
+
+        :else
+        (println "❎ Operação cancelada pelo usuário. Nenhum arquivo foi removido.")))))
 
 
+; USB-1000: Disable USB storage module if not in use
+
+(def usb-conf-file "/etc/modprobe.d/usb-storage.conf")
+(def blacklist-line "blacklist usb-storage")
+
+(defn usb-storage-loaded? []
+  "Verifica se o módulo está carregado na memória (lsmod)."
+  (let [res (shell {:out :string :continue true} "lsmod")]
+    (if (not= 0 (:exit res))
+      false ;; Se lsmod falhar, assumimos que não conseguimos verificar
+      (re-find #"^usb_storage\b" (:out res)))))
+
+(defn usb-config-ok? []
+  "Verifica se o arquivo de configuração existe e contém o blacklist."
+  (if-not (fs/exists? usb-conf-file)
+    false
+    (let [content (slurp usb-conf-file)]
+      (boolean (re-find #"^\s*blacklist\s+usb-storage\b" content)))))
+
+(defn usb-1000-check [_opts]
+  (println "[USB-1000] Verificando bloqueio do módulo usb-storage...")
+
+  (let [conf-ok (usb-config-ok?)
+        loaded  (usb-storage-loaded?)]
+
+    (cond
+      (and conf-ok (not loaded))
+      (do (println "✔️  Módulo usb-storage bloqueado e descarregado.") true)
+
+      (not conf-ok)
+      (do (println (str "❌ Configuração de blacklist ausente em " usb-conf-file)) false)
+
+      loaded
+      (do (println "⚠️  Configuração existe, mas o módulo usb_storage ainda está carregado na memória.") false))))
+
+(defn confirm-unload? []
+  (print "⚠️  O módulo usb_storage está carregado. Deseja descarregá-lo agora? [s/N] ")
+  (flush)
+  (let [input (str/trim (or (read-line) ""))]
+    (= "s" (str/lower-case input))))
+
+(defn usb-1000 [opts]
+  ;; 1. Ajuste da Configuração (Persistência)
+  (when-not (usb-config-ok?)
+    (if (:dry-run opts)
+      (println (str "🔒 [DRY-RUN] Criaria " usb-conf-file " com blacklist."))
+      (try
+        (println (str "📝 Criando regra de blacklist em " usb-conf-file "..."))
+        ;; Garante que o diretório pai existe
+        (fs/create-dirs (fs/parent usb-conf-file))
+        (spit usb-conf-file (str blacklist-line "\n") :append true)
+        (println "✅ Configuração aplicada com sucesso.")
+        (catch Exception e
+          (println (str "🔴 Erro ao escrever arquivo: " (.getMessage e)))))))
+
+  ;; 2. Ajuste do Runtime (Memória)
+  (when (usb-storage-loaded?)
+    (cond
+      (:dry-run opts)
+      (println "🧹 [DRY-RUN] Executaria 'modprobe -r usb-storage' agora.")
+
+      ;; Se for auto ou usuário confirmar
+      (or (:auto opts) (confirm-unload?))
+      (do
+        (println "⚙️  Tentando descarregar módulo...")
+        (let [res (shell {:continue true} "sudo modprobe -r usb-storage")]
+          (if (= 0 (:exit res))
+            (println "✅ Módulo descarregado com sucesso.")
+            (println "❌ Falha ao descarregar (o módulo pode estar em uso). Reinicie o sistema para aplicar."))))
+
+      :else
+      (println "🔐 Atenção: O módulo permanecerá ativo até o próximo reboot."))))
+
+; STRG-1846: Disable FireWire storage drivers if not in use
+(def fw-conf-file "/etc/modprobe.d/firewire.conf")
+(def fw-modules ["firewire-core" "firewire-ohci" "firewire-sbp2"])
+
+(defn firewire-loaded? []
+  "Verifica se algum módulo firewire está carregado via lsmod."
+  ;; grep genérico por 'firewire' pega firewire_core, firewire_ohci, etc.
+  (let [res (shell {:out :string :continue true} "lsmod")]
+    (if (not= 0 (:exit res))
+      false
+      (boolean (re-find #"firewire" (:out res))))))
+
+(defn get-missing-blacklists []
+  "Retorna lista de módulos que ainda NÃO estão no arquivo de conf."
+  (if-not (fs/exists? fw-conf-file)
+    fw-modules ;; Se arquivo não existe, todos faltam
+    (let [content (slurp fw-conf-file)]
+      (filter (fn [mod-name]
+                ;; Verifica: blacklist module-name (com borda de palavra \b)
+                (not (re-find (re-pattern (str "^\\s*blacklist\\s+" mod-name "\\b"))
+                              content)))
+              fw-modules))))
+
+(defn strg-1846-check [_opts]
+  (println "[STRG-1846] Verificando bloqueio de módulos FireWire...")
+
+  (let [missing (get-missing-blacklists)
+        loaded  (firewire-loaded?)]
+
+    (cond
+      (and (empty? missing) (not loaded))
+      (do (println "✔️  Todos os módulos FireWire bloqueados e inativos.") true)
+
+      (seq missing)
+      (do
+        (println (str "❌ Configuração incompleta. Faltam blacklists para: " (str/join ", " missing)))
+        false)
+
+      loaded
+      (do (println "⚠️  Configuração existe, mas módulos FireWire ainda estão ativos na memória.") false))))
+
+(defn confirm-fw-unload? []
+  (print "⚠️  Módulos FireWire detectados. Deseja descarregá-los agora? [s/N] ")
+  (flush)
+  (let [input (str/trim (or (read-line) ""))]
+    (= "s" (str/lower-case input))))
+
+(defn strg-1846 [opts]
+  ;; 1. Correção da Configuração (Persistência)
+  (let [missing (get-missing-blacklists)]
+    (when (seq missing)
+      (if (:dry-run opts)
+        (println (str "🔒 [DRY-RUN] Adicionaria ao " fw-conf-file ": " (str/join ", " missing)))
+
+        (try
+          (println (str "📝 Atualizando " fw-conf-file "..."))
+          (fs/create-dirs (fs/parent fw-conf-file))
+
+          ;; Gera as linhas novas
+          (let [new-lines (map #(str "blacklist " %) missing)]
+            (spit fw-conf-file (str (str/join "\n" new-lines) "\n") :append true))
+
+          (println (str "✅ Módulos bloqueados na configuração: " (str/join ", " missing)))
+          (catch Exception e
+            (println (str "🔴 Erro ao escrever arquivo: " (.getMessage e))))))))
+
+  ;; 2. Correção do Runtime (Memória)
+  (when (firewire-loaded?)
+    (cond
+      (:dry-run opts)
+      (println "🧹 [DRY-RUN] Executaria 'modprobe -r' nos módulos FireWire.")
+
+      (or (:auto opts) (confirm-fw-unload?))
+      (do
+        (println "⚙️  Tentando descarregar módulos...")
+        (doseq [mod fw-modules]
+          ;; Tenta descarregar um por um. Ignoramos erros individuais (pois dependências podem reclamar)
+          (shell {:continue true} "sudo modprobe -r" mod))
+
+        ;; Verificação final pós-tentativa
+        (if (firewire-loaded?)
+          (println "⚠️  Alguns módulos ainda estão ativos (verifique dependências).")
+          (println "✅ Módulos descarregados com sucesso.")))
+
+      :else
+      (println "🔐 Os módulos permanecerão carregados até o próximo reboot."))))
+
+; NAME-4028: Verifica e corrige a configuração do nome DNS (FQDN)
+
+(defn get-dns-info []
+  "Coleta hostname, fqdn e domain name do sistema."
+  ;; Usamos :continue true para não estourar erro se o comando falhar (comum se mal configurado)
+  (let [sh-val (fn [cmd]
+                 (-> (shell {:out :string :err :null :continue true} cmd)
+                     :out
+                     str/trim))
+        hostname (sh-val "hostname")
+        fqdn     (sh-val "hostname --fqdn")
+        domain   (sh-val "dnsdomainname")]
+    {:hostname hostname :fqdn fqdn :domain domain}))
+
+(defn valid-fqdn? [{:keys [hostname fqdn domain]}]
+  "Replica a lógica de validação do Perl."
+  (cond
+    (str/blank? fqdn) false
+    (= fqdn hostname) false
+    (not (str/includes? fqdn ".")) false
+    (= domain "(none)") false
+    (str/blank? domain) false
+    :else true))
+
+(defn name-4028-check [_opts]
+  (println "[NAME-4028] Verificando configuração de nome DNS (FQDN)...")
+
+  (let [info (get-dns-info)]
+    (println (str "📛 hostname: " (:hostname info)))
+    (println (str "🌐 FQDN:      " (:fqdn info)))
+    (println (str "🌍 domínio:   " (:domain info)))
+
+    (if (valid-fqdn? info)
+      (do
+        (println "✅ Nome de domínio DNS configurado corretamente.")
+        true)
+      (do
+        (println "⚠️  FQDN ou domínio DNS ausente ou incorreto.")
+        false))))
+
+(defn update-hosts-file [fqdn hostname]
+  "Lê /etc/hosts, remove linhas antigas de 127.0.1.1 e adiciona a nova."
+  (let [hosts-file "/etc/hosts"
+        content    (slurp hosts-file)
+        lines      (str/split-lines content)
+
+        ;; Filtra removendo qualquer linha que comece com 127.0.1.1
+        clean-lines (remove #(re-find #"^127\.0\.1\.1\s+" %) lines)
+
+        ;; Cria a nova linha (Tab separated)
+        new-line    (str "127.0.1.1\t" fqdn " " hostname)
+
+        ;; Junta tudo
+        final-content (str (str/join "\n" clean-lines) "\n" new-line "\n")]
+
+    (spit hosts-file final-content)))
+
+(defn name-4028 [opts]
+  (when-not (name-4028-check opts)
+    (println "🔧 Você pode corrigir isso agora.")
+
+    ;; NAME-4028 é especial: não podemos automatizar (--auto) sem saber o nome.
+    ;; Se estiver em modo auto ou dry-run, pulamos a interação.
+    (if (:auto opts)
+      (println "⚠️  [AUTO] Pulei a configuração pois requer input manual do nome.")
+
+      (if (:dry-run opts)
+        (println "ℹ️  [DRY-RUN] Solicitaria novo FQDN e aplicaria as mudanças.")
+
+        ;; Modo Interativo
+        (do
+          (print "Deseja configurar um FQDN agora? [s/N] ")
+          (flush)
+          (let [resp (str/trim (or (read-line) ""))]
+            (if-not (= "s" (str/lower-case resp))
+              (println "❎ Nenhuma alteração realizada.")
+
+              (do
+                (print "Digite o FQDN desejado (ex: servidor1.exemplo.com): ")
+                (flush)
+                (let [new-fqdn (str/trim (read-line))]
+                  ;; Validação Regex
+                  (if-not (re-matches #"^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" new-fqdn)
+                    (println "❌ FQDN inválido. Deve conter pelo menos um ponto e caracteres válidos.")
+
+                    (let [[new-host _] (str/split new-fqdn #"\." 2)]
+                      (println (str "⚙️  Configurando Host: " new-host " / FQDN: " new-fqdn))
+
+                      (try
+                        ;; 1. /etc/hostname
+                        (spit "/etc/hostname" (str new-host "\n"))
+
+                        ;; 2. /etc/hosts
+                        (update-hosts-file new-fqdn new-host)
+
+                        ;; 3. hostnamectl
+                        (let [res (shell {:continue true} "hostnamectl set-hostname" new-fqdn)]
+                          (if (= 0 (:exit res))
+                            (println (str "✅ FQDN configurado com sucesso: " new-fqdn))
+                            (println "❌ Erro ao aplicar hostname com hostnamectl.")))
+
+                        (catch Exception e
+                          (println (str "🔴 Erro crítico ao aplicar configurações: " (.getMessage e))))))))))))))))
+
+; PKGS-7312: Atualizar sistema rolling release (ex: Arch Linux)
+
+(defn get-pending-updates []
+  "Retorna lista de atualizações. Retorna nil se checkupdates falhar/não existir."
+  (if-not (fs/which "checkupdates")
+    (do (println "⚠️  'checkupdates' não encontrado (instale pacman-contrib).") nil)
+
+    ;; checkupdates retorna exit 2 se não houver nada. Ignoramos o erro.
+    (let [res (shell {:out :string :err :null :continue true} "checkupdates")]
+      (cond
+        (= 0 (:exit res)) (str/split-lines (:out res))
+        (= 2 (:exit res)) [] ;; Exit 2 = Tudo atualizado
+        :else nil))))        ;; Outro erro
+
+(defn pkgs-7312-check [_opts]
+  (println "[PKGS-7312] Verificando atualizações do sistema...")
+
+  (let [updates (get-pending-updates)]
+    (cond
+      (nil? updates) false ;; Falha técnica
+      (empty? updates) (do (println "✅ Sistema já está atualizado.") true)
+      :else
+      (do
+        (println (str "📦 Há " (count updates) " atualização(ões) pendente(s)."))
+        false))))
+
+(defn pkgs-7312 [opts]
+  ;; Se o check falhar (tem updates ou erro), entramos aqui
+  (when-not (pkgs-7312-check opts)
+    (let [updates (get-pending-updates)]
+
+      (when (seq updates)
+        (println "📦 Lista de pacotes:")
+        (doseq [pkg updates]
+          (println (str "   - " pkg)))
+
+        (cond
+          (:dry-run opts)
+          (println "🔍 Modo simulação: atualizações não serão aplicadas.")
+
+          ;; Se Auto ou Confirmação do usuário
+          (or (:auto opts)
+              (do
+                (print "\nDeseja aplicar as atualizações agora com 'sudo pacman -Syu'? [s/N] ")
+                (flush)
+                (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+          (do
+            (println "⏳ Atualizando sistema...")
+            (let [res (shell {:continue true} "sudo pacman -Syu")]
+              (if (= 0 (:exit res))
+                (println "✅ Sistema atualizado com sucesso.")
+                (println "❌ Erro na atualização."))))
+
+          :else
+          (println "🔕 Atualizações não aplicadas."))))))
+
+; PKGS-7320: Instalar e rodar arch-audit para encontrar pacotes vulneráveis
+
+(defn pkgs-7320-check [_opts]
+  (println "[PKGS-7320] Verificando vulnerabilidades (arch-audit)...")
+
+  (if-not (fs/which "arch-audit")
+    (do
+      (println "⚠️  Utilitário 'arch-audit' não está instalado.")
+      false)
+
+    ;; Se instalado, rodamos para ver se detecta algo
+    ;; arch-audit retorna 0 se seguro, >0 se vulnerável (depende da versão, mas checamos output)
+    (let [res (shell {:out :string :continue true} "arch-audit")]
+      (if (and (= 0 (:exit res)) (str/blank? (:out res)))
+        (do (println "✅ Nenhuma vulnerabilidade conhecida encontrada.") true)
+        (do (println "⚠️  Vulnerabilidades detectadas ou ferramenta reportou output.") false)))))
+
+(defn install-arch-audit [opts]
+  (if (:dry-run opts)
+    (println "🔍 [DRY-RUN] Instalaria arch-audit via pacman.")
+
+    (if (or (:auto opts)
+            (do
+              (print "❗ Deseja instalar 'arch-audit' agora? [s/N] ")
+              (flush)
+              (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+      (do
+        (println "⚙️  Instalando arch-audit...")
+        (let [res (shell {:continue true} "sudo pacman -Sy --noconfirm arch-audit")]
+          (= 0 (:exit res))))
+      (do
+        (println "⏭️  Instalação ignorada.")
+        false))))
+
+(defn pkgs-7320 [opts]
+  ;; O comportamento "fix" aqui é:
+  ;; 1. Garantir que a ferramenta existe
+  ;; 2. Rodar a ferramenta e mostrar o output
+
+  (let [installed? (fs/which "arch-audit")]
+
+    (if (not installed?)
+      ;; Se não instalado, tenta instalar
+      (when (install-arch-audit opts)
+        ;; Se instalou com sucesso, chama recursivamente para rodar o audit
+        (pkgs-7320 opts))
+
+      ;; Se já instalado (ou acabou de instalar)
+      (do
+        (println "🔎 Executando análise com arch-audit...")
+        (shell "arch-audit")))))
+
+; NETW-3200: Verifica e desabilita protocolos de rede não utilizados (dccp, sctp, rds, tipc)
+
+(def netw-protocols ["dccp" "sctp" "rds" "tipc"])
+(def netw-conf-file "/etc/modprobe.d/block-protocols.conf")
+
+(defn is-module-loaded? [proto]
+  "Verifica se o módulo está carregado na memória (lsmod)."
+  (let [res (shell {:out :string :continue true} "lsmod")]
+    (if (not= 0 (:exit res))
+      false
+      (boolean (re-find (re-pattern (str "^" proto "\\b")) (:out res))))))
+
+(defn is-module-disabled-in-file? [proto]
+  "Verifica se existe a linha 'install proto /bin/true' no arquivo de conf."
+  (if-not (fs/exists? netw-conf-file)
+    false
+    (let [content (slurp netw-conf-file)
+          pattern (re-pattern (str "(?m)^\\s*install\\s+" proto "\\s+/bin/true"))]
+      (boolean (re-find pattern content)))))
+
+(defn verify-kernel-config [proto]
+  "Roda modprobe --showconfig para ver se o kernel reconhece o bloqueio."
+  (let [res (shell {:out :string :err :null :continue true} "modprobe --showconfig")]
+    (if (not= 0 (:exit res))
+      false
+      (boolean (re-find (re-pattern (str "install\\s+" proto "\\s+/bin/true")) (:out res))))))
+
+(defn netw-3200-check [_opts]
+  (println (str "[NETW-3200] Verificando protocolos desnecessários: " (str/join ", " netw-protocols)))
+
+  (let [results (for [proto netw-protocols]
+                  (let [loaded    (is-module-loaded? proto)
+                        blocked   (is-module-disabled-in-file? proto)]
+                    {:proto proto :loaded loaded :blocked blocked}))
+        all-ok? (every? (fn [r] (and (:blocked r) (not (:loaded r)))) results)]
+
+    (if all-ok?
+      (do
+        (println "✅ Todos os protocolos estão desabilitados e descarregados.")
+        true)
+      (do
+        (doseq [r results]
+          (cond
+            (:loaded r)  (println (str "⚠️  " (:proto r) " está carregado na memória."))
+            (not (:blocked r)) (println (str "❌ " (:proto r) " não está bloqueado em " netw-conf-file))
+            :else (println (str "✔️  " (:proto r) " ok."))))
+        false))))
+
+(defn confirm-netw-unload? [proto]
+  (print (str "⚠️  Módulo " proto " está carregado. Deseja descarregá-lo agora? [s/N] "))
+  (flush)
+  (let [input (str/trim (or (read-line) ""))]
+    (= "s" (str/lower-case input))))
+
+(defn netw-3200 [opts]
+  ;; 1. Configuração de Persistência (Arquivo)
+  (let [missing-blocks (remove is-module-disabled-in-file? netw-protocols)]
+    (when (seq missing-blocks)
+      (if (:dry-run opts)
+        (println (str "🔒 [DRY-RUN] Adicionaria regras de bloqueio para: " (str/join ", " missing-blocks)))
+
+        (try
+          (fs/create-dirs (fs/parent netw-conf-file))
+          (when-not (fs/exists? netw-conf-file)
+            (spit netw-conf-file "# Criado por hardening NETW-3200\n"))
+
+          (println (str "📝 Atualizando " netw-conf-file "..."))
+          (doseq [proto missing-blocks]
+            (spit netw-conf-file (str "install " proto " /bin/true\n") :append true)
+            (println (str "✅ Adicionada regra de install/bin/true para " proto)))
+
+          (catch Exception e
+            (println (str "🔴 Erro ao escrever arquivo: " (.getMessage e))))))))
+
+  ;; 2. Configuração de Runtime (Memória)
+  (doseq [proto netw-protocols]
+    (when (is-module-loaded? proto)
+      (cond
+        (:dry-run opts)
+        (println (str "🛑 [DRY-RUN] Executaria 'modprobe -r " proto "'."))
+
+        (or (:auto opts) (confirm-netw-unload? proto))
+        (do
+          (println (str "⚙️  Removendo módulo " proto "..."))
+          (let [res (shell {:continue true} "sudo modprobe -r" proto)]
+            (if (= 0 (:exit res))
+              (println "✅ Sucesso.")
+              (println "❌ Falha ao descarregar (pode estar em uso)."))))
+
+        :else
+        (println (str "⏭️  " proto " permanecerá carregado até reboot.")))))
+
+  ;; 3. Verificação Final do Kernel (modprobe --showconfig)
+  ;; Isso confirma se o "install /bin/true" foi absorvido
+  (println "\n🧪 Verificando persistência no kernel (modprobe --showconfig)...")
+  (if (:dry-run opts)
+    (println "ℹ️  [DRY-RUN] Verificação pulada.")
+    (doseq [proto netw-protocols]
+      (if (verify-kernel-config proto)
+        (println (str "🔒 " proto ": corretamente bloqueado (install /bin/true detectado)."))
+        (println (str "⚠️  " proto ": bloqueio não detectado no showconfig. Talvez precise reiniciar ou rodar 'depmod'."))))))
+
+; PHP-2372: Desativa exposição de versão do PHP via expose_php = Off
+# PHP-2376: Desativa allow_url_fopen para evitar downloads remotos via PHP
+
+;; --- Helpers Genéricos para PHP ---
+
+(defn get-php-ini-path []
+  "Localiza o php.ini ativo via comando 'php --ini'."
+  (if-not (fs/which "php")
+    nil
+    (let [res (shell {:out :string :err :null :continue true} "php --ini")]
+      (when (= 0 (:exit res))
+        (some->> (str/split-lines (:out res))
+                 (filter #(str/includes? % "Loaded Configuration File"))
+                 (first)
+                 (str/split #":\s+")
+                 (second)
+                 (str/trim))))))
+
+(defn get-php-setting [ini-path key-name]
+  "Lê o valor de uma configuração no arquivo ini."
+  (let [pattern (re-pattern (str "(?i)^\\s*" key-name "\\s*=\\s*(\\w+)"))]
+    (some->> (str/split-lines (slurp ini-path))
+             (keep #(second (re-find pattern %))) ;; Pega o valor capturado
+             (first))))
+
+(defn restart-web-service [opts]
+  "Tenta reiniciar o serviço web, perguntando ao usuário qual é."
+  (println "🔁 Deseja reiniciar o servidor web (ex: apache/nginx/php-fpm)? [s/N] ")
+  (flush)
+
+  (let [should-restart? (if (:auto opts)
+                          true ;; Se é auto, assumimos que sim, mas precisamos saber qual serviço
+                          (= "s" (str/lower-case (str/trim (or (read-line) "")))))]
+
+    (when should-restart?
+      (print "Informe o nome do serviço (ex: php-fpm, apache2, nginx): ")
+      (flush)
+      (let [svc (str/trim (or (read-line) ""))]
+        (if (str/blank? svc)
+          (println "⚠️  Nome do serviço vazio. Reinicialização ignorada.")
+          (do
+            (println (str "⚙️  Reiniciando " svc "..."))
+            (if (:dry-run opts)
+              (println "ℹ️  [DRY-RUN] Executaria: sudo systemctl restart" svc)
+              (let [res (shell {:continue true} "sudo systemctl restart" svc)]
+                (if (= 0 (:exit res))
+                  (println (str "✅ Serviço " svc " reiniciado."))
+                  (println (str "❌ Falha ao reiniciar " svc ".")))))))))))
+
+(defn apply-php-fix [opts key-name target-value desc-id]
+  "Lógica comum para aplicar correções no php.ini."
+  (let [ini-path (get-php-ini-path)]
+    (if-not ini-path
+      (println "❌ Não foi possível localizar o arquivo php.ini (PHP instalado?).")
+
+      (do
+        (println (str "📄 Usando " ini-path))
+        (let [content (slurp ini-path)
+              lines   (str/split-lines content)
+              pattern (re-pattern (str "(?i)^\\s*" key-name "\\s*="))
+              target-line (str key-name " = " target-value)]
+
+          ;; Processa as linhas
+          (let [result (reduce (fn [acc line]
+                                 (if (re-find pattern line)
+                                   (-> acc
+                                       (update :lines conj target-line)
+                                       (assoc :found true))
+                                   (update :lines conj line)))
+                               {:lines [] :found false}
+                               lines)
+
+                final-lines (if (:found result)
+                              (:lines result)
+                              (concat (:lines result) [(str "\n; Adicionado por hardening " desc-id) target-line]))]
+
+            (if (:dry-run opts)
+              (println (str "🔍 [DRY-RUN] Definiria " key-name " = " target-value))
+
+              (try
+                (spit ini-path (str (str/join "\n" final-lines) "\n"))
+                (println (str "✅ " key-name " definido como " target-value "."))
+                (restart-web-service opts)
+                (catch Exception e
+                  (println (str "🔴 Erro ao escrever no php.ini: " (.getMessage e))))))))))))
+
+;; --- Módulo PHP-2372 ---
+
+(defn php-2372-check [_opts]
+  (println "[PHP-2372] Verificando configuração expose_php...")
+  (if-let [ini-path (get-php-ini-path)]
+    (let [val (get-php-setting ini-path "expose_php")]
+      (if (= "Off" val) ;; Case sensitive check aqui, ou use str/lower-case se preferir
+        (do (println "✔️  expose_php já está Off.") true)
+        (do (println (str "⚠️  expose_php está configurado como " (or val "N/A"))) false)))
+    (do (println "⚠️  php.ini não encontrado.") false)))
+
+(defn php-2372 [opts]
+  (when-not (php-2372-check opts)
+    (apply-php-fix opts "expose_php" "Off" "PHP-2372")))
+
+;; --- Módulo PHP-2376 ---
+
+(defn php-2376-check [_opts]
+  (println "[PHP-2376] Verificando configuração allow_url_fopen...")
+  (if-let [ini-path (get-php-ini-path)]
+    (let [val (get-php-setting ini-path "allow_url_fopen")]
+      (if (= "Off" val)
+        (do (println "✔️  allow_url_fopen já está Off.") true)
+        (do (println (str "⚠️  allow_url_fopen está configurado como " (or val "N/A"))) false)))
+    (do (println "⚠️  php.ini não encontrado.") false)))
+
+(defn php-2376 [opts]
+  (when-not (php-2376-check opts)
+    (apply-php-fix opts "allow_url_fopen" "Off" "PHP-2376")))
+
+; LOGG-2146: Verifica e rotaciona arquivos de log (incluindo subdiretórios)
+
+(def custom-logrotate-conf "/etc/logrotate.d/custom-unmanaged-logs")
+
+(defn get-all-log-files []
+  "Encontra todos os arquivos .log em /var/log recursivamente."
+  (try
+    (->> (fs/glob "/var/log" "**/*.log")
+         (map str) ;; Converte Path object para String
+         (filter fs/regular-file?) ;; Garante que é arquivo, não diretório
+         set)
+    (catch Exception e
+      (println (str "⚠️  Erro ao listar arquivos em /var/log: " (.getMessage e)))
+      #{})))
+
+(defn get-managed-logs []
+  "Lê configs do logrotate e retorna um set de caminhos configurados."
+  (let [configs (concat ["/etc/logrotate.conf"]
+                        (map str (fs/glob "/etc/logrotate.d" "*")))
+
+        extract-path (fn [line]
+                       ;; Regex equivalente ao m{^(/var/log/[^ ]+)} do Perl
+                       (second (re-find #"^(/var/log/\S+)" (str/trim line))))]
+
+    (->> configs
+         (filter fs/exists?)
+         (filter fs/regular-file?)
+         (mapcat (fn [f]
+                   (try
+                     (str/split-lines (slurp f))
+                     (catch Exception _ []))))
+         (keep extract-path)
+         set)))
+
+(defn get-unmanaged-logs []
+  "Retorna lista de logs que existem no disco mas não nas configs."
+  (let [all-logs (get-all-log-files)
+        managed  (get-managed-logs)]
+    ;; Remove do set 'all-logs' aqueles que estão em 'managed'
+    (sort (vec (clojure.set/difference all-logs managed)))))
+
+(defn logg-2146-check [_opts]
+  (println "[LOGG-2146] Verificando rotação de logs...")
+
+  (if-not (fs/which "logrotate")
+    (do
+      (println "❌ logrotate não está instalado.")
+      false)
+
+    (let [unmanaged (get-unmanaged-logs)]
+      (if (empty? unmanaged)
+        (do
+          (println "✅ Todos os arquivos .log em /var/log estão sendo rotacionados.")
+          true)
+        (do
+          (println "⚠️  Arquivos sem rotação configurada:")
+          (doseq [log unmanaged]
+            (println (str "   - " log)))
+          false)))))
+
+(defn generate-logrotate-entry [log-path]
+  (str log-path " {\n"
+       "    weekly\n"
+       "    rotate 4\n"
+       "    compress\n"
+       "    missingok\n"
+       "    notifempty\n"
+       "}\n"))
+
+(defn logg-2146 [opts]
+  ;; Check falhou (logs órfãos ou sem logrotate)
+  (when-not (logg-2146-check opts)
+
+    ;; 1. Verifica instalação
+    (when-not (fs/which "logrotate")
+      (println "🔧 Por favor instale com: sudo pacman -S logrotate")
+      (throw (ex-info "Dependência ausente" {:pkg "logrotate"})))
+
+    ;; 2. Trata os logs órfãos
+    (let [unmanaged (get-unmanaged-logs)]
+      (when (seq unmanaged)
+        (cond
+          (:dry-run opts)
+          (println "🔍 [DRY-RUN] Seriam criadas regras para os arquivos listados acima.")
+
+          (or (:auto opts)
+              (do
+                (print "Deseja configurar rotação padrão para esses arquivos? [s/N] ")
+                (flush)
+                (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+          (try
+            (println (str "⚙️  Gerando configuração em " custom-logrotate-conf "..."))
+
+            (let [content (str "# Criado automaticamente por hardening LOGG-2146\n"
+                               (str/join "\n" (map generate-logrotate-entry unmanaged)))]
+              (spit custom-logrotate-conf content))
+
+            (println "✅ Regras de rotação criadas com sucesso.")
+
+            (catch Exception e
+              (println (str "🔴 Erro ao criar arquivo de configuração: " (.getMessage e)))))
+
+          :else
+          (println "⏭️  Configuração ignorada."))))))
+
+; BANN-7126: Adiciona um banner legal em /etc/issue e /etc/issue.net
+(def banner-targets ["/etc/issue" "/etc/issue.net"])
+
+(def banner-lines
+  ["╔══════════════════════════════════════════════════════╗"
+   "║        ⚠️  ACESSO RESTRITO AO SISTEMA ⚠️              ║"
+   "╚══════════════════════════════════════════════════════╝"
+   ""
+   "Este sistema é de uso exclusivo de usuários autorizados."
+   ""
+   "Todas as atividades são monitoradas e registradas."
+   "Usuários não autorizados estarão sujeitos a sanções administrativas,"
+   "civis e criminais, conforme a legislação vigente."
+   ""
+   "Ao continuar, você declara estar ciente e concorda com esses termos."
+   ""])
+
+(def full-banner (str/join "\n" banner-lines))
+
+(defn has-legal-banner? [file]
+  "Verifica se o arquivo contém palavras-chave do banner."
+  (if-not (fs/exists? file)
+    false
+    (let [content (slurp file)]
+      ;; Lógica do Perl: grep { /ACESSO RESTRITO|Todas as atividades/ }
+      (boolean (re-find #"ACESSO RESTRITO|Todas as atividades" content)))))
+
+(defn bann-7126-check [_opts]
+  (println "[BANN-7126] Verificando banner legal em /etc/issue e issue.net...")
+
+  (let [results (for [f banner-targets]
+                  {:file f :ok (has-legal-banner? f)})
+        all-ok? (every? :ok results)]
+
+    (if all-ok?
+      (do
+        (println "✅ Banner legal presente em todos os arquivos alvo.")
+        true)
+      (do
+        (doseq [r results]
+          (if (:ok r)
+            (println (str "✔️  " (:file r) " já possui banner."))
+            (println (str "⚠️  " (:file r) " não possui o banner padrão."))))
+        false))))
+
+(defn apply-banner [file opts]
+  (cond
+    (:dry-run opts)
+    (do
+      (println (str "🔍 [DRY-RUN] O seguinte conteúdo seria escrito em " file ":\n"))
+      (println full-banner))
+
+    (or (:auto opts)
+        (do
+          (print (str "Deseja aplicar o banner legal em " file "? [s/N] "))
+          (flush)
+          (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+    (try
+      (spit file (str full-banner "\n"))
+      (println (str "✅ Banner aplicado com sucesso em " file "."))
+      (catch Exception e
+        (println (str "🔴 Erro ao escrever em " file ": " (.getMessage e)))))
+
+    :else
+    (println (str "⏭️  Alteração ignorada para " file "."))))
+
+(defn bann-7126 [opts]
+  ;; Diferente dos outros, aqui iteramos sobre os arquivos na função fix
+  ;; para permitir que o usuário aceite um e negue outro se quiser (modo interativo)
+
+  (println "[BANN-7126] Iniciando aplicação de banners...")
+
+  (doseq [file banner-targets]
+    (if (has-legal-banner? file)
+      (println (str "✔️  Banner já presente em " file "."))
+
+      ;; Se não tem banner, tenta aplicar
+      (apply-banner file opts))))
+
+; ACCT-9622: Habilita process accounting no sistema
+;; --- Helpers de Pacotes e Serviços ---
+
+(defn package-installed? [pkg]
+  (let [res (shell {:out :null :err :null :continue true} "pacman -Q" pkg)]
+    (= 0 (:exit res))))
+
+(defn install-package [pkg opts]
+  (cond
+    (:dry-run opts)
+    (println (str "🔍 [DRY-RUN] Instalaria pacote " pkg "."))
+
+    (or (:auto opts)
+        (do
+          (print (str "Deseja instalar o pacote " pkg " agora? [s/N] "))
+          (flush)
+          (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+    (do
+      (println (str "⚙️  Instalando " pkg "..."))
+      (let [res (shell {:continue true} "sudo pacman -Sy --noconfirm" pkg)]
+        (if (= 0 (:exit res))
+          (do (println (str "✅ " pkg " instalado.")) true)
+          (do (println (str "❌ Falha ao instalar " pkg ".")) false))))
+
+    :else
+    (do (println "❎ Instalação cancelada.") false)))
+
+(defn enable-service [svc opts]
+  (if (:dry-run opts)
+    (println (str "🔍 [DRY-RUN] Habilitaria e iniciaria " svc "."))
+    (do
+      (println (str "🚀 Ativando " svc "..."))
+      (shell "sudo systemctl enable --now" svc)
+      (let [res (shell {:out :string :continue true} "systemctl is-active" svc)]
+        (if (= "active" (str/trim (:out res)))
+          (println (str "✅ " svc " está ativo."))
+          (println (str "❌ " svc " falhou ao iniciar.")))))))
+
+;; --- ACCT-9622: Process Accounting ---
+
+(defn acct-9622-check [_opts]
+  (println "[ACCT-9622] Verificando process accounting (acct)...")
+  (if (package-installed? "acct")
+    (let [res (shell {:out :string :continue true} "accton")]
+      ;; O comando 'accton' sem argumentos não imprime status em algumas versões,
+      ;; mas em outras imprime "Turning on process accounting...".
+      ;; A maneira mais segura de checar no Linux é ver se o arquivo de log está sendo usado
+      ;; ou se existe o flag no kernel, mas vamos confiar na existência do arquivo de log ativo.
+      (if (fs/exists? "/var/log/pacct")
+        (do (println "✔️  Pacote instalado e log /var/log/pacct existe.") true)
+        (do (println "⚠️  Pacote instalado mas log não encontrado.") false)))
+    (do (println "⚠️  Pacote 'acct' não instalado.") false)))
+
+(defn acct-9622 [opts]
+  (when-not (acct-9622-check opts)
+    (when (or (package-installed? "acct") (install-package "acct" opts))
+      (if (:dry-run opts)
+        (println "🔍 [DRY-RUN] Ativaria o accounting em /var/log/pacct.")
+
+        (let [log-file "/var/log/pacct"]
+          (println "📂 Configurando arquivo de log...")
+          (when-not (fs/exists? log-file)
+            (shell "sudo touch" log-file)
+            (shell "sudo chown root:root" log-file)
+            (shell "sudo chmod 600" log-file))
+
+          (println "Ativando accton...")
+          (let [res (shell {:continue true} "sudo accton" log-file)]
+            (if (= 0 (:exit res))
+              (println (str "✅ Process accounting ativado em " log-file))
+              (println "❌ Falha ao ativar accton."))))))))
 
 
+; ACCT-9626: Ativa coleta de contabilidade de sistema com sysstat
+(defn acct-9626-check [_opts]
+  (println "[ACCT-9626] Verificando sysstat...")
+  (if (package-installed? "sysstat")
+    (let [res (shell {:out :string :continue true} "systemctl is-active sysstat")]
+      (if (= "active" (str/trim (:out res)))
+        (do (println "✔️  sysstat instalado e rodando.") true)
+        (do (println "⚠️  sysstat instalado mas inativo.") false)))
+    (do (println "⚠️  Pacote 'sysstat' não instalado.") false)))
+
+(defn acct-9626 [opts]
+  (when-not (acct-9626-check opts)
+    (when (or (package-installed? "sysstat") (install-package "sysstat" opts))
+
+      ;; Configuração do /etc/default/sysstat (comum em Debian, mas no Arch as vezes é opcional)
+      (let [conf-file "/etc/default/sysstat"]
+        (if (fs/exists? conf-file)
+          (if (:dry-run opts)
+            (println (str "🔍 [DRY-RUN] Ajustaria ENABLED=\"true\" em " conf-file))
+            (do
+              (println (str "📝 Configurando " conf-file "..."))
+              ;; Regex replace simples para ativar
+              (let [content (slurp conf-file)
+                    new-content (if (str/includes? content "ENABLED")
+                                  (str/replace content #"ENABLED=\".*\"" "ENABLED=\"true\"")
+                                  (str content "\nENABLED=\"true\"\n"))]
+                (spit conf-file new-content)
+                (println "✅ Configuração atualizada."))))
+          (println (str "ℹ️  " conf-file " não encontrado (pode ser padrão no Arch). Seguindo para ativação do serviço."))))
+
+      ;; Ativa serviço
+      (enable-service "sysstat" opts))))
 
 
+; ACCT-9628: Ativa auditd e configura regras básicas de auditoria
+(defn acct-9628-check [_opts]
+  (println "[ACCT-9628] Verificando auditd...")
+  (if (package-installed? "audit")
+    (let [active? (= "active" (str/trim (:out (shell {:out :string :continue true} "systemctl is-active auditd"))))
+          rules-exist? (fs/exists? "/etc/audit/rules.d/99-hardening.rules")]
+      (if (and active? rules-exist?)
+        (do (println "✔️  auditd ativo e regras de hardening presentes.") true)
+        (do (println "⚠️  auditd inativo ou sem regras configuradas.") false)))
+    (do (println "⚠️  Pacote 'audit' não instalado.") false)))
+
+(defn acct-9628 [opts]
+  (when-not (acct-9628-check opts)
+    (when (or (package-installed? "audit") (install-package "audit" opts))
+
+      ;; Ativa serviço PRIMEIRO (auditd precisa estar rodando para carregar regras via augenrules as vezes)
+      (enable-service "auditd" opts)
+
+      (if (:dry-run opts)
+        (println "🔍 [DRY-RUN] Criaria regras de auditoria em /etc/audit/rules.d/99-hardening.rules.")
+
+        (do
+          (println "🛡️  Escrevendo regras de auditoria...")
+          (let [rules-file "/etc/audit/rules.d/99-hardening.rules"
+                rules-content (str "# Regras de Hardening ACCT-9628\n"
+                                   "-w /etc/passwd -p wa -k passwd_changes\n"
+                                   "-w /etc/shadow -p wa -k shadow_changes\n"
+                                   "-w /etc/group -p wa -k group_changes\n"
+                                   "-w /etc/sudoers -p wa -k sudoers_changes\n"
+                                   "-a always,exit -F path=/usr/bin/passwd -F perm=x -k passwd_exec\n"
+                                   "-a always,exit -F path=/usr/bin/sudo -F perm=x -k sudo_exec\n"
+                                   "-a always,exit -F path=/usr/bin/chmod -F perm=x -k chmod_exec\n"
+                                   "-a always,exit -F path=/usr/bin/chown -F perm=x -k chown_exec\n"
+                                   "-a always,exit -F arch=b64 -S chown,fchown,fchownat,lchown -k chown_calls\n"
+                                   "-a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -k chmod_calls\n")]
+
+            (try
+              (spit rules-file rules-content)
+              (println "✅ Regras escritas com sucesso.")
+
+              ;; Carrega regras
+              (println "🔄 Carregando regras (augenrules)...")
+              (let [res (shell {:continue true} "sudo augenrules --load")]
+                (if (= 0 (:exit res))
+                  (println "✅ Regras carregadas no kernel.")
+                  (println "⚠️  Falha ao carregar regras (verifique logs do auditd).")))
+
+              (catch Exception e
+                (println (str "🔴 Erro ao escrever regras: " (.getMessage e)))))))))))
+
+; TIME-3104: Ativa sincronização de tempo com NTP (systemd-timesyncd)
+(defn get-ntp-status []
+  "Obtém propriedades NTP do timedatectl de forma estruturada."
+  (let [res (shell {:out :string :err :null :continue true}
+                   "timedatectl show -p NTP -p NTPSynchronized")]
+    (if (not= 0 (:exit res))
+      {:active "no" :synced "no"} ;; Falha segura
+      (let [lines (str/split-lines (:out res))
+            props (into {} (map #(str/split % #"=" 2) lines))]
+        {:active (get props "NTP" "no")
+         :synced (get props "NTPSynchronized" "no")}))))
+
+(defn time-3104-check [_opts]
+  (println "[TIME-3104] Verificando status da sincronização NTP...")
+
+  (let [status (get-ntp-status)
+        is-active (= "yes" (:active status))
+        is-synced (= "yes" (:synced status))]
+
+    (if (and is-active is-synced)
+      (do
+        (println "✅ Sincronização NTP está ativa e o relógio está sincronizado.")
+        true)
+      (do
+        (println "⚠️  Status do NTP:")
+        (println (str "   - Serviço Ativo: " (:active status)))
+        (println (str "   - Sincronizado:  " (:synced status)))
+        false))))
+
+(defn time-3104 [opts]
+  (when-not (time-3104-check opts)
+
+    (cond
+      (:dry-run opts)
+      (println "🔍 [DRY-RUN] Habilitaria e iniciaria systemd-timesyncd.service.")
+
+      (or (:auto opts)
+          (do
+            (print "Deseja ativar systemd-timesyncd agora? [s/N] ")
+            (flush)
+            (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+      (do
+        (println "🔧 Habilitando systemd-timesyncd...")
+        ;; Tenta habilitar e iniciar
+        (shell {:continue true} "sudo systemctl enable systemd-timesyncd.service")
+        (shell {:continue true} "sudo systemctl start systemd-timesyncd.service")
+
+        ;; Aguarda um breve momento para o serviço tentar sync (opcional, mas útil)
+        (Thread/sleep 1000)
+
+        ;; Verificação pós-ativação
+        (let [status (get-ntp-status)]
+          (if (= "yes" (:synced status))
+            (println "✅ Sincronização NTP ativada com sucesso.")
+            (do
+              ;; Às vezes demora um pouco para sincronizar, então verificamos se pelo menos está ativo
+              (if (= "yes" (:active status))
+                (println "⚠️  Serviço ativado, mas o relógio ainda está sincronizando (pode levar alguns segundos).")
+                (println "❌ Falha ao ativar sincronização NTP. Verifique logs do systemd-timesyncd."))))))
+
+      :else
+      (println "⏭️  Ativação ignorada."))))
 
 
+; CRYP-7902: Verifica certificados locais que estão expirados ou prestes a expirar
+
+;; Diretórios padrão de certificados no Linux
+(def cert-paths ["/etc/ssl"
+                 "/etc/pki"
+                 "/usr/local/share/ca-certificates"
+                 "/etc/letsencrypt/live"
+                 "/etc/letsencrypt/archive"])
+
+;; Formatador para ler a data do OpenSSL (Ex: "May  5 12:00:00 2025 GMT")
+;; Usamos Locale/US pois o OpenSSL geralmente retorna meses em inglês
+(def openssl-date-fmt
+  (DateTimeFormatter/ofPattern "MMM d HH:mm:ss yyyy z" Locale/US))
+
+(defn find-cert-files []
+  "Busca arquivos .crt, .pem, .cer recursivamente nos caminhos definidos."
+  (let [extensions #{".crt" ".pem" ".cer"}]
+    (->> cert-paths
+         (filter fs/exists?) ;; Ignora diretórios que não existem
+         (mapcat (fn [path]
+                   (try
+                     (fs/glob path "**/*.{crt,pem,cer}")
+                     (catch Exception _ [])))) ;; Ignora erros de permissão na listagem
+         (map str) ;; Converte Path object para String
+         (distinct)))) ;; Evita duplicatas (links simbólicos podem causar isso)
+
+(defn get-cert-end-date [cert-file]
+  "Extrai a data de expiração usando openssl."
+  (let [res (shell {:out :string :err :null :continue true}
+                   "openssl x509 -enddate -noout -in" cert-file)]
+    (when (= 0 (:exit res))
+      (let [out (str/trim (:out res))]
+        ;; Output esperado: notAfter=May  5 12:00:00 2025 GMT
+        (when-let [[_ date-str] (re-find #"^notAfter=(.*)" out)]
+          (try
+            ;; As vezes o dia vem com espaço extra "May  5", o parser do Java pode ser estrito
+            ;; Vamos normalizar espaços simples
+            (let [clean-date (str/join " " (str/split date-str #"\s+"))]
+              (ZonedDateTime/parse clean-date openssl-date-fmt))
+            (catch Exception e
+              (println (str "⚠️  Erro ao parsear data de " cert-file ": " date-str))
+              nil)))))))
+
+(defn check-cert-status [cert-file now warn-date]
+  "Retorna :expired, :expiring ou :ok"
+  (if-let [end-date (get-cert-end-date cert-file)]
+    (cond
+      (.isBefore end-date now) :expired
+      (.isBefore end-date warn-date) :expiring
+      :else :ok)
+    :error)) ;; Erro ao ler/parsear
+
+(defn cryp-7902-check [_opts]
+  (println "[CRYP-7902] Verificando certificados locais para expiração...")
+
+  (let [certs (find-cert-files)]
+    (if (empty? certs)
+      (do
+        (println "ℹ️  Nenhum certificado encontrado nos diretórios padrão.")
+        true)
+
+      (let [now (ZonedDateTime/now)
+            warn-date (.plusDays now 30)
+
+            ;; Processa todos os certificados
+            results (pmap (fn [f] ;; pmap faz em paralelo para ser mais rápido
+                            (assoc {} :file f :status (check-cert-status f now warn-date)))
+                          certs)
+
+            expired (filter #(= :expired (:status %)) results)
+            expiring (filter #(= :expiring (:status %)) results)]
+
+        ;; Reporta Problemas
+        (doseq [r expired]
+          (println (str "❌ [EXPIRADO] " (:file r))))
+
+        (doseq [r expiring]
+          (println (str "⚠️  [Vencendo em breve] " (:file r))))
+
+        ;; Resumo Final
+        (if (and (empty? expired) (empty? expiring))
+          (do
+            (println "✅ Todos os certificados estão válidos por pelo menos 30 dias.")
+            true)
+          (do
+            (println (str "\nResumo: " (count expired) " expirado(s), " (count expiring) " vencendo(s) em até 30 dias."))
+            false))))))
+
+(defn cryp-7902 [opts]
+  ;; Como este módulo é apenas de verificação (não renovamos certificados automaticamente
+  ;; pois isso depende de CA externa ou LetsEncrypt), a função principal apenas roda o check.
+  (cryp-7902-check opts))
+
+; FINT-4350: Instala e inicializa AIDE para verificação de integridade de arquivos
+
+;; --- Helpers Comuns ---
+
+(defn package-installed? [pkg]
+  (let [res (shell {:out :null :err :null :continue true} "pacman -Q" pkg)]
+    (= 0 (:exit res))))
+
+(defn install-package [pkg opts]
+  (cond
+    (:dry-run opts)
+    (do (println (str "🔍 [DRY-RUN] Instalaria pacote " pkg ".")) true)
+
+    (or (:auto opts)
+        (do
+          (print (str "Deseja instalar o pacote " pkg " agora? [s/N] "))
+          (flush)
+          (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+    (do
+      (println (str "⚙️  Instalando " pkg "..."))
+      (let [res (shell {:continue true} "sudo pacman -Sy --noconfirm" pkg)]
+        (if (= 0 (:exit res))
+          (do (println (str "✅ " pkg " instalado.")) true)
+          (do (println (str "❌ Falha ao instalar " pkg ".")) false))))
+
+    :else
+    (do (println "❎ Instalação cancelada.") false)))
+
+;; --- FINT-4350: AIDE ---
+
+(defn fint-4350-check [_opts]
+  (println "[FINT-4350] Verificando AIDE (File Integrity)...")
+  (if (package-installed? "aide")
+    (if (fs/exists? "/var/lib/aide/aide.db.gz")
+      (do (println "✔️  AIDE instalado e banco de dados presente.") true)
+      (do (println "⚠️  AIDE instalado mas banco de dados não encontrado.") false))
+    (do (println "⚠️  Pacote 'aide' não instalado.") false)))
+
+(defn fint-4350 [opts]
+  (when-not (fint-4350-check opts)
+
+    ;; 1. Instalação
+    (when (or (package-installed? "aide") (install-package "aide" opts))
+
+      (if (:dry-run opts)
+        (println "🔍 [DRY-RUN] Inicializaria o banco de dados do AIDE.")
+
+        (do
+          (println "🛠️  Inicializando banco de dados do AIDE (pode demorar)...")
+          (let [res (shell {:continue true} "sudo aide --init")]
+            (if (not= 0 (:exit res))
+              (println "❌ Falha ao gerar banco de dados.")
+
+              (do
+                (println "✅ Banco inicial gerado.")
+                (println "📂 Movendo banco para local padrão...")
+                (let [mv-res (shell {:continue true} "sudo mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz")]
+                  (if (= 0 (:exit mv-res))
+                    (do
+                      (println "✅ Banco de dados pronto.")
+                      (println "ℹ️  Execute verificações futuras com: sudo aide --check"))
+                    (println "⚠️  Falha ao mover banco de dados.")))))))))))
 
 
+; TOOL-5002: Verifica presença de ferramentas de automação no sistema
+(def automation-tools
+  {"ansible"   "Ansible"
+   "puppet"    "Puppet"
+   "salt"      "SaltStack"
+   "chef-client" "Chef"
+   "cf-agent"  "CFEngine"})
+
+(defn tool-5002-check [_opts]
+  (println "[TOOL-5002] Verificando ferramentas de automação...")
+  (let [found (filter #(fs/which (key %)) automation-tools)]
+    (if (seq found)
+      (do
+        (println "✅ Ferramentas de automação detectadas:")
+        (doseq [[bin name] found]
+          (println (str "   - " name " (" bin ")")))
+        true)
+      (do
+        (println "⚠️  Nenhuma ferramenta de automação encontrada.")
+        false))))
+
+(defn tool-5002 [opts]
+  (when-not (tool-5002-check opts)
+    ;; Se não encontrou nada, sugere instalar Ansible
+    (install-package "ansible" opts)))
+
+; FILE-7524: Verifica e restringe permissões perigosas de arquivos
+
+(defn get-file-mode [path]
+  "Retorna permissão octal como string (ex: '777')."
+  (try
+    (let [perms (Files/getPosixFilePermissions (fs/path path) (make-array LinkOption 0))
+          ;; Converte Set<PosixFilePermission> para rwxrwxrwx
+          perm-str (PosixFilePermissions/toString perms)
+          ;; Converte rwxrwxrwx para octal (ex: 755)
+          octal (reduce (fn [acc [i char]]
+                          (if (= char \-)
+                            acc
+                            (let [bit (mod (- 8 i) 3) ;; 0, 1, 2
+                                  val (case (mod i 3) 0 4, 1 2, 2 1)
+                                  shift (* 3 (quot (- 8 i) 3))]
+                              ;; Este cálculo manual é complexo, vamos simplificar:
+                              ;; É mais fácil usar fs/posix->int se disponível ou lógica simples
+                              ;; Mas como babashka expõe Java, vamos usar bibliotecas se possível.
+                              acc)))) ;; Placeholder
+          ;; Na verdade, o fs/posix-file-permissions do babashka retorna um set.
+          ;; O jeito mais fácil de pegar octal no babashka fs:
+          path-obj (fs/path path)
+          attr (Files/getAttribute path-obj "unix:mode" (make-array LinkOption 0))
+          octal (format "%o" (bit-and attr 0777))]
+      octal)
+    (catch Exception _ nil)))
+
+(defn get-risky-files []
+  "Busca arquivos com permissões 777, 666."
+  ;; Limitamos a busca para evitar scan do disco inteiro
+  ;; e usamos max-depth para não travar em /var/lib/docker e afins.
+  (let [base-dirs ["/etc" "/home" "/opt" "/srv"] ;; Removi /var pois é muito grande/ruidoso
+        suspects (atom [])]
+
+    (doseq [dir base-dirs]
+      (when (fs/exists? dir)
+        ;; fs/glob é recursivo. Cuidado.
+        ;; Para performance e segurança, vamos iterar manualmente com fs/walk limitando profundidade seria ideal,
+        ;; mas glob "**" é o padrão. Vamos filtrar depois.
+        (try
+          (doseq [f (fs/glob dir "**/*")]
+            (when (fs/regular-file? f)
+              (let [mode (get-file-mode f)]
+                (when (or (= "777" mode) (= "666" mode))
+                  (let [name (str f)
+                        type (cond
+                               (re-find #"\.(conf|ini)$" name) :config
+                               (re-find #"\.(key|pem)$" name) :key
+                               (re-find #"id_rsa" name) :key
+                               :else :file)]
+                    (swap! suspects conj {:path name :mode mode :type type}))))))
+          (catch Exception e
+            (println (str "⚠️  Erro ao escanear " dir ": " (.getMessage e)))))))
+    @suspects))
+
+(defn suggest-mode [{:keys [mode type]}]
+  (cond
+    (= :key type) "600"
+    (= :config type) "640"
+    (= "777" mode) "755" ;; Executável público -> Executável seguro
+    (= "666" mode) "644" ;; Leitura/Escrita pública -> Leitura pública
+    :else "644"))
+
+(defn file-7524-check [_opts]
+  (println "[FILE-7524] Buscando arquivos com permissões perigosas (777/666)...")
+  (let [files (get-risky-files)]
+    (if (seq files)
+      (do
+        (println (str "⚠️  Encontrados " (count files) " arquivos arriscados:"))
+        (doseq [f (take 10 files)]
+          (println (str "   [" (:mode f) "] " (:path f))))
+        (when (> (count files) 10) (println "..."))
+        false)
+      (do
+        (println "✅ Nenhum arquivo crítico encontrado (nos diretórios base).")
+        true))))
+
+(defn file-7524 [opts]
+  (when-not (file-7524-check opts)
+    (let [files (get-risky-files)]
+
+      (cond
+        (:dry-run opts)
+        (do
+          (println "🔍 [DRY-RUN] Sugestões de correção:")
+          (doseq [f (take 20 files)]
+            (println (str "chmod " (suggest-mode f) " " (:path f)))))
+
+        (or (:auto opts)
+            (do
+              (print "Deseja corrigir as permissões automaticamente? [s/N] ")
+              (flush)
+              (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+        (do
+          (println "🛠️  Aplicando correções...")
+          (doseq [f files]
+            (let [new-mode (suggest-mode f)]
+              (try
+                (fs/set-posix-file-permissions (:path f) new-mode)
+                (println (str "✅ " (:path f) " -> " new-mode))
+                (catch Exception e
+                  ;; Tenta com sudo se falhar (fs/set-posix usa Java API que roda como usuário atual)
+                  (let [res (shell {:continue true} "sudo chmod" new-mode (:path f))]
+                    (if (= 0 (:exit res))
+                      (println (str "✅ [SUDO] " (:path f) " -> " new-mode))
+                      (println (str "❌ Falha: " (:path f))))))))))
+
+        :else
+        (println "⏭️  Correções ignoradas.")))))
+
+; KRNL-6000: Aplica valores seguros de sysctl para segurança do kernel com backup
+
+;; --- KRNL-6000: Sysctl Hardening ---
+
+(def sysctl-recommended
+  {"kernel.kptr_restrict" "2"
+   "fs.suid_dumpable" "0"
+   "kernel.randomize_va_space" "2"
+   "net.ipv4.icmp_echo_ignore_broadcasts" "1"
+   "net.ipv4.conf.all.accept_redirects" "0"
+   "net.ipv4.conf.all.send_redirects" "0"
+   "net.ipv4.conf.all.accept_source_route" "0"
+   "net.ipv4.conf.default.accept_redirects" "0"
+   "net.ipv4.conf.default.send_redirects" "0"
+   "net.ipv4.conf.default.accept_source_route" "0"
+   "net.ipv4.tcp_syncookies" "1"
+   "net.ipv4.tcp_timestamps" "0"
+   "net.ipv6.conf.all.accept_redirects" "0"
+   "net.ipv6.conf.default.accept_redirects" "0"})
+
+(defn get-sysctl [key]
+  (let [res (shell {:out :string :err :null :continue true} "sysctl -n" key)]
+    (if (= 0 (:exit res))
+      (str/trim (:out res))
+      nil)))
+
+(defn krnl-6000-check [_opts]
+  (println "[KRNL-6000] Verificando parâmetros sysctl...")
+
+  (let [results (for [[k expected] sysctl-recommended]
+                  (let [current (get-sysctl k)]
+                    {:key k :current current :expected expected :ok? (= current expected)}))
+        bad-params (filter #(not (:ok? %)) results)]
+
+    (if (empty? bad-params)
+      (do (println "✔️  Todos os parâmetros sysctl estão corretos.") true)
+      (do
+        (doseq [p bad-params]
+          (println (str "⚠️  " (:key p) " atual: " (or (:current p) "N/A") " -> recomendado: " (:expected p))))
+        false))))
+
+(defn krnl-6000 [opts]
+  (when-not (krnl-6000-check opts)
+    (let [diffs (filter (fn [[k expected]] (not= (get-sysctl k) expected)) sysctl-recommended)]
+
+      (if (:dry-run opts)
+        (do
+          (println "🔍 [DRY-RUN] Os seguintes valores seriam aplicados:")
+          (doseq [[k v] diffs] (println (str "   " k " = " v))))
+
+        (if (or (:auto opts)
+                (do
+                  (print "Deseja aplicar os valores recomendados e salvar backup? [s/N] ")
+                  (flush)
+                  (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+          (do
+            ;; 1. Backup
+            (let [backup-dir "/var/backups"
+                  timestamp  (.format (LocalDateTime/now) (DateTimeFormatter/ofPattern "yyyyMMdd"))
+                  backup-file (str backup-dir "/sysctl-backup-" timestamp ".conf")]
+
+              (println "💾 Gerando backup...")
+              (fs/create-dirs backup-dir)
+              (with-open [w (clojure.java.io/writer backup-file)]
+                (.write w (str "# Backup automático sysctl " timestamp "\n"))
+                (doseq [[k _] sysctl-recommended]
+                  (when-let [curr (get-sysctl k)]
+                    (.write w (str k " = " curr "\n")))))
+              (println (str "✅ Backup salvo em " backup-file)))
+
+            ;; 2. Aplicação Persistente
+            (println "⚙️  Aplicando configurações...")
+            (let [conf-file "/etc/sysctl.d/99-hardening.conf"
+                  new-content (str "# sysctl hardening - KRNL-6000\n"
+                                   (str/join "\n" (map (fn [[k v]] (str k " = " v)) diffs))
+                                   "\n")]
+              (spit conf-file new-content)
+
+              ;; 3. Aplicação em Runtime
+              (doseq [[k v] diffs]
+                (shell "sudo sysctl -w" (str k "=" v)))
+
+              (println (str "✅ Valores aplicados e salvos em " conf-file))))
+
+          (println "⏭️  Alterações ignoradas."))))))
 
 
+; HRDN-7222: Verifica e restringe o uso de compiladores no sistema
+
+(def compilers ["gcc" "g++" "clang" "cc" "c++" "rustc" "go" "javac"
+                "kotlinc" "native-image" "julia" "gfortran" "ifort"
+                "nim" "ghc" "fpc" "swiftc" "zig" "v" "nasm" "as"])
+
+(defn get-file-owner [path]
+  (try
+    (Files/getOwner (fs/path path) (make-array LinkOption 0))
+    (catch Exception _ nil)))
+
+(defn get-octal-mode [path]
+  (try
+    (let [attr (Files/getAttribute (fs/path path) "unix:mode" (make-array LinkOption 0))]
+      (format "%o" (bit-and attr 0777))) ;; Máscara para pegar apenas permissões
+    (catch Exception _ nil)))
+
+(defn find-compilers []
+  "Busca compiladores no PATH e em diretórios específicos."
+  (let [found (atom #{})]
+    ;; 1. Check PATH
+    (doseq [c compilers]
+      (when-let [p (fs/which c)]
+        (swap! found conj (str (fs/real-path p))))) ;; Resolve symlinks
+
+    ;; 2. Scan dirs (limitado para performance)
+    ;; No Perl era File::Find. Aqui usamos fs/walk mas com filtro de nome para ser rápido.
+    (let [search-dirs ["/usr/local" "/opt" "/home"]]
+      (doseq [dir search-dirs]
+        (when (fs/exists? dir)
+          (try
+            (fs/walk-file-tree dir
+                               {:max-depth 4 ;; Limita profundidade para não varrer o mundo
+                                :visit-file (fn [path _attrs]
+                                              (let [fname (str (fs/file-name path))]
+                                                (when (some #{fname} compilers)
+                                                  (swap! found conj (str path)))
+                                                :continue))})
+            (catch Exception _ nil)))))
+    @found))
+
+(defn check-compiler-perms [path]
+  (let [mode  (get-octal-mode path)
+        owner (str (get-file-owner path)) ;; Retorna Principal, convertemos pra string
+
+        ;; Verifica se é dono do próprio home
+        home-owner (second (re-find #"^/home/([^/]+)" path))
+        is-home-owner? (and home-owner (= owner home-owner))
+
+        ;; Regras de segurança:
+        ;; 1. Root com permissão restrita (750 ou 700 - começa com 7 e termina com 0)
+        ;; 2. Ou usuário dono do arquivo dentro da sua home
+        is-safe? (or (and (= "root" owner)
+                          (re-matches #"7[0-5]0" (str mode)))
+                     is-home-owner?)]
+
+    {:path path :mode mode :owner owner :safe? is-safe?}))
+
+(defn hrdn-7222-check [_opts]
+  (println "[HRDN-7222] Verificando compiladores...")
+  (let [paths (find-compilers)]
+    (if (empty? paths)
+      (do (println "✅ Nenhum compilador encontrado.") true)
+
+      (let [analysis (map check-compiler-perms paths)
+            unsafe   (filter #(not (:safe? %)) analysis)]
+
+        (doseq [item analysis]
+          (println (str " - " (:path item) " [" (:mode item) " " (:owner item) "] "
+                        (if (:safe? item) "✔️ OK" "❌ NÃO SEGURO"))))
+
+        (if (empty? unsafe)
+          (do (println "✅ Todos os compiladores têm permissões seguras.") true)
+          (do (println "⚠️  Compiladores com permissões excessivas detectados.") false))))))
+
+(defn hrdn-7222 [opts]
+  (when-not (hrdn-7222-check opts)
+    (let [paths (find-compilers)
+          unsafe (filter #(not (:safe? (check-compiler-perms %))) paths)]
+
+      (if (:dry-run opts)
+        (do
+          (println "🔍 [DRY-RUN] Ações sugeridas:")
+          (doseq [p unsafe]
+            (let [owner (or (second (re-find #"^/home/([^/]+)" p)) "root")]
+              (println (str "chmod 750 " p "; chown " owner ":" owner " " p)))))
+
+        (if (or (:auto opts)
+                (do
+                  (print "Deseja corrigir permissões automaticamente? [s/N] ")
+                  (flush)
+                  (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+          (doseq [p unsafe]
+            (let [owner (or (second (re-find #"^/home/([^/]+)" p)) "root")]
+              (println (str "🛠️  Corrigindo " p " -> " owner ":750"))
+              (shell "sudo chmod 750" p)
+              (shell "sudo chown" (str owner ":" owner) p)))
+
+          (println "⏭️  Correções ignoradas."))))))
+
+; HRDN-7230: Instala scanner de malware (rkhunter) e executa verificação inicial
+
+;; --- Helpers (Reutilizados para contexto) ---
+
+(defn package-installed? [pkg]
+  (let [res (shell {:out :null :err :null :continue true} "pacman -Q" pkg)]
+    (= 0 (:exit res))))
+
+(defn install-package [pkg opts]
+  (cond
+    (:dry-run opts)
+    (do (println (str "🔍 [DRY-RUN] Instalaria pacote " pkg ".")) true)
+
+    (or (:auto opts)
+        (do
+          (print (str "Deseja instalar o pacote " pkg " agora? [s/N] "))
+          (flush)
+          (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+    (do
+      (println (str "⚙️  Instalando " pkg "..."))
+      (let [res (shell {:continue true} "sudo pacman -Sy --noconfirm" pkg)]
+        (if (= 0 (:exit res))
+          (do (println (str "✅ " pkg " instalado.")) true)
+          (do (println (str "❌ Falha ao instalar " pkg ".")) false))))
+
+    :else
+    (do (println "❎ Instalação cancelada.") false)))
+
+;; --- HRDN-7230: Rkhunter ---
+
+(defn hrdn-7230-check [_opts]
+  (println "[HRDN-7230] Verificando presença de scanner de malware...")
+
+  (let [has-rkhunter   (fs/which "rkhunter")
+        has-chkrootkit (fs/which "chkrootkit")]
+
+    (if (or has-rkhunter has-chkrootkit)
+      (do
+        (println (str "✅ Scanner detectado: "
+                      (when has-rkhunter "rkhunter ")
+                      (when has-chkrootkit "chkrootkit")))
+        true)
+      (do
+        (println "⚠️  Nenhum scanner (rkhunter/chkrootkit) encontrado.")
+        false))))
+
+(defn configure-cron-job [opts]
+  (if (:dry-run opts)
+    (println "🔍 [DRY-RUN] Criaria script em /etc/cron.daily/rkhunter.")
+
+    (if (or (:auto opts)
+            (do
+              (print "Deseja configurar verificação periódica (cron daily)? [s/N] ")
+              (flush)
+              (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+      (try
+        (let [cron-path "/etc/cron.daily/rkhunter"
+              cron-content (str "#!/bin/sh\n"
+                                "/usr/bin/rkhunter --update > /dev/null\n"
+                                "/usr/bin/rkhunter --check --skip-keypress --report-warnings-only | tee /var/log/rkhunter-cron.log\n")]
+
+          (println (str "📅 Configurando cron job em " cron-path "..."))
+
+          ;; Escreve o arquivo
+          (spit cron-path cron-content)
+
+          ;; Torna executável (precisa ser root, usamos shell chmod para garantir)
+          (shell "sudo chmod +x" cron-path)
+
+          (println "✅ Cron diário criado com sucesso."))
+        (catch Exception e
+          (println (str "🔴 Erro ao configurar cron: " (.getMessage e)))))
+
+      (println "⏭️  Configuração de cron ignorada."))))
+
+(defn hrdn-7230 [opts]
+  ;; 1. Check & Install
+  (when-not (hrdn-7230-check opts)
+    (when-not (install-package "rkhunter" opts)
+      ;; Se falhar ou cancelar instalação, aborta o resto da função
+      (println "🛑 Abortando configuração do rkhunter.")
+      (return))) ;; return não existe em clojure como statement, o when-not cuida do fluxo
+
+  ;; Se chegamos aqui, rkhunter está instalado (ou estava, ou acabamos de instalar)
+  ;; Mas precisamos garantir que ele está instalado para rodar os comandos, caso o check tenha passado por causa do chkrootkit
+  (when (fs/which "rkhunter")
+
+    (if (:dry-run opts)
+      (println "🔍 [DRY-RUN] Executaria atualização de base, propupd e scan inicial.")
+
+      (do
+        (println "🔄 Atualizando base de dados do rkhunter (pode demorar)...")
+        ;; Usamos :continue true pois rkhunter pode retornar warnings como exit code não zero
+        (shell {:continue true} "sudo rkhunter --update")
+
+        (println "📸 Atualizando propriedades de arquivos (baseline)...")
+        (shell {:continue true} "sudo rkhunter --propupd")
+
+        (println "🔍 Executando verificação inicial...")
+        (shell {:continue true} "sudo rkhunter --check --skip-keypress")
+
+        ;; Configuração do Cron
+        (configure-cron-job opts)))))
+
+; SSH-7408: Harden SSH configuration
+
+(def ssh-config-file "/etc/ssh/sshd_config")
+(def ssh-backup-file "/etc/ssh/sshd_config.bak")
+
+(def base-hardening-config
+  {"AllowTcpForwarding"   "no"
+   "ClientAliveCountMax"  "2"
+   "LogLevel"             "VERBOSE"
+   "MaxAuthTries"         "3"
+   "MaxSessions"          "2"
+   "TCPKeepAlive"         "no"
+   "X11Forwarding"        "no"
+   "AllowAgentForwarding" "no"})
+
+(defn ask-for-port [opts]
+  "Determina se a porta deve ser alterada baseada em args ou input."
+  ;; 1. Se foi passado via flag --port no main (opts)
+  (if-let [cli-port (:port opts)]
+    cli-port
+
+    ;; 2. Se for auto sem flag, não muda
+    (if (:auto opts)
+      nil
+
+      ;; 3. Interativo
+      (do
+        (print "Deseja alterar a porta padrão SSH? [s/N] ")
+        (flush)
+        (let [resp (str/trim (or (read-line) ""))]
+          (when (= "s" (str/lower-case resp))
+            (print "Digite a nova porta desejada (ex: 2222): ")
+            (flush)
+            (let [p (str/trim (or (read-line) ""))]
+              (if (re-matches #"\d+" p)
+                p
+                (do (println "❌ Porta inválida. Mantendo a atual.") nil)))))))))
+
+(defn apply-ssh-changes [content settings]
+  "Recebe o conteúdo do arquivo e um mapa de configurações.
+   Retorna o novo conteúdo do arquivo."
+  (let [lines (str/split-lines content)
+
+        ;; Passo 1: Substituir linhas existentes
+        ;; Usamos reduce para reconstruir o vetor de linhas e marcar quais chaves encontramos
+        processed (reduce (fn [acc line]
+                            (let [trimmed (str/trim line)
+                                  ;; Tenta achar se a linha começa com alguma chave desejada
+                                  ;; Regex: ^\s*Key\s+ (ignora comentários #Key)
+                                  matched-key (some (fn [k]
+                                                      (when (re-find (re-pattern (str "(?i)^\\s*" k "\\b")) trimmed)
+                                                        k))
+                                                    (keys settings))]
+
+                              (if matched-key
+                                ;; Se achou, substitui a linha pelo valor novo e marca como encontrada
+                                (-> acc
+                                    (update :lines conj (str matched-key " " (get settings matched-key)))
+                                    (update :found conj matched-key))
+                                ;; Se não, mantém a linha original
+                                (update :lines conj line))))
+                          {:lines [] :found #{}}
+                          lines)
+
+        found-keys (:found processed)
+        existing-lines (:lines processed)
+
+        ;; Passo 2: Adicionar chaves que não existiam no arquivo
+        missing-keys (remove found-keys (keys settings))
+        new-lines (map #(str % " " (get settings %)) missing-keys)]
+
+    (str (str/join "\n" (concat existing-lines new-lines)) "\n")))
+
+(defn ssh-7408 [opts]
+  (println "[SSH-7408] Endurecendo configurações de SSH...")
+
+  (if-not (fs/exists? ssh-config-file)
+    (println (str "❌ Arquivo " ssh-config-file " não encontrado."))
+
+    (do
+      ;; 1. Backup
+      (if (and (not (:dry-run opts)) (not (:auto opts)))
+        (do
+          (print (str "Deseja criar um backup de " ssh-config-file "? [S/n] "))
+          (flush)
+          (let [resp (str/trim (or (read-line) ""))]
+            (when-not (= "n" (str/lower-case resp))
+              (shell "cp" ssh-config-file ssh-backup-file)
+              (println (str "📦 Backup criado em " ssh-backup-file)))))
+        ;; Em auto mode, backup automático é uma boa prática, mas seguindo lógica original:
+        nil)
+
+      ;; 2. Determinar configurações finais
+      (let [target-port (ask-for-port opts)
+            ;; Se user definiu porta, adiciona ao mapa. Se não, usa o mapa base.
+            final-config (if target-port
+                           (assoc base-hardening-config "Port" target-port)
+                           base-hardening-config)
+
+            content (slurp ssh-config-file)
+            new-content (apply-ssh-changes content final-config)]
+
+        ;; 3. Aplicação ou Simulação
+        (if (:dry-run opts)
+          (do
+            (println "🔍 [DRY-RUN] As seguintes configurações seriam aplicadas:")
+            (doseq [[k v] final-config]
+              (println (str "   " k " " v)))
+            (println "--- Preview do final do arquivo ---")
+            (println (str/join "\n" (take-last 5 (str/split-lines new-content)))))
+
+          (do
+            ;; Escrita
+            (spit ssh-config-file new-content)
+            (println "✅ sshd_config atualizado com sucesso.")
+
+            ;; Restart do serviço
+            (if (or (:auto opts)
+                    (do
+                      (print "Deseja reiniciar o sshd agora? [s/N] ")
+                      (flush)
+                      (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
+              (do
+                (println "🔁 Reiniciando sshd...")
+                (let [res (shell {:continue true} "sudo systemctl restart sshd")]
+                  (if (= 0 (:exit res))
+                    (println "✅ Serviço sshd reiniciado.")
+                    (println "❌ Falha ao reiniciar sshd."))))
+              (println "⏭️  Restart ignorado."))))))))
 
 
 
