@@ -279,7 +279,41 @@ estejam definidas:
         (t
             ())))
 
+(defun sud/calculate-time-difference (start-date-str end-date-str)
+  "Calculate the time difference between two date strings (DD/MM/YYYY HH:MM:SS).
+Returns a list (HOURS MINUTES SECONDS)."
+  (let* ((format-string "%d/%m/%Y %H:%M:%S")
+         (time-format "%Y-%m-%d %H:%M:%S") ;; required for parsing by `parse-time-string`
 
+         ;; Helper to convert input format to an ISO-like format for Emacs parsing
+         (convert-to-iso (lambda (date-str)
+                           (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\) \\([0-9]+\\):\\([0-9]+\\):\\([0-9]+\\)" date-str)
+                               ;; Reformat DD/MM/YYYY HH:MM:SS to YYYY-MM-DD HH:MM:SS
+                               (format "%s-%s-%s %s:%s:%s"
+                                       (match-string 3 date-str) (match-string 2 date-str) (match-string 1 date-str)
+                                       (match-string 4 date-str) (match-string 5 date-str) (match-string 6 date-str))
+                             (error "Invalid date format: %s" date-str))))
+
+         (start-iso (funcall convert-to-iso start-date-str))
+         (end-iso (funcall convert-to-iso end-date-str))
+
+         ;; Parse the ISO-like strings into Emacs time objects
+         (start-time (parse-time-string start-iso))
+         (end-time (parse-time-string end-iso))
+
+         ;; Calculate the difference (returns a time object)
+         (diff-time (time-subtract end-time start-time))
+
+         ;; Convert the time difference into a list of (seconds-integer nanoseconds-integer)
+         (diff-seconds-list (time-to-seconds diff-time))
+         (total-seconds (car diff-seconds-list))
+
+         ;; Calculate H:M:S from total seconds
+         (hours (floor (/ total-seconds 3600)))
+         (minutes (floor (/ (mod total-seconds 3600) 60)))
+         (seconds (mod total-seconds 60)))
+
+    (list hours minutes seconds)))
 
 (defun sud/dashboard-logo ()
 
