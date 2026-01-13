@@ -1,0 +1,44 @@
+#!/bin/bash
+# Check if the first parameter is provided (is not an empty string)
+if [ -z "$1" ]; then
+    echo "Error: No directory path provided."
+    echo "Usage: $0 <directory_name>"
+    exit 1
+fi
+
+# Check if the provided parameter exists AND is a directory
+if [ ! -d "$1" ]; then
+    echo "Error: \"$1\" is not a valid directory or does not exist."
+    exit 1
+fi
+
+# Find all directories that contain a '.git' subdirectory
+# and execute git gc within them.
+find "$1" -type d -name ".git" -prune | while read -r git_dir; do
+    # Determine the parent directory of the .git dir (the root of the repository)
+    repo_dir=$(dirname "$git_dir")
+    echo "Entering directory: $repo_dir"
+    # Change to the repository directory and run 'git gc'
+    if (cd "$repo_dir" && git gc); then
+        echo "'git gc' completed successfully in $repo_dir"
+    else
+        echo "Error running 'git gc' in $repo_dir"
+    fi
+    echo "----------------------------------------"
+done
+
+# find all maven projects and deletes target dir
+find "$1" -type f -name "pom.xml" -prune | while read -r pom_file; do
+    target_dir=$(dirname "$pom_file")/target
+    if [ -d "$target_dir" ]; then
+        echo "Deleting directory: $target_dir"
+        if rm -rf "$target_dir"; then
+            echo "rm -rf $target_dir completed successfully"
+        else
+            echo "Error running rm -rf $target_dir"
+        fi
+        echo "----------------------------------------"
+    fi
+done
+
+echo "Script finished."
