@@ -19,7 +19,6 @@ return {
         "vim",
         "yaml",
         "tsx",
-        "norg",
         "scss",
         "svelte",
         "vue",
