@@ -79,8 +79,14 @@
 
 (if (sud/font-installed? "Symbols Nerd Font")
     (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
-           doom-emoji-font (font-spec :family "Symbols Nerd Font")
            doom-unicode-font (font-spec :family "Symbols Nerd Font")))
+(if (sud/font-installed? "Noto Color Emoji")
+    (setq! doom-emoji-font (font-spec :family "Symbols Nerd Font")))
+;; Write good faces can be less annoying
+(after! writegood-mode
+  (set-face-attribute 'writegood-weasels-face nil :foreground "gold" :inherit nil)
+  (set-face-attribute 'writegood-passive-voice-face nil :foreground "yellow" :inherit nil)
+  (set-face-attribute 'writegood-duplicates-face nil :foreground "orange" :inherit nil))
 
 (setq! frame-title-format
        '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
