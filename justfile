@@ -145,6 +145,10 @@ pynvim:
 npm_neovim:
     npm install --global neovim
 
+[group('neovim')]
+gem_neovim:
+    gem install neovim
+
 [unix]
 [group('emacs')]
 [script]
