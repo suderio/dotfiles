@@ -1,7 +1,8 @@
 # key: heinc
 # name: Texto de HE para INCIDENTES
 # --
-$1 $2 $3 `(sud/calculate-time-difference (yas-field-value 1) (yas-field-value 2))`
+$1 $2 $3
+#\`(sud/calculate-time-difference (yas-field-value 1) (yas-field-value 2))\`
 $4
 Acessos remotos VPN obtidos pelo job rundeck n. $5
 Resolução de incidentes em regime de sobreaviso e fora do horário de expediente normal para minimizar impactos de indisponibilidades.
