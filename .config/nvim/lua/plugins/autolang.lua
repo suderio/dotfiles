@@ -4,7 +4,7 @@ return {
     event = { "BufReadPost", "BufWritePost" },
     config = function()
       require("autolang").setup({
-        -- Your custom config here (optional)
+        limit_languages = { "en", "pt_BR" },
       })
     end,
   },
