@@ -230,13 +230,12 @@
   (setq! magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")
          magit-diff-refine-hunk 'all))
 
-(setq! lsp-java-server-install-dir "~/.local/etc/eclipse.jdt.ls")
+;(setq! lsp-java-server-install-dir "~/.local/etc/eclipse.jdt.ls")
 
-(setq! lsp-julia-package-dir nil)
-(after! lsp-julia
-  (setq! lsp-julia-default-environment "~/.julia/environments/v1.12"))
+(after! eglot-jl
+  (setq eglot-jl-language-server-project "~/.julia/environments/v1.12"))
 
-(setq! lsp-clients-lua-language-server-bin "~/.local/bin")
+;(setq! lsp-clients-lua-language-server-bin "~/.local/bin")
 
 
 
