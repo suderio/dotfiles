@@ -149,6 +149,10 @@ npm_neovim:
 gem_neovim:
     gem install neovim
 
+[group('neovim')]
+perl_neovim:
+    cpanm -n Neovim::Ext
+
 [unix]
 [group('emacs')]
 [script]

@@ -31,8 +31,8 @@ force_color_prompt=yes
 
 [ -n "$force_color_prompt" ] && command -v tput &>/dev/null && (tput setaf || tput AF) &>/dev/null && color_prompt=yes || color_prompt=
 [ "$color_prompt" = yes ] &&
-  PS1='${chroot_ps1:+($chroot_ps1)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ ' ||
-  PS1='${chroot_ps1:+($chroot_ps1)}\u@\h:\w\$ '
+    PS1='${chroot_ps1:+($chroot_ps1)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ ' ||
+    PS1='${chroot_ps1:+($chroot_ps1)}\u@\h:\w\$ '
 unset color_prompt force_color_prompt
 
 export LESS=-R
@@ -53,15 +53,15 @@ export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do source "$f"; done
 
 if [ -n "$SSH_AUTH_SOCK" ]; then
-  echo "ssh-agent is already running and accessible."
+    echo "ssh-agent is already running and accessible."
 else
-  echo "ssh-agent is not running or not accessible. Starting a new one..."
-  eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
+    echo "ssh-agent is not running or not accessible. Starting a new one..."
+    eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
 fi
-
 
 command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-init)"
 
+# TODO Corrigir essa configuração do ruby!
 [ -x "$HOME/.rbenv/bin/rbenv" ] && eval "$(~/.rbenv/bin/rbenv init - --no-rehash bash)"
 
 command -v perl &>/dev/null && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)" &>/dev/null
@@ -75,5 +75,3 @@ command -v fzf &>/dev/null && eval "$(fzf --bash)"
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
-
-
