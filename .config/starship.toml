@@ -1,3 +1,6 @@
+
+format = "$all$shlvl$sudo"
+
 command_timeout = 9000
 [character]
 success_symbol = "[>](bold green)"
