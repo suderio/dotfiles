@@ -123,7 +123,7 @@
     (let [status-out (git :status-porcelain opts)
           files-to-add (->> (str/split-lines status-out)
                             (map str/trim)
-                            (filter #(re-find #"^[MD]" %)) ;; Modified ou Deleted
+                            (filter #(re-find #"^[AMD]" %)) ;; Added, Modified ou Deleted
                             (map #(second (str/split % #"\s+" 2)))
                             (map #(str home "/"  %)))]
 
