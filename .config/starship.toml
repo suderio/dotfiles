@@ -203,10 +203,10 @@ symbol = " "
 [bun]
 symbol = " "
 
-[cpp]
-symbol = " "
-style = "bg:green"
-format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
+#[cpp]
+#symbol = " "
+#style = "bg:green"
+#format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
 
 [cmake]
 symbol = " "
@@ -238,10 +238,10 @@ symbol = " "
 style = "bg:green"
 format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
 
-[fortran]
-symbol = " "
-style = "bg:green"
-format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
+#[fortran]
+#symbol = " "
+#style = "bg:green"
+#format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
 
 [fossil_branch]
 symbol = " "
