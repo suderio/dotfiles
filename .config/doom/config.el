@@ -65,11 +65,11 @@
                :action org-journal-open-current-journal-file)
              )
 
-(if (sud/font-installed? "FiraCode Nerd Font")
-    (setq! doom-font (font-spec :family "FiraCode Nerd Font" :size 12 :weight 'semi-light)))
+(if (sud/font-installed? "FiraCode Nerd Font Mono")
+    (setq! doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 10 :weight 'semi-light)))
 
 (if (sud/font-installed? "FiraCode Nerd Font Propo")
-    (setq! doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 12)))
+    (setq! doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 10)))
 
 (if (sud/font-installed? "FiraCode Nerd Font Mono")
     (setq! doom-big-font (font-spec :family "FiraCode Nerd Font Mono" :size 16 :weight 'bold)))
@@ -77,11 +77,11 @@
 (if (sud/font-installed? "NotoSerif Nerd Font")
     (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 12)))
 
-(if (sud/font-installed? "Symbols Nerd Font")
-    (setq! doom-symbol-font (font-spec :family "Symbols Nerd Font")
-           doom-unicode-font (font-spec :family "Symbols Nerd Font")))
+;;(if (sud/font-installed? "Symbols Nerd Font Mono")
+;;(setq! doom-symbol-font (font-spec :family "Symbols Nerd Font Mono")
+;;       doom-unicode-font (font-spec :family "Symbols Nerd Font Mono")))
 (if (sud/font-installed? "Noto Color Emoji")
-    (setq! doom-emoji-font (font-spec :family "Symbols Nerd Font")))
+    (setq! doom-emoji-font (font-spec :family "Noto Color Emoji")))
 ;; Write good faces can be less annoying
 (after! writegood-mode
   (set-face-attribute 'writegood-weasels-face nil :foreground "gold" :inherit nil)
