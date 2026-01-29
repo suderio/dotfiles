@@ -38,8 +38,8 @@
 
 (setq! browse-url-browser-function 'eww-browse-url)
 
-(setq! doom-theme 'modus-vivendi)
-(add-to-list 'default-frame-alist '(alpha-background . 80)) ; For all new frames henceforth
+(setq! doom-theme 'modus-vivendi-tinted)
+(add-to-list 'default-frame-alist '(alpha-background . 70)) ; For all new frames henceforth
 (setq! modus-themes-bold-constructs t)
 (setq! modus-themes-italic-constructs t)
 (setq! modus-themes-prompts '(bold))
@@ -277,7 +277,6 @@
   (set-formatter! 'shfmt '("shfmt" "-ci"
                            (unless indent-tabs-mode
                              (list "-i" (number-to-string tab-width))))))
-
 (setq! +format-on-save-disabled-modes
        '(emacs-lisp-mode  ; elisp's mechanisms are good enough
          sql-mode         ; sqlformat is currently broken

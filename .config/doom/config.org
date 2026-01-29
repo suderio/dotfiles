@@ -81,8 +81,8 @@ This shows if we are inside WSL
 ** UI
 *** Theme
 #+begin_src emacs-lisp
-(setq! doom-theme 'modus-vivendi)
-(add-to-list 'default-frame-alist '(alpha-background . 80)) ; For all new frames henceforth
+(setq! doom-theme 'modus-vivendi-tinted)
+(add-to-list 'default-frame-alist '(alpha-background . 70)) ; For all new frames henceforth
 (setq! modus-themes-bold-constructs t)
 (setq! modus-themes-italic-constructs t)
 (setq! modus-themes-prompts '(bold))
@@ -98,7 +98,7 @@ Disables annoying bell
 (setq! visible-bell nil)
 (setq! ring-bell-function 'ignore)
 #+end_src
-*** Dashboard
+*** TODO Dashboard
 #+begin_src emacs-lisp
 (setq! fancy-splash-image (file-name-concat doom-user-dir "emacs-logo.png"))
 
@@ -402,7 +402,6 @@ See https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
   (set-formatter! 'shfmt '("shfmt" "-ci"
                            (unless indent-tabs-mode
                              (list "-i" (number-to-string tab-width))))))
-
 (setq! +format-on-save-disabled-modes
        '(emacs-lisp-mode  ; elisp's mechanisms are good enough
          sql-mode         ; sqlformat is currently broken
