@@ -137,6 +137,9 @@ youtube-dl = "latest"
 jwt = "latest"
 typstyle = "latest"
 "pipx:pylatexenc" = "latest"
+"npm:yaml-language-server" = "latest"
+yamlfmt = "latest"
+yamllint = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
