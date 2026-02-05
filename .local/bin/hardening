@@ -1469,7 +1469,7 @@
           (= "s" (str/lower-case (str/trim (or (read-line) ""))))))
     (do
       (println (str "⚙️  Instalando " pkg "..."))
-      (let [res (shell {:continue true} "sudo pacman -Sy --noconfirm" pkg)]
+      (let [res (shell {:continue true} "paru -Sy --noconfirm" pkg)]
         (if (= 0 (:exit res))
           (do (println (str "✅ " pkg " instalado.")) true)
           (do (println (str "❌ Falha ao instalar " pkg ".")) false))))

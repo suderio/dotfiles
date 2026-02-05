@@ -1,0 +1,12 @@
+{
+  "plugins": {
+    "mini.nvim": {
+      "rev": "4f53281",
+      "src": "https://github.com/nvim-mini/mini.nvim.git"
+    },
+    "nfnl": {
+      "rev": "fecf731",
+      "src": "https://github.com/Olical/nfnl.git"
+    }
+  }
+}
