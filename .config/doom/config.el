@@ -231,6 +231,14 @@
   (setq! magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")
          magit-diff-refine-hunk 'all))
 
+(after! eglot
+  ;; Add the bash-language-server command to eglot-server-programs
+  (add-to-list 'eglot-server-programs
+               '((sh-mode bash-ts-mode) . ("bash-language-server" "start"))))
+;; Automatically ensure eglot is running for sh-mode and bash-ts-mode files
+;; (sh-mode . eglot-ensure)
+;; (bash-ts-mode . eglot-ensure))
+
 ;(setq! lsp-java-server-install-dir "~/.local/etc/eclipse.jdt.ls")
 
 (after! eglot-jl

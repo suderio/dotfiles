@@ -335,6 +335,17 @@ Obs.: diff-refine-hunk may be slow
          magit-diff-refine-hunk 'all))
 #+end_src
 ** Languages
+*** Shell
+#+begin_src emacs-lisp
+(after! eglot
+  ;; Add the bash-language-server command to eglot-server-programs
+  (add-to-list 'eglot-server-programs
+               '((sh-mode bash-ts-mode) . ("bash-language-server" "start"))))
+;; Automatically ensure eglot is running for sh-mode and bash-ts-mode files
+;; (sh-mode . eglot-ensure)
+;; (bash-ts-mode . eglot-ensure))
+
+#+end_src
 *** Java
 #+begin_src emacs-lisp
 ;(setq! lsp-java-server-install-dir "~/.local/etc/eclipse.jdt.ls")
