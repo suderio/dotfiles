@@ -1,4 +1,221 @@
 #!/usr/bin/env bash
+sud_change_cert() {
+
+# Parâmetros
+JKS_FILE=$1
+PASSWORD=$2
+ALIAS=$3
+# Se o quarto parâmetro estiver vazio, usa o ALIAS como alvo da conexão
+REMOTE=${4:-$ALIAS}
+
+if [[ -z "$JKS_FILE" || -z "$PASSWORD" || -z "$ALIAS" ]]; then
+    echo "Uso: $0 <arquivo.jks> <senha> <alias_no_jks> [dominio_remoto_opcional]"
+    exit 1
+fi
+
+TMP_DIR=$(mktemp -d)
+REMOTE_CERT="$TMP_DIR/remote.pem"
+
+echo "-------------------------------------------------------"
+echo "Target JKS: $JKS_FILE"
+echo "Alias:      $ALIAS"
+echo "Conectando: $REMOTE"
+echo "-------------------------------------------------------"
+
+# 1. Download do certificado (e cadeia de intermediários via -showcerts)
+# O timeout de 10s evita que o script trave em caso de rede instável
+echo "🌐 Baixando certificado de https://$REMOTE..."
+timeout 10s openssl s_client -connect "${REMOTE}:443" -servername "$REMOTE" -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM > "$REMOTE_CERT"
+
+# 2. Verifica se o arquivo foi criado e não está vazio
+if [[ ! -s "$REMOTE_CERT" ]]; then
+    echo "❌ Erro: Não foi possível obter o certificado de $REMOTE."
+    rm -rf "$TMP_DIR"
+    exit 0 # Encerra sem erro para não quebrar automações
+fi
+
+echo "✅ Certificado baixado com sucesso."
+
+# 3. Remover entrada antiga no JKS
+# Necessário para que o import não falhe por 'Alias já existente'
+echo "🗑️  Limpando entrada antiga '$ALIAS' no JKS..."
+keytool -delete -alias "$ALIAS" -keystore "$JKS_FILE" -storepass "$PASSWORD" 2>/dev/null
+
+# 4. Importar o novo certificado com a cadeia de confiança
+# -trustcacerts: Usa os certificados do sistema/jks para validar a cadeia
+echo "📥 Importando novo certificado..."
+keytool -importcert -trustcacerts -file "$REMOTE_CERT" \
+    -alias "$ALIAS" \
+    -keystore "$JKS_FILE" \
+    -storepass "$PASSWORD" \
+    -noprompt
+
+if [ $? -eq 0 ]; then
+    echo "🎉 SUCESSO: O alias '$ALIAS' foi atualizado com o certificado vindo de $REMOTE."
+else
+    echo "❌ ERRO: Falha ao importar o certificado no Keystore."
+fi
+
+# Limpeza
+rm -rf "$TMP_DIR"
+}
+sud_check_certs() {
+
+JKS_FILE=$1
+PASSWORD=$2
+
+if [[ -z "$JKS_FILE" || -z "$PASSWORD" ]]; then
+  echo "Uso: $0 <arquivo.jks> <senha>"
+  exit 1
+fi
+
+# 1. Listar todos os aliases do JKS
+ALIASES=$(keytool -list -v -keystore "$JKS_FILE" -storepass "$PASSWORD" | grep "Alias name:" | awk '{print $3}')
+
+echo "====================================================="
+echo "   RELATÓRIO DE VALIDAÇÃO DE KEYSTORE (JKS)          "
+echo "====================================================="
+
+for ALIAS in $ALIASES; do
+  echo -e "\n🔍 ANALISANDO ALIAS: $ALIAS"
+  echo "-----------------------------------------------------"
+
+  # Pasta temporária para análise
+  TMP_JKS="/tmp/${ALIAS}_jks.pem"
+  TMP_REMOTE="/tmp/${ALIAS}_remote.pem"
+
+  # 2. Extrair certificado do JKS
+  keytool -exportcert -alias "$ALIAS" -keystore "$JKS_FILE" -storepass "$PASSWORD" -rfc >"$TMP_JKS" 2>/dev/null
+
+  if [ ! -s "$TMP_JKS" ]; then
+    echo "❌ Erro ao extrair certificado do JKS para o alias $ALIAS."
+    continue
+  fi
+
+  # 3. Verificar Validade Temporal
+  VALID_DATES=$(openssl x509 -noout -dates -in "$TMP_JKS")
+  echo "📅 $VALID_DATES"
+
+  # 4. Verificar SAN (Subject Alternative Name)
+  # Extrai a lista de SANs
+  SAN_LIST=$(openssl x509 -noout -ext subjectAltName -in "$TMP_JKS" | grep -v "Subject Alternative Name" | tr -d '[:space:]' | tr ',' '\n')
+
+  VALID_SAN=false
+
+  for san in $SAN_LIST; do
+    # Remove o prefixo 'DNS:' que o openssl adiciona
+    clean_san=${san#DNS:}
+
+    # Se for um Wildcard (ex: *.xpto.com)
+    if [[ "$clean_san" == \** ]]; then
+      # Transforma *.xpto.com em uma regex que valida subdomínios
+      # Escapa os pontos e troca o * por uma regex de subdomínio
+      suffix=${clean_san#*.}
+      if [[ "$ALIAS" == *".$suffix" && "$ALIAS" != *.*."$suffix" ]]; then
+        VALID_SAN=true
+        break
+      fi
+    # Se for uma correspondência exata
+    elif [[ "$clean_san" == "$ALIAS" ]]; then
+      VALID_SAN=true
+      break
+    fi
+  done
+
+  if [ "$VALID_SAN" = true ]; then
+    echo "✅ SAN: Domínio '$ALIAS' autorizado (via correspondência direta ou Wildcard)."
+  else
+    echo "❌ AVISO SAN: '$ALIAS' NÃO autorizado. Certificado cobre: $SAN_LIST"
+  fi
+  # 5. Comparação com Certificado Remoto (URL)
+  echo "🌐 Conectando a https://$ALIAS..."
+  echo | openssl s_client -connect "${ALIAS}:443" -servername "$ALIAS" 2>/dev/null | openssl x509 >"$TMP_REMOTE"
+
+  if [ -s "$TMP_REMOTE" ]; then
+    FP_JKS=$(openssl x509 -noout -fingerprint -sha256 -in "$TMP_JKS")
+    FP_REMOTE=$(openssl x509 -noout -fingerprint -sha256 -in "$TMP_REMOTE")
+
+    if [ "$FP_JKS" == "$FP_REMOTE" ]; then
+      echo "✅ INTEGRIDADE: O certificado no JKS é idêntico ao da URL."
+    else
+      echo "❌ DIVERGÊNCIA: O certificado local difere do remoto!"
+    fi
+  else
+    echo "❓ Não foi possível obter o certificado remoto para $ALIAS."
+  fi
+
+  # 6. Verificação da Cadeia de Confiança (Trust Chain)
+  # Tenta verificar o certificado contra o próprio JKS (caso ele seja uma TrustStore)
+  echo "🛡️  Verificando Cadeia de Confiança..."
+  openssl verify -CAfile <(keytool -list -rfc -keystore "$JKS_FILE" -storepass "$PASSWORD") "$TMP_JKS" >/dev/null 2>&1
+
+  if [ $? -eq 0 ]; then
+    echo "✅ CADEIA: Certificado confiável dentro deste Keystore."
+  else
+    echo "❌ CADEIA: Certificado NÃO possui cadeia completa/confiável no Keystore."
+  fi
+
+  # Limpeza
+  rm -f "$TMP_JKS" "$TMP_REMOTE"
+done
+
+echo -e "\n====================================================="
+}
+sud_git_clean() {
+
+# Check if the first parameter is provided (is not an empty string)
+if [ -z "$1" ]; then
+    echo "Error: No directory path provided."
+    echo "Usage: $0 <directory_name>"
+    exit 1
+fi
+
+# Check if the provided parameter exists AND is a directory
+if [ ! -d "$1" ]; then
+    echo "Error: \"$1\" is not a valid directory or does not exist."
+    exit 1
+fi
+
+# Find all directories that contain a '.git' subdirectory
+# and execute git gc within them.
+find "$1" -type d -name ".git" -prune | while read -r git_dir; do
+    # Determine the parent directory of the .git dir (the root of the repository)
+    repo_dir=$(dirname "$git_dir")
+    echo "Entering directory: $repo_dir"
+    # Change to the repository directory and run 'git gc'
+    if (cd "$repo_dir" && git gc); then
+        echo "'git gc' completed successfully in $repo_dir"
+    else
+        echo "Error running 'git gc' in $repo_dir"
+    fi
+    echo "----------------------------------------"
+done
+
+# find all maven projects and deletes target dir
+find "$1" -type f -name "pom.xml" -prune | while read -r pom_file; do
+    target_dir=$(dirname "$pom_file")/target
+    if [ -d "$target_dir" ]; then
+        echo "Deleting directory: $target_dir"
+        if rm -rf "$target_dir"; then
+            echo "rm -rf $target_dir completed successfully"
+        else
+            echo "Error running rm -rf $target_dir"
+        fi
+        echo "----------------------------------------"
+    fi
+done
+
+echo "Script finished."
+}
+
+sud_increase_swap() {
+    # run with sudo
+    sudo swapoff -a
+    sudo dd if=/dev/zero of=/swapfile bs=1G count=8
+    sudo mkswap /swapfile
+    sudo swapon /swapfile
+    sudo grep SwapTotal /proc/meminfo
+}
 
 # ==============================================================================
 # Função: analisar_logs
@@ -43,20 +260,20 @@ sud_analisar_logs() {
     # O primeiro ":" (:i:f:) habilita o modo silencioso para tratar erros manualmente.
     while getopts ":i:f:" opt; do
         case ${opt} in
-            i)
-                data_inicial="$OPTARG"
-                ;;
-            f)
-                data_final="$OPTARG"
-                ;;
-            \?) # Caso de opção inválida
-                echo "Erro: Opção inválida: -$OPTARG" >&2
-                return 1
-                ;;
-            :) # Caso de opção sem o argumento esperado
-                echo "Erro: A opção -$OPTARG requer um argumento." >&2
-                return 1
-                ;;
+        i)
+            data_inicial="$OPTARG"
+            ;;
+        f)
+            data_final="$OPTARG"
+            ;;
+        \?) # Caso de opção inválida
+            echo "Erro: Opção inválida: -$OPTARG" >&2
+            return 1
+            ;;
+        :) # Caso de opção sem o argumento esperado
+            echo "Erro: A opção -$OPTARG requer um argumento." >&2
+            return 1
+            ;;
         esac
     done
 
@@ -97,463 +314,441 @@ sud_analisar_logs() {
 
     # --- 3. Execução do Comando de Análise ---
 
-    sed -n "/$data_inicial/,/$data_final/p" "$arquivo" | \
-    awk '{print $7}' | \
-    cut --delimiter=/ -f2 | \
-    cut --delimiter=? -f1 | \
-    sort | \
-    uniq -c | \
-    sort -rn
+    sed -n "/$data_inicial/,/$data_final/p" "$arquivo" |
+        awk '{print $7}' |
+        cut --delimiter=/ -f2 |
+        cut --delimiter=? -f1 |
+        sort |
+        uniq -c |
+        sort -rn
 }
 
 sud_google_drive() {
-  mount | grep "${HOME}/gdrive" >/dev/null || /usr/bin/google-drive-ocamlfuse "${HOME}/gdrive"
+    mount | grep "${HOME}/gdrive" >/dev/null || /usr/bin/google-drive-ocamlfuse "${HOME}/gdrive"
 }
 
 sud_test_iso_2022_locking_scape() {
-  echo -e "\033(0"
+    echo -e "\033(0"
 }
 
-sud_extract () {
-  if [ -f "$1" ] ; then
-    case "$1" in
-      *.tar.bz2)   tar xvjf "$1"    ;;
-      *.tar.gz)    tar xvzf "$1"    ;;
-      *.bz2)       bunzip2 "$1"     ;;
-      *.rar)       unrar x "$1"       ;;
-      *.gz)        gunzip "$1"      ;;
-      *.tar)       tar xvf "$1"     ;;
-      *.tbz2)      tar xvjf "$1"    ;;
-      *.tgz)       tar xvzf "$1"    ;;
-      *.zip)       unzip "$1"       ;;
-      *.Z)         uncompress "$1"  ;;
-      *.7z)        7z x "$1"        ;;
-      *)           echo "don't know how to extract '$1'..." ;;
-    esac
-  else
-    echo "'$1' is not a valid file!"
-  fi
+sud_extract() {
+    if [ -f "$1" ]; then
+        case "$1" in
+        *.tar.bz2) tar xvjf "$1" ;;
+        *.tar.gz) tar xvzf "$1" ;;
+        *.bz2) bunzip2 "$1" ;;
+        *.rar) unrar x "$1" ;;
+        *.gz) gunzip "$1" ;;
+        *.tar) tar xvf "$1" ;;
+        *.tbz2) tar xvjf "$1" ;;
+        *.tgz) tar xvzf "$1" ;;
+        *.zip) unzip "$1" ;;
+        *.Z) uncompress "$1" ;;
+        *.7z) 7z x "$1" ;;
+        *) echo "don't know how to extract '$1'..." ;;
+        esac
+    else
+        echo "'$1' is not a valid file!"
+    fi
 }
 
 sud_fawk() {
-  first="awk '{print "
-  last="}'"
-  cmd="${first}\$${1}${last}"
-  eval "$cmd"
+    first="awk '{print "
+    last="}'"
+    cmd="${first}\$${1}${last}"
+    eval "$cmd"
 }
 
 sud_compare() {
-  ssh "$1" "cat $2" | diff - "$2"
+    ssh "$1" "cat $2" | diff - "$2"
 }
 
 true=0
 false=1
 
 sud_repeatString() {
-  local stringToRepeat="${1}"
-  declare -i depth="${2}"
-  
-  if [[ -z "${stringToRepeat}" ]];then
-    printf "%s\n" "Usage:${FUNCNAME} string ?depth"
-    return $false
-  fi
-  
-  (( depth == 0 )) && depth=1
-  
-  (
-    # depthIndex will loose it value after been executed in this subshell	
-    for ((depthIndex=0;depthIndex<${depth};depthIndex+=1)) {
-      
-      printf "%s" "${stringToRepeat}"
-      
-    }
-	
-	printf "\n"				
-  )    
+    local stringToRepeat="${1}"
+    declare -i depth="${2}"
+
+    if [[ -z "${stringToRepeat}" ]]; then
+        printf "%s\n" "Usage:${FUNCNAME} string ?depth"
+        return $false
+    fi
+
+    ((depth == 0)) && depth=1
+
+    (
+        # depthIndex will loose it value after been executed in this subshell
+        for ((depthIndex = 0; depthIndex < ${depth}; depthIndex += 1)); do
+
+            printf "%s" "${stringToRepeat}"
+
+        done
+
+        printf "\n"
+    )
 }
 
 sud_charAt() {
-  local  char="${1}"
-  declare -i charPosition=${2}
-  
-  [[ -z "${char}" ]] && \
-    printf "%s\n" "Usage:${FUNCNAME} string (position to extract string)" && return $false
-  
-  {
-    [[ ${charPosition} -eq 0 ]] && printf "%c\n" "${char}" && return $true
-  } || {
-    # if the position specified is greater than the length of the string print out an empty string
-    [[ ${charPosition} -gt ${#char} ]] && printf "%s\n" "" && return $true
-  }
-  
-  
-  
-  (
-    # All the variables delcared here will get lost after this subshell finsih executing
-    
-    local temp=${char}
-    local cutFirstString
-    declare -i i=0
-    while [[ -n "${temp}" ]];do
-      #if [[ $charPosition == $i ]];then
-      #	printf "%c" 
-      #fi
-      : $((i++))
-      cutFirstString=$(printf "%c" "${temp}")
-      temp=${temp#*$cutFirstString}
-      (( i == charPosition )) && printf "%s\n" "${cutFirstString}"
-      
-    done
-  )
+    local char="${1}"
+    declare -i charPosition=${2}
+
+    [[ -z "${char}" ]] &&
+        printf "%s\n" "Usage:${FUNCNAME} string (position to extract string)" && return $false
+
+    {
+        [[ ${charPosition} -eq 0 ]] && printf "%c\n" "${char}" && return $true
+    } || {
+        # if the position specified is greater than the length of the string print out an empty string
+        [[ ${charPosition} -gt ${#char} ]] && printf "%s\n" "" && return $true
+    }
+
+    (
+        # All the variables delcared here will get lost after this subshell finsih executing
+
+        local temp=${char}
+        local cutFirstString
+        declare -i i=0
+        while [[ -n "${temp}" ]]; do
+            #if [[ $charPosition == $i ]];then
+            #	printf "%c"
+            #fi
+            : $((i++))
+            cutFirstString=$(printf "%c" "${temp}")
+            temp=${temp#*$cutFirstString}
+            ((i == charPosition)) && printf "%s\n" "${cutFirstString}"
+
+        done
+    )
 }
 
 sud_includes() {
-  local char="${1}"
-  local includes="${2}"
-  declare -i depth="${3}"
-  {
-    [[ -z "$char" ]] || [[ -z "$includes" ]]
-  } && printf "%s\n" "Usage:${FUNCNAME} string includesToCheck ?depth" && return $false;
-  if  [[ $depth -gt ${#char} ]];then
-    depth=0
-  elif [[ $depth != 0 ]];then
-    while [[ -n $char ]];do
-      if [[ ! $depth -eq ${#char} ]];then
-	char=${char#*?}
-	continue ;
-      fi
-      break ;
-    done
-  fi
-  
-  for ((i=$depth;i<=${#char};)) {
-    while [[ -n $char ]] || [[ -n $includes ]];do
-      printChar=$(printf "%c\n" "$char")
-      printIncludes=$(printf "%c\n" "$includes" )
-      
-      [[ -z $printIncludes ]] && {
-	printf "%s\n" "true"
-	return $true
-	
-      } # did this to fix a bug, if the string can be cut to the ending and printInlcudes become null that means all other test was true
+    local char="${1}"
+    local includes="${2}"
+    declare -i depth="${3}"
+    {
+        [[ -z "$char" ]] || [[ -z "$includes" ]]
+    } && printf "%s\n" "Usage:${FUNCNAME} string includesToCheck ?depth" && return $false
+    if [[ $depth -gt ${#char} ]]; then
+        depth=0
+    elif [[ $depth != 0 ]]; then
+        while [[ -n $char ]]; do
+            if [[ ! $depth -eq ${#char} ]]; then
+                char=${char#*?}
+                continue
+            fi
+            break
+        done
+    fi
 
+    for ((i = $depth; i <= ${#char}; )); do
+        while [[ -n $char ]] || [[ -n $includes ]]; do
+            printChar=$(printf "%c\n" "$char")
+            printIncludes=$(printf "%c\n" "$includes")
 
-      
-      if [[ $printChar !=  $printIncludes ]];then
-	printf "%s\n" "false" && return $false
-      fi
-      char=${char#*?}
-      includes=${includes#*?}
-      : $(( i++ ))
+            [[ -z $printIncludes ]] && {
+                printf "%s\n" "true"
+                return $true
+
+            } # did this to fix a bug, if the string can be cut to the ending and printInlcudes become null that means all other test was true
+
+            if [[ $printChar != $printIncludes ]]; then
+                printf "%s\n" "false" && return $false
+            fi
+            char=${char#*?}
+            includes=${includes#*?}
+            : $((i++))
+        done
     done
-  }
 }
 
 sud_endsWith() {
-  local char="${1}"
-  local endswith="${2}"
-  declare -i depth="${3}"
+    local char="${1}"
+    local endswith="${2}"
+    declare -i depth="${3}"
 
-  {
-    [[ -z "$char" ]] || [[ -z "$endswith" ]]
-  } && printf "%s\n" "Usage:${FUNCNAME} string endToCheck ?depth" && return $false
-  
-  (( depth == 0 )) && depth=${#char}
+    {
+        [[ -z "$char" ]] || [[ -z "$endswith" ]]
+    } && printf "%s\n" "Usage:${FUNCNAME} string endToCheck ?depth" && return $false
 
+    ((depth == 0)) && depth=${#char}
 
-  (
-    character="${char}"
-    for ((i=1;i<=$depth;i++)) {
-      while [ -n "$character" ];do
-	
-	printOne=$(printf "%c" "$character")
-	character=${character#*"${printOne}"}
-	
-	(( i == depth )) && {
-	  
-	  [[ "${printOne}" == "${endswith}" ]] && {
-	    printf "%s\n" "true" && return $true\
-					   
-	  } || {
-	    printf "%s\n" "false"
-	    return $false
-	  }
-	  
-	  
-	} || {
-	  
-	  continue 2;
-	}
-	
-      done
-      
-    }
-  )
+    (
+        character="${char}"
+        for ((i = 1; i <= $depth; i++)); do
+            while [ -n "$character" ]; do
+
+                printOne=$(printf "%c" "$character")
+                character=${character#*"${printOne}"}
+
+                ((i == depth)) && {
+
+                    [[ "${printOne}" == "${endswith}" ]] && {
+                        printf "%s\n" "true" && return $true
+                    } || {
+                        printf "%s\n" "false"
+                        return $false
+                    }
+
+                } || {
+
+                    continue 2
+                }
+
+            done
+
+        done
+    )
 }
 
 sud_isInteger() {
-  local number="${1}"
-  
-  [[ -z "${number}" ]] && {
-    printf "%s\n" "Usage: ${FUNCNAME} number"
-    return $false
-  }
-  
-  # check if the content of $number is an alphabet or any punctuation mark
+    local number="${1}"
 
-  (
-    for ((i=0;i<=${#number};)) {
-      while [ -n "$number" ];do
-	printNumber=$(printf "%c" "$number")
-	[[ ! $printNumber == [0-9] ]] && return $false
-	number=${number#*?}
-	: $(( i++ ))
-      done
+    [[ -z "${number}" ]] && {
+        printf "%s\n" "Usage: ${FUNCNAME} number"
+        return $false
     }
-  )
 
-  [[ $? == 1 ]] && return $false
-  
-  #if egrep -q "([[:alpha:]])|([[:punct:]])" <<<"${number}";then
-  #return $false
-  #fi
-  
-  return $true
+    # check if the content of $number is an alphabet or any punctuation mark
+
+    (
+        for ((i = 0; i <= ${#number}; )); do
+            while [ -n "$number" ]; do
+                printNumber=$(printf "%c" "$number")
+                [[ ! $printNumber == [0-9] ]] && return $false
+                number=${number#*?}
+                : $((i++))
+            done
+        done
+    )
+
+    [[ $? == 1 ]] && return $false
+
+    #if egrep -q "([[:alpha:]])|([[:punct:]])" <<<"${number}";then
+    #return $false
+    #fi
+
+    return $true
 }
 
 sud_int() {
-  # get all the integers before the decimal point
-  # non integers values will cause an error
-  local integer="${1}"
+    # get all the integers before the decimal point
+    # non integers values will cause an error
+    local integer="${1}"
 
-  [[ -z "${integer}" ]] && {
-    printf "%s\n" "Usage: ${FUNCNAME} number"
-    return $false
-  }
-
-  isInteger $integer
-
-  # if the exit status of "isInteger $integer" greater than 0 enter the below block of code
-  [[ $? != 0 ]] && {
-    # setting integer to another variable
-    local privInteger=$integer
-    local ind;
-    for ((ind=0;ind<=${#privInteger};)) {
-      
-      # while privInteger is non-zero i.e if there is still text in privInteger
-      
-      while [ -n "$privInteger" ];do
-	# save the first character of privInteger in printchar variable
-	local printchar=$(printf "%c" "${privInteger}" )
-	# cut the first character in privInteger until there is nothing in privInteger
-	privInteger=${privInteger#*$printchar}
-	# incase printchar variable does not contain 0-9 or .
-	[[ ! $printchar =~ ([0-9\.]) ]] && {
-	  # declare a variable space
-	  local space=""
-	  # save integer again on another variable
-	  local int=$integer
-	  local err;
-	  for ((err=0;err<=${#int};)) {
-	    # this block of code , will add a single space to the space variable
-	    # aslong as int is non-zero and $pchar(see the next while loop ) does not equal printchar
-	    # Note:- $printchar is the single value that does not equal 0-9 or .
-	    # if a match is find return from this function with return code of 1
-	    while [ -n "${int}" ];do
-	      local pchar=$(printf "%c" "${int}")
-	      [[ $pchar == $printchar ]] && {
-		printf "%s\n" "${integer}"
-		printf "%s\n" "$space^Invalid character"	    
-		return $false
-	      }
-	      space+=" "
-	      : $(( err++ ))
-	      # cut a single value from int until there is nothing inside
-	      int=${int#*$pchar}
-	    done
-	    
-	  } ; #end of $err
-	      
-	      
-	} ; # End of $printchar
-	
-	#for ((period=0;period<=${#integer};period++)) {
-	#	echo $printchar
-	#   }
-	
-	: $(( ind++ ))
-      done
-      # printchar does not equal any punct value
-      # cut any leading . forward
-      printf "%s\n" "${integer%%.*}"
-      return $true
+    [[ -z "${integer}" ]] && {
+        printf "%s\n" "Usage: ${FUNCNAME} number"
+        return $false
     }
-  }
-  printf "%s\n" "${integer}"
-  return $true
+
+    isInteger $integer
+
+    # if the exit status of "isInteger $integer" greater than 0 enter the below block of code
+    [[ $? != 0 ]] && {
+        # setting integer to another variable
+        local privInteger=$integer
+        local ind
+        for ((ind = 0; ind <= ${#privInteger}; )); do
+
+            # while privInteger is non-zero i.e if there is still text in privInteger
+
+            while [ -n "$privInteger" ]; do
+                # save the first character of privInteger in printchar variable
+                local printchar=$(printf "%c" "${privInteger}")
+                # cut the first character in privInteger until there is nothing in privInteger
+                privInteger=${privInteger#*$printchar}
+                # incase printchar variable does not contain 0-9 or .
+                [[ ! $printchar =~ ([0-9\.]) ]] && {
+                    # declare a variable space
+                    local space=""
+                    # save integer again on another variable
+                    local int=$integer
+                    local err
+                    for ((err = 0; err <= ${#int}; )); do
+                        # this block of code , will add a single space to the space variable
+                        # aslong as int is non-zero and $pchar(see the next while loop ) does not equal printchar
+                        # Note:- $printchar is the single value that does not equal 0-9 or .
+                        # if a match is find return from this function with return code of 1
+                        while [ -n "${int}" ]; do
+                            local pchar=$(printf "%c" "${int}")
+                            [[ $pchar == $printchar ]] && {
+                                printf "%s\n" "${integer}"
+                                printf "%s\n" "$space^Invalid character"
+                                return $false
+                            }
+                            space+=" "
+                            : $((err++))
+                            # cut a single value from int until there is nothing inside
+                            int=${int#*$pchar}
+                        done
+
+                    done #end of $err
+
+                } # End of $printchar
+
+                #for ((period=0;period<=${#integer};period++)) {
+                #	echo $printchar
+                #   }
+
+                : $((ind++))
+            done
+            # printchar does not equal any punct value
+            # cut any leading . forward
+            printf "%s\n" "${integer%%.*}"
+            return $true
+        done
+    }
+    printf "%s\n" "${integer}"
+    return $true
 }
 
 sud_raw() {
-  # you might not need this
-  local str="${1}"
-  [[ -z "${@}" ]] && {
-    printf "%s\n" "Usage: raw string"
-  }
-  sed 's|\\|\\\\|g' <<<"${str}"
+    # you might not need this
+    local str="${1}"
+    [[ -z "${@}" ]] && {
+        printf "%s\n" "Usage: raw string"
+    }
+    sed 's|\\|\\\\|g' <<<"${str}"
 }
 
 sud_destructure() {
-  # do not quote the array argument ( first agument )
-  # it is important you quote the second argument to this function
-  # associative arrays work in alphabetical order
-  # use "," to separate the variables to assign each array element to
-  # for example
-  # array=( bash ksh zsh )
-  # destructure ${array[@]} "var1,var2,var3"
-  # echo $var1
-  # echo $var2
-  # echo $var3
-  [[ -z "${@}" ]] && {
-    
-    printf "%s\n" "Usage:${FUNCNAME}  array values"
-    printf "%s\n" "destructure \${array[@]} \"var1,var2,,var3\""
-    printf "%s\n" "The array should not be quoted but the variables to assign the array element should be quoted"
-    return $false
-  }
-  
-  # Substract 1 from the total number of arguments
-  local arrayLength=$(( ${#@} - 1))
-  # get the location of the last argument
-  local str=$(( arrayLength + 1 ))
-  # get the value of the last argument using indirect reference ( ! )
-  local strToDestruct="${!str},"
-  declare -i y=0;
-  local varList;
-  # loop through the length of arrayLength
-  for ((i=0;i<=$arrayLength;)) {
-    # for j in the total number of arguments
-    for j ; do
-      # if the value of i equals the length of our arrayLength variable, break from the 2 loops
-      (( i == arrayLength )) && break 2;
-      while [ -n "$strToDestruct" ] ;do
-	(( y == arrayLength )) && break 3;
-	local destruct=${strToDestruct%%,*}
-	strToDestruct=${strToDestruct#*,}
-	{
-	  [[ -z "${destruct}" ]] || [[ "${destruct}" == +( ) ]]
-	}  && {
-	  declare -x null="null"
-	  varList+=${!destruct}, # ${null} >> ignore this comment
-	  : $(( y++ ))
-	  continue 2
-	}
-	declare -g $destruct=$j
-	varList+=${!destruct},
-	: $(( y++ ))
-	continue 2;
-	
-      done
-      : $(( i++ ))
+    # do not quote the array argument ( first agument )
+    # it is important you quote the second argument to this function
+    # associative arrays work in alphabetical order
+    # use "," to separate the variables to assign each array element to
+    # for example
+    # array=( bash ksh zsh )
+    # destructure ${array[@]} "var1,var2,var3"
+    # echo $var1
+    # echo $var2
+    # echo $var3
+    [[ -z "${@}" ]] && {
+
+        printf "%s\n" "Usage:${FUNCNAME}  array values"
+        printf "%s\n" "destructure \${array[@]} \"var1,var2,,var3\""
+        printf "%s\n" "The array should not be quoted but the variables to assign the array element should be quoted"
+        return $false
+    }
+
+    # Substract 1 from the total number of arguments
+    local arrayLength=$((${#@} - 1))
+    # get the location of the last argument
+    local str=$((arrayLength + 1))
+    # get the value of the last argument using indirect reference ( ! )
+    local strToDestruct="${!str},"
+    declare -i y=0
+    local varList
+    # loop through the length of arrayLength
+    for ((i = 0; i <= $arrayLength; )); do
+        # for j in the total number of arguments
+        for j; do
+            # if the value of i equals the length of our arrayLength variable, break from the 2 loops
+            ((i == arrayLength)) && break 2
+            while [ -n "$strToDestruct" ]; do
+                ((y == arrayLength)) && break 3
+                local destruct=${strToDestruct%%,*}
+                strToDestruct=${strToDestruct#*,}
+                {
+                    [[ -z "${destruct}" ]] || [[ "${destruct}" == +( ) ]]
+                } && {
+                    declare -x null="null"
+                    varList+=${!destruct}, # ${null} >> ignore this comment
+                    : $((y++))
+                    continue 2
+                }
+                declare -g $destruct=$j
+                varList+=${!destruct},
+                : $((y++))
+                continue 2
+
+            done
+            : $((i++))
+        done
     done
-  }
-      varList=${varList%,*}
+    varList=${varList%,*}
 }
 
 sud...() {
-  # Spread a bunch of string inside an array
-  # for example:-
-  # str=bash
-  # array=( $(... $str) )
-  # echo ${str[@]}
-  # b a s h
-  
-  local stringToSpread="$@"
+    # Spread a bunch of string inside an array
+    # for example:-
+    # str=bash
+    # array=( $(... $str) )
+    # echo ${str[@]}
+    # b a s h
 
-  [[ -z "${stringToSpread}" ]] && {
+    local stringToSpread="$@"
 
-    printf "%s\n" "Usage: ${FUNCNAME} string"
-    return $false
-  }
-  
-  [[ ${#@} -eq 1 ]] && {
-    for ((i=0;i<=${#stringToSpread};i++)) {
-      while [[ -n "${stringToSpread}" ]];do
-	printf "%c\n" "${stringToSpread}"
-	stringToSpread=${stringToSpread#*?}
-      done
+    [[ -z "${stringToSpread}" ]] && {
+
+        printf "%s\n" "Usage: ${FUNCNAME} string"
+        return $false
     }
-  }
+
+    [[ ${#@} -eq 1 ]] && {
+        for ((i = 0; i <= ${#stringToSpread}; i++)); do
+            while [[ -n "${stringToSpread}" ]]; do
+                printf "%c\n" "${stringToSpread}"
+                stringToSpread=${stringToSpread#*?}
+            done
+        done
+    }
 }
 
 sud_foreach() {
-  # dont'quote the array arugment ( i.e the first agument )
-  # If you pass in a function as the callback using the function command you should wrap it in single quotes
-  local array=$(( ${#@} - 1 ))
-  local callback=$(( array + 1 ))
-  declare -ga newArray
-  [[ -z ${#@} ]] && {
-    printf "%s\n" "Usage: ${FUNCNAME} array callback"
-    return $false
-  }
-  # stupid hack to test if argument 1 is an array
-  [[ ${array} -le 1 ]] && {
-    printf "%s\n" "Error: first argument is not an Array"
-    return $false
-  }
-
-  [[ -z "${callback}" ]] && {
-    printf "%s\n" "Error: No Callback argument was provided"
-    return $false
-  }
-  declare -F ${!callback} >/dev/null
-
-  [[ $? -ge 1 ]] && {
-    #Evaluate the callback
-    eval ${!callback} &>/dev/null
-    #If the previous command exit status is greater or equal to 1
-    [[ $? -ge 1 ]] && {   
-      printf "%s\n" "Error: bad array callback"
-      return $false
+    # dont'quote the array arugment ( i.e the first agument )
+    # If you pass in a function as the callback using the function command you should wrap it in single quotes
+    local array=$((${#@} - 1))
+    local callback=$((array + 1))
+    declare -ga newArray
+    [[ -z ${#@} ]] && {
+        printf "%s\n" "Usage: ${FUNCNAME} array callback"
+        return $false
     }
-    
-    local command=$(egrep -o "\w+\(\)" <<<${!callback})
-    command=${command/()/}
-    for ((i=0;i<=${#array};)) {
-      for j; do
-	(( i == array )) && break 2;
-	newArray+=( $( $command $j ) )
-	: $(( i++ ))
-      done
+    # stupid hack to test if argument 1 is an array
+    [[ ${array} -le 1 ]] && {
+        printf "%s\n" "Error: first argument is not an Array"
+        return $false
     }
-	echo "${newArray[@]}"
-	return $true
-  }
 
-  for ((i=0;i<=${#array};)) {
-    for j;do
-      (( i == array )) && break 2;
-      newArray+=( $( ${!callback} $j) )
+    [[ -z "${callback}" ]] && {
+        printf "%s\n" "Error: No Callback argument was provided"
+        return $false
+    }
+    declare -F ${!callback} >/dev/null
 
-      : $(( i++ ))
+    [[ $? -ge 1 ]] && {
+        #Evaluate the callback
+        eval ${!callback} &>/dev/null
+        #If the previous command exit status is greater or equal to 1
+        [[ $? -ge 1 ]] && {
+            printf "%s\n" "Error: bad array callback"
+            return $false
+        }
+
+        local command=$(egrep -o "\w+\(\)" <<<${!callback})
+        command=${command/()/}
+        for ((i = 0; i <= ${#array}; )); do
+            for j; do
+                ((i == array)) && break 2
+                newArray+=($($command $j))
+                : $((i++))
+            done
+        done
+        echo "${newArray[@]}"
+        return $true
+    }
+
+    for ((i = 0; i <= ${#array}; )); do
+        for j; do
+            ((i == array)) && break 2
+            newArray+=($(${!callback} $j))
+
+            : $((i++))
+        done
     done
-  }
-      echo "${newArray[@]}"
+    echo "${newArray[@]}"
 }
 
-sud_copyWithin() {
-  local array=$1
-  declare -i indexToCopyFrom=$2
-  declare -i indexToCopyTo=$3
-  read -a array <<<"$array"
-  local valueOfIndexToCopyFrom=${array[$indexToCopyFrom]}
-  local valueOfIndexToCopyTo=${array[$indexToCopyTo]}
-  {
-    [[ -z ${@} ]] || [[ -z "$array" ]]
-  } && {
-    printf "%s\n" "Usage: copyWithin arrayArgument indexToCopyFrom indexToCopyto"
-    return $false
-  }
-  array[$indexToCopyTo]=$valueOfIndexToCopyFrom
-  echo ${array[@]}
-  return $true;
+sud_mapscii() {
+    telnet mapscii.me
 }
