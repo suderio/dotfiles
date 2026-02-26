@@ -67,10 +67,10 @@
              )
 
 (if (sud/font-installed? "FiraCode Nerd Font Mono")
-    (setq! doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 10 :weight 'semi-light)))
+    (setq! doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 11 :weight 'semi-light)))
 
 (if (sud/font-installed? "FiraCode Nerd Font Propo")
-    (setq! doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 10)))
+    (setq! doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 11)))
 
 (if (sud/font-installed? "FiraCode Nerd Font Mono")
     (setq! doom-big-font (font-spec :family "FiraCode Nerd Font Mono" :size 16 :weight 'bold)))
