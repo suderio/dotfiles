@@ -1,14 +1,120 @@
 #!/usr/bin/env bash
 
-google_drive() {
+# ==============================================================================
+# Função: analisar_logs
+#
+# Descrição:
+#   Processa um arquivo de log para extrair, contar e classificar endpoints
+#   acessados dentro de um intervalo de tempo específico.
+#
+# Uso:
+#   analisar_logs [-i "data_inicial"] [-f "data_final"] <arquivo_de_log>
+#
+# Opções:
+#   -i <data>  (Opcional) Data Inicial no formato "DD/Mon/YYYY:HH:MM:SS".
+#              Se omitida, o padrão é a meia-noite do dia atual.
+#
+#   -f <data>  (Opcional) Data Final no formato "DD/Mon/YYYY:HH:MM:SS".
+#              Se omitida, o padrão é a meia-noite do dia seguinte.
+#
+# Parâmetros:
+#   arquivo_de_log (Obrigatório) O caminho para o arquivo de log que será analisado.
+#
+# Retorno:
+#   - Em caso de sucesso, exibe a contagem de acessos aos endpoints.
+#   - Em caso de erro, exibe uma mensagem no stderr e retorna um código de saída != 0.
+#
+# Exemplos:
+#   ./script_analise.sh -i "22/Jul/2025:10:00:00" -f "22/Jul/2025:11:00:00" access.log
+#   ./script_analise.sh access.log
+# ==============================================================================
+sud_analisar_logs() {
+    # --- 1. Tratamento de Parâmetros com getopts ---
+
+    # Zera o índice de opções, importante se a função for chamada múltiplas vezes no mesmo shell.
+    OPTIND=1
+
+    # Inicializa as variáveis de data.
+    local data_inicial=""
+    local data_final=""
+
+    # Processa as opções (-i e -f) usando o getopts.
+    # O ":" após cada letra (i:f:) indica que a opção espera um argumento.
+    # O primeiro ":" (:i:f:) habilita o modo silencioso para tratar erros manualmente.
+    while getopts ":i:f:" opt; do
+        case ${opt} in
+            i)
+                data_inicial="$OPTARG"
+                ;;
+            f)
+                data_final="$OPTARG"
+                ;;
+            \?) # Caso de opção inválida
+                echo "Erro: Opção inválida: -$OPTARG" >&2
+                return 1
+                ;;
+            :) # Caso de opção sem o argumento esperado
+                echo "Erro: A opção -$OPTARG requer um argumento." >&2
+                return 1
+                ;;
+        esac
+    done
+
+    # Remove da lista de parâmetros todas as opções que já foram processadas pelo getopts.
+    shift "$((OPTIND - 1))"
+
+    # O que sobrar na lista de parâmetros é o nome do arquivo.
+    local arquivo="$1"
+
+    # --- 2. Validação e Definição de Padrões ---
+
+    # Validação do parâmetro obrigatório: nome do arquivo.
+    if [[ -z "$arquivo" ]]; then
+        echo "Erro: O nome do arquivo é um parâmetro obrigatório." >&2
+        echo "Uso: analisar_logs [-i data_inicial] [-f data_final] <nome_do_arquivo>" >&2
+        return 1
+    fi
+
+    # Verifica se o arquivo existe e se pode ser lido.
+    if [[ ! -r "$arquivo" ]]; then
+        echo "Erro: O arquivo '$arquivo' não existe ou não possui permissão de leitura." >&2
+        return 1
+    fi
+
+    # Define a data inicial padrão se a opção -i não for fornecida.
+    # O formato agora é "DD/Mon/YYYY:HH:MM:SS" para corresponder ao solicitado.
+    if [[ -z "$data_inicial" ]]; then
+        # LC_ALL=C garante que o mês seja em inglês (ex: Jul), que é comum em logs.
+        data_inicial=$(LC_ALL=C date '+%d/%b/%Y:00:00:00')
+        echo "Info: Data inicial não informada. Usando o padrão: $data_inicial" >&2
+    fi
+
+    # Define a data final padrão se a opção -f não for fornecida.
+    if [[ -z "$data_final" ]]; then
+        data_final=$(LC_ALL=C date -d "tomorrow" '+%d/%b/%Y:00:00:00')
+        echo "Info: Data final não informada. Usando o padrão: $data_final" >&2
+    fi
+
+    # --- 3. Execução do Comando de Análise ---
+
+    sed -n "/$data_inicial/,/$data_final/p" "$arquivo" | \
+    awk '{print $7}' | \
+    cut --delimiter=/ -f2 | \
+    cut --delimiter=? -f1 | \
+    sort | \
+    uniq -c | \
+    sort -rn
+}
+
+sud_google_drive() {
   mount | grep "${HOME}/gdrive" >/dev/null || /usr/bin/google-drive-ocamlfuse "${HOME}/gdrive"
 }
 
-test_iso_2022_locking_scape() {
+sud_test_iso_2022_locking_scape() {
   echo -e "\033(0"
 }
 
-extract () {
+sud_extract () {
   if [ -f "$1" ] ; then
     case "$1" in
       *.tar.bz2)   tar xvjf "$1"    ;;
@@ -29,21 +135,21 @@ extract () {
   fi
 }
 
-fawk() {
+sud_fawk() {
   first="awk '{print "
   last="}'"
   cmd="${first}\$${1}${last}"
   eval "$cmd"
 }
 
-compare() {
+sud_compare() {
   ssh "$1" "cat $2" | diff - "$2"
 }
 
 true=0
 false=1
 
-repeatString() {
+sud_repeatString() {
   local stringToRepeat="${1}"
   declare -i depth="${2}"
   
@@ -65,7 +171,8 @@ repeatString() {
 	printf "\n"				
   )    
 }
-charAt() {
+
+sud_charAt() {
   local  char="${1}"
   declare -i charPosition=${2}
   
@@ -99,7 +206,8 @@ charAt() {
     done
   )
 }
-includes() {
+
+sud_includes() {
   local char="${1}"
   local includes="${2}"
   declare -i depth="${3}"
@@ -141,7 +249,7 @@ includes() {
   }
 }
 
-endsWith() {
+sud_endsWith() {
   local char="${1}"
   local endswith="${2}"
   declare -i depth="${3}"
@@ -182,67 +290,8 @@ endsWith() {
     }
   )
 }
-offset() {
-  # Bug: It does not deal with negative numbers
-  # better still use ${var:position:length} to get the offset of a value
-  local string=${1}
-  local position=${2}
-  local length=${3}
 
-  [[ -z "${string}" ]] && printf "%s\n" "Error: String to work with was not specified" && \
-    printf "%s\n" "Usage:${FUNCNAME} string ?postion ?length" && return $false
-  if [[ -z "${position}" ]] && [[ -z "${length}" ]];then
-    printf "%s\n" "${string}"
-    return $true
-  fi
-
-  [[ "${position}" =~ [A-Za-z] ]] && \
-    printf "%s\n" "Error: Required an integer for postion but got a string"  && return $false
-  [[ "${length}"  =~ [A-Za-z] ]] && \
-    printf "%s\n" "Error: Required an integer for length but got a string" && return $false
-  if [[ ${position} -gt ${#string} ]] || [[ ${length} -gt ${#string} ]] ;then
-    printf "%s\n" "Error: index is greater than string length"
-    return $false
-  fi
-  
-  (
-    # Kill all the variables declared inside this subshell when done
-    # Using index++ inside the for (()) introduced an unwanted feature
-    # i had  to take it to the body of the while loop
-    for ((index=0;index<=${#string};)) {
-      
-      while [ -n "${string}" ];do
-
-	(( index == position )) && {
-	  # If the value of index equals to the position specified run this block of code
-	  # if length is null print the string and return from this function ${FUNCNAME}
-	  [[ -z "${length}" ]] && printf "%s\n" "${string}" && return $true
-
-	  # if length is not null get the offset specified by the user
-	  for ((ind=0;ind<=${#string};)) {
-	    
-	    while [ -n "${string}" ];do
-	      
-	      (( ${#string} == length )) && {
-		echo "$string" && return $true;
-	      }
-	      string=${string%$(printf "%c" "$(rev <<<${string})")*}
-	      # : >> don't run the result of $(( ind++ ))
-	      # better still ind=$(( ind++ ))
-	      : $(( ind++ ))
-	    done
-	  }	
-	}
-	
-	printOneChar=$(printf "%c" "${string}" )
-	string=${string#*$printOneChar}
-	: $((index++))
-      done
-    }
-  )
-}
-
-isInteger() {
+sud_isInteger() {
   local number="${1}"
   
   [[ -z "${number}" ]] && {
@@ -272,7 +321,7 @@ isInteger() {
   return $true
 }
 
-int() {
+sud_int() {
   # get all the integers before the decimal point
   # non integers values will cause an error
   local integer="${1}"
@@ -343,7 +392,8 @@ int() {
   printf "%s\n" "${integer}"
   return $true
 }
-raw() {
+
+sud_raw() {
   # you might not need this
   local str="${1}"
   [[ -z "${@}" ]] && {
@@ -351,7 +401,8 @@ raw() {
   }
   sed 's|\\|\\\\|g' <<<"${str}"
 }
-destructure() {
+
+sud_destructure() {
   # do not quote the array argument ( first agument )
   # it is important you quote the second argument to this function
   # associative arrays work in alphabetical order
@@ -408,7 +459,7 @@ destructure() {
       varList=${varList%,*}
 }
 
-s...() {
+sud...() {
   # Spread a bunch of string inside an array
   # for example:-
   # str=bash
@@ -434,7 +485,7 @@ s...() {
   }
 }
 
-foreach() {
+sud_foreach() {
   # dont'quote the array arugment ( i.e the first agument )
   # If you pass in a function as the callback using the function command you should wrap it in single quotes
   local array=$(( ${#@} - 1 ))
@@ -489,7 +540,7 @@ foreach() {
       echo "${newArray[@]}"
 }
 
-copyWithin() {
+sud_copyWithin() {
   local array=$1
   declare -i indexToCopyFrom=$2
   declare -i indexToCopyTo=$3
