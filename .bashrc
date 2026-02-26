@@ -75,3 +75,4 @@ command -v fzf &>/dev/null && eval "$(fzf --bash)"
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
+source /usr/share/doc/pkgfile/command-not-found.bash

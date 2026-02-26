@@ -37,6 +37,7 @@
   (ispell-hunspell-add-multi-dic "pt_BR,en_US"))
 
 (setq! browse-url-browser-function 'eww-browse-url)
+(setq projectile-files-cache-expire 30) ;; Cache expires after 10 seconds
 
 (setq! doom-theme 'modus-vivendi-tinted)
 (add-to-list 'default-frame-alist '(alpha-background . 70)) ; For all new frames henceforth
