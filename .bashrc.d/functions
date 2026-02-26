@@ -1,211 +1,211 @@
 #!/usr/bin/env bash
 sud_change_cert() {
 
-# Parâmetros
-JKS_FILE=$1
-PASSWORD=$2
-ALIAS=$3
-# Se o quarto parâmetro estiver vazio, usa o ALIAS como alvo da conexão
-REMOTE=${4:-$ALIAS}
+    # Parâmetros
+    JKS_FILE=$1
+    PASSWORD=$2
+    ALIAS=$3
+    # Se o quarto parâmetro estiver vazio, usa o ALIAS como alvo da conexão
+    REMOTE=${4:-$ALIAS}
 
-if [[ -z "$JKS_FILE" || -z "$PASSWORD" || -z "$ALIAS" ]]; then
-    echo "Uso: $0 <arquivo.jks> <senha> <alias_no_jks> [dominio_remoto_opcional]"
-    exit 1
-fi
+    if [[ -z "$JKS_FILE" || -z "$PASSWORD" || -z "$ALIAS" ]]; then
+        echo "Uso: $0 <arquivo.jks> <senha> <alias_no_jks> [dominio_remoto_opcional]"
+        exit 1
+    fi
 
-TMP_DIR=$(mktemp -d)
-REMOTE_CERT="$TMP_DIR/remote.pem"
+    TMP_DIR=$(mktemp -d)
+    REMOTE_CERT="$TMP_DIR/remote.pem"
 
-echo "-------------------------------------------------------"
-echo "Target JKS: $JKS_FILE"
-echo "Alias:      $ALIAS"
-echo "Conectando: $REMOTE"
-echo "-------------------------------------------------------"
+    echo "-------------------------------------------------------"
+    echo "Target JKS: $JKS_FILE"
+    echo "Alias:      $ALIAS"
+    echo "Conectando: $REMOTE"
+    echo "-------------------------------------------------------"
 
-# 1. Download do certificado (e cadeia de intermediários via -showcerts)
-# O timeout de 10s evita que o script trave em caso de rede instável
-echo "🌐 Baixando certificado de https://$REMOTE..."
-timeout 10s openssl s_client -connect "${REMOTE}:443" -servername "$REMOTE" -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM > "$REMOTE_CERT"
+    # 1. Download do certificado (e cadeia de intermediários via -showcerts)
+    # O timeout de 10s evita que o script trave em caso de rede instável
+    echo "🌐 Baixando certificado de https://$REMOTE..."
+    timeout 10s openssl s_client -connect "${REMOTE}:443" -servername "$REMOTE" -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM >"$REMOTE_CERT"
 
-# 2. Verifica se o arquivo foi criado e não está vazio
-if [[ ! -s "$REMOTE_CERT" ]]; then
-    echo "❌ Erro: Não foi possível obter o certificado de $REMOTE."
+    # 2. Verifica se o arquivo foi criado e não está vazio
+    if [[ ! -s "$REMOTE_CERT" ]]; then
+        echo "❌ Erro: Não foi possível obter o certificado de $REMOTE."
+        rm -rf "$TMP_DIR"
+        exit 0 # Encerra sem erro para não quebrar automações
+    fi
+
+    echo "✅ Certificado baixado com sucesso."
+
+    # 3. Remover entrada antiga no JKS
+    # Necessário para que o import não falhe por 'Alias já existente'
+    echo "🗑️  Limpando entrada antiga '$ALIAS' no JKS..."
+    keytool -delete -alias "$ALIAS" -keystore "$JKS_FILE" -storepass "$PASSWORD" 2>/dev/null
+
+    # 4. Importar o novo certificado com a cadeia de confiança
+    # -trustcacerts: Usa os certificados do sistema/jks para validar a cadeia
+    echo "📥 Importando novo certificado..."
+    keytool -importcert -trustcacerts -file "$REMOTE_CERT" \
+        -alias "$ALIAS" \
+        -keystore "$JKS_FILE" \
+        -storepass "$PASSWORD" \
+        -noprompt
+
+    if [ $? -eq 0 ]; then
+        echo "🎉 SUCESSO: O alias '$ALIAS' foi atualizado com o certificado vindo de $REMOTE."
+    else
+        echo "❌ ERRO: Falha ao importar o certificado no Keystore."
+    fi
+
+    # Limpeza
     rm -rf "$TMP_DIR"
-    exit 0 # Encerra sem erro para não quebrar automações
-fi
-
-echo "✅ Certificado baixado com sucesso."
-
-# 3. Remover entrada antiga no JKS
-# Necessário para que o import não falhe por 'Alias já existente'
-echo "🗑️  Limpando entrada antiga '$ALIAS' no JKS..."
-keytool -delete -alias "$ALIAS" -keystore "$JKS_FILE" -storepass "$PASSWORD" 2>/dev/null
-
-# 4. Importar o novo certificado com a cadeia de confiança
-# -trustcacerts: Usa os certificados do sistema/jks para validar a cadeia
-echo "📥 Importando novo certificado..."
-keytool -importcert -trustcacerts -file "$REMOTE_CERT" \
-    -alias "$ALIAS" \
-    -keystore "$JKS_FILE" \
-    -storepass "$PASSWORD" \
-    -noprompt
-
-if [ $? -eq 0 ]; then
-    echo "🎉 SUCESSO: O alias '$ALIAS' foi atualizado com o certificado vindo de $REMOTE."
-else
-    echo "❌ ERRO: Falha ao importar o certificado no Keystore."
-fi
-
-# Limpeza
-rm -rf "$TMP_DIR"
 }
 sud_check_certs() {
 
-JKS_FILE=$1
-PASSWORD=$2
+    JKS_FILE=$1
+    PASSWORD=$2
 
-if [[ -z "$JKS_FILE" || -z "$PASSWORD" ]]; then
-  echo "Uso: $0 <arquivo.jks> <senha>"
-  exit 1
-fi
-
-# 1. Listar todos os aliases do JKS
-ALIASES=$(keytool -list -v -keystore "$JKS_FILE" -storepass "$PASSWORD" | grep "Alias name:" | awk '{print $3}')
-
-echo "====================================================="
-echo "   RELATÓRIO DE VALIDAÇÃO DE KEYSTORE (JKS)          "
-echo "====================================================="
-
-for ALIAS in $ALIASES; do
-  echo -e "\n🔍 ANALISANDO ALIAS: $ALIAS"
-  echo "-----------------------------------------------------"
-
-  # Pasta temporária para análise
-  TMP_JKS="/tmp/${ALIAS}_jks.pem"
-  TMP_REMOTE="/tmp/${ALIAS}_remote.pem"
-
-  # 2. Extrair certificado do JKS
-  keytool -exportcert -alias "$ALIAS" -keystore "$JKS_FILE" -storepass "$PASSWORD" -rfc >"$TMP_JKS" 2>/dev/null
-
-  if [ ! -s "$TMP_JKS" ]; then
-    echo "❌ Erro ao extrair certificado do JKS para o alias $ALIAS."
-    continue
-  fi
-
-  # 3. Verificar Validade Temporal
-  VALID_DATES=$(openssl x509 -noout -dates -in "$TMP_JKS")
-  echo "📅 $VALID_DATES"
-
-  # 4. Verificar SAN (Subject Alternative Name)
-  # Extrai a lista de SANs
-  SAN_LIST=$(openssl x509 -noout -ext subjectAltName -in "$TMP_JKS" | grep -v "Subject Alternative Name" | tr -d '[:space:]' | tr ',' '\n')
-
-  VALID_SAN=false
-
-  for san in $SAN_LIST; do
-    # Remove o prefixo 'DNS:' que o openssl adiciona
-    clean_san=${san#DNS:}
-
-    # Se for um Wildcard (ex: *.xpto.com)
-    if [[ "$clean_san" == \** ]]; then
-      # Transforma *.xpto.com em uma regex que valida subdomínios
-      # Escapa os pontos e troca o * por uma regex de subdomínio
-      suffix=${clean_san#*.}
-      if [[ "$ALIAS" == *".$suffix" && "$ALIAS" != *.*."$suffix" ]]; then
-        VALID_SAN=true
-        break
-      fi
-    # Se for uma correspondência exata
-    elif [[ "$clean_san" == "$ALIAS" ]]; then
-      VALID_SAN=true
-      break
+    if [[ -z "$JKS_FILE" || -z "$PASSWORD" ]]; then
+        echo "Uso: $0 <arquivo.jks> <senha>"
+        exit 1
     fi
-  done
 
-  if [ "$VALID_SAN" = true ]; then
-    echo "✅ SAN: Domínio '$ALIAS' autorizado (via correspondência direta ou Wildcard)."
-  else
-    echo "❌ AVISO SAN: '$ALIAS' NÃO autorizado. Certificado cobre: $SAN_LIST"
-  fi
-  # 5. Comparação com Certificado Remoto (URL)
-  echo "🌐 Conectando a https://$ALIAS..."
-  echo | openssl s_client -connect "${ALIAS}:443" -servername "$ALIAS" 2>/dev/null | openssl x509 >"$TMP_REMOTE"
+    # 1. Listar todos os aliases do JKS
+    ALIASES=$(keytool -list -v -keystore "$JKS_FILE" -storepass "$PASSWORD" | grep "Alias name:" | awk '{print $3}')
 
-  if [ -s "$TMP_REMOTE" ]; then
-    FP_JKS=$(openssl x509 -noout -fingerprint -sha256 -in "$TMP_JKS")
-    FP_REMOTE=$(openssl x509 -noout -fingerprint -sha256 -in "$TMP_REMOTE")
+    echo "====================================================="
+    echo "   RELATÓRIO DE VALIDAÇÃO DE KEYSTORE (JKS)          "
+    echo "====================================================="
 
-    if [ "$FP_JKS" == "$FP_REMOTE" ]; then
-      echo "✅ INTEGRIDADE: O certificado no JKS é idêntico ao da URL."
-    else
-      echo "❌ DIVERGÊNCIA: O certificado local difere do remoto!"
-    fi
-  else
-    echo "❓ Não foi possível obter o certificado remoto para $ALIAS."
-  fi
+    for ALIAS in $ALIASES; do
+        echo -e "\n🔍 ANALISANDO ALIAS: $ALIAS"
+        echo "-----------------------------------------------------"
 
-  # 6. Verificação da Cadeia de Confiança (Trust Chain)
-  # Tenta verificar o certificado contra o próprio JKS (caso ele seja uma TrustStore)
-  echo "🛡️  Verificando Cadeia de Confiança..."
-  openssl verify -CAfile <(keytool -list -rfc -keystore "$JKS_FILE" -storepass "$PASSWORD") "$TMP_JKS" >/dev/null 2>&1
+        # Pasta temporária para análise
+        TMP_JKS="/tmp/${ALIAS}_jks.pem"
+        TMP_REMOTE="/tmp/${ALIAS}_remote.pem"
 
-  if [ $? -eq 0 ]; then
-    echo "✅ CADEIA: Certificado confiável dentro deste Keystore."
-  else
-    echo "❌ CADEIA: Certificado NÃO possui cadeia completa/confiável no Keystore."
-  fi
+        # 2. Extrair certificado do JKS
+        keytool -exportcert -alias "$ALIAS" -keystore "$JKS_FILE" -storepass "$PASSWORD" -rfc >"$TMP_JKS" 2>/dev/null
 
-  # Limpeza
-  rm -f "$TMP_JKS" "$TMP_REMOTE"
-done
+        if [ ! -s "$TMP_JKS" ]; then
+            echo "❌ Erro ao extrair certificado do JKS para o alias $ALIAS."
+            continue
+        fi
 
-echo -e "\n====================================================="
+        # 3. Verificar Validade Temporal
+        VALID_DATES=$(openssl x509 -noout -dates -in "$TMP_JKS")
+        echo "📅 $VALID_DATES"
+
+        # 4. Verificar SAN (Subject Alternative Name)
+        # Extrai a lista de SANs
+        SAN_LIST=$(openssl x509 -noout -ext subjectAltName -in "$TMP_JKS" | grep -v "Subject Alternative Name" | tr -d '[:space:]' | tr ',' '\n')
+
+        VALID_SAN=false
+
+        for san in $SAN_LIST; do
+            # Remove o prefixo 'DNS:' que o openssl adiciona
+            clean_san=${san#DNS:}
+
+            # Se for um Wildcard (ex: *.xpto.com)
+            if [[ "$clean_san" == \** ]]; then
+                # Transforma *.xpto.com em uma regex que valida subdomínios
+                # Escapa os pontos e troca o * por uma regex de subdomínio
+                suffix=${clean_san#*.}
+                if [[ "$ALIAS" == *".$suffix" && "$ALIAS" != *.*."$suffix" ]]; then
+                    VALID_SAN=true
+                    break
+                fi
+            # Se for uma correspondência exata
+            elif [[ "$clean_san" == "$ALIAS" ]]; then
+                VALID_SAN=true
+                break
+            fi
+        done
+
+        if [ "$VALID_SAN" = true ]; then
+            echo "✅ SAN: Domínio '$ALIAS' autorizado (via correspondência direta ou Wildcard)."
+        else
+            echo "❌ AVISO SAN: '$ALIAS' NÃO autorizado. Certificado cobre: $SAN_LIST"
+        fi
+        # 5. Comparação com Certificado Remoto (URL)
+        echo "🌐 Conectando a https://$ALIAS..."
+        echo | openssl s_client -connect "${ALIAS}:443" -servername "$ALIAS" 2>/dev/null | openssl x509 >"$TMP_REMOTE"
+
+        if [ -s "$TMP_REMOTE" ]; then
+            FP_JKS=$(openssl x509 -noout -fingerprint -sha256 -in "$TMP_JKS")
+            FP_REMOTE=$(openssl x509 -noout -fingerprint -sha256 -in "$TMP_REMOTE")
+
+            if [ "$FP_JKS" == "$FP_REMOTE" ]; then
+                echo "✅ INTEGRIDADE: O certificado no JKS é idêntico ao da URL."
+            else
+                echo "❌ DIVERGÊNCIA: O certificado local difere do remoto!"
+            fi
+        else
+            echo "❓ Não foi possível obter o certificado remoto para $ALIAS."
+        fi
+
+        # 6. Verificação da Cadeia de Confiança (Trust Chain)
+        # Tenta verificar o certificado contra o próprio JKS (caso ele seja uma TrustStore)
+        echo "🛡️  Verificando Cadeia de Confiança..."
+        openssl verify -CAfile <(keytool -list -rfc -keystore "$JKS_FILE" -storepass "$PASSWORD") "$TMP_JKS" >/dev/null 2>&1
+
+        if [ $? -eq 0 ]; then
+            echo "✅ CADEIA: Certificado confiável dentro deste Keystore."
+        else
+            echo "❌ CADEIA: Certificado NÃO possui cadeia completa/confiável no Keystore."
+        fi
+
+        # Limpeza
+        rm -f "$TMP_JKS" "$TMP_REMOTE"
+    done
+
+    echo -e "\n====================================================="
 }
 sud_git_clean() {
 
-# Check if the first parameter is provided (is not an empty string)
-if [ -z "$1" ]; then
-    echo "Error: No directory path provided."
-    echo "Usage: $0 <directory_name>"
-    exit 1
-fi
-
-# Check if the provided parameter exists AND is a directory
-if [ ! -d "$1" ]; then
-    echo "Error: \"$1\" is not a valid directory or does not exist."
-    exit 1
-fi
-
-# Find all directories that contain a '.git' subdirectory
-# and execute git gc within them.
-find "$1" -type d -name ".git" -prune | while read -r git_dir; do
-    # Determine the parent directory of the .git dir (the root of the repository)
-    repo_dir=$(dirname "$git_dir")
-    echo "Entering directory: $repo_dir"
-    # Change to the repository directory and run 'git gc'
-    if (cd "$repo_dir" && git gc); then
-        echo "'git gc' completed successfully in $repo_dir"
-    else
-        echo "Error running 'git gc' in $repo_dir"
+    # Check if the first parameter is provided (is not an empty string)
+    if [ -z "$1" ]; then
+        echo "Error: No directory path provided."
+        echo "Usage: $0 <directory_name>"
+        exit 1
     fi
-    echo "----------------------------------------"
-done
 
-# find all maven projects and deletes target dir
-find "$1" -type f -name "pom.xml" -prune | while read -r pom_file; do
-    target_dir=$(dirname "$pom_file")/target
-    if [ -d "$target_dir" ]; then
-        echo "Deleting directory: $target_dir"
-        if rm -rf "$target_dir"; then
-            echo "rm -rf $target_dir completed successfully"
+    # Check if the provided parameter exists AND is a directory
+    if [ ! -d "$1" ]; then
+        echo "Error: \"$1\" is not a valid directory or does not exist."
+        exit 1
+    fi
+
+    # Find all directories that contain a '.git' subdirectory
+    # and execute git gc within them.
+    find "$1" -type d -name ".git" -prune | while read -r git_dir; do
+        # Determine the parent directory of the .git dir (the root of the repository)
+        repo_dir=$(dirname "$git_dir")
+        echo "Entering directory: $repo_dir"
+        # Change to the repository directory and run 'git gc'
+        if (cd "$repo_dir" && git gc); then
+            echo "'git gc' completed successfully in $repo_dir"
         else
-            echo "Error running rm -rf $target_dir"
+            echo "Error running 'git gc' in $repo_dir"
         fi
         echo "----------------------------------------"
-    fi
-done
+    done
 
-echo "Script finished."
+    # find all maven projects and deletes target dir
+    find "$1" -type f -name "pom.xml" -prune | while read -r pom_file; do
+        target_dir=$(dirname "$pom_file")/target
+        if [ -d "$target_dir" ]; then
+            echo "Deleting directory: $target_dir"
+            if rm -rf "$target_dir"; then
+                echo "rm -rf $target_dir completed successfully"
+            else
+                echo "Error running rm -rf $target_dir"
+            fi
+            echo "----------------------------------------"
+        fi
+    done
+
+    echo "Script finished."
 }
 
 sud_increase_swap() {
@@ -260,20 +260,20 @@ sud_analisar_logs() {
     # O primeiro ":" (:i:f:) habilita o modo silencioso para tratar erros manualmente.
     while getopts ":i:f:" opt; do
         case ${opt} in
-        i)
-            data_inicial="$OPTARG"
-            ;;
-        f)
-            data_final="$OPTARG"
-            ;;
-        \?) # Caso de opção inválida
-            echo "Erro: Opção inválida: -$OPTARG" >&2
-            return 1
-            ;;
-        :) # Caso de opção sem o argumento esperado
-            echo "Erro: A opção -$OPTARG requer um argumento." >&2
-            return 1
-            ;;
+            i)
+                data_inicial="$OPTARG"
+                ;;
+            f)
+                data_final="$OPTARG"
+                ;;
+            \?) # Caso de opção inválida
+                echo "Erro: Opção inválida: -$OPTARG" >&2
+                return 1
+                ;;
+            :) # Caso de opção sem o argumento esperado
+                echo "Erro: A opção -$OPTARG requer um argumento." >&2
+                return 1
+                ;;
         esac
     done
 
@@ -334,18 +334,18 @@ sud_test_iso_2022_locking_scape() {
 sud_extract() {
     if [ -f "$1" ]; then
         case "$1" in
-        *.tar.bz2) tar xvjf "$1" ;;
-        *.tar.gz) tar xvzf "$1" ;;
-        *.bz2) bunzip2 "$1" ;;
-        *.rar) unrar x "$1" ;;
-        *.gz) gunzip "$1" ;;
-        *.tar) tar xvf "$1" ;;
-        *.tbz2) tar xvjf "$1" ;;
-        *.tgz) tar xvzf "$1" ;;
-        *.zip) unzip "$1" ;;
-        *.Z) uncompress "$1" ;;
-        *.7z) 7z x "$1" ;;
-        *) echo "don't know how to extract '$1'..." ;;
+            *.tar.bz2) tar xvjf "$1" ;;
+            *.tar.gz) tar xvzf "$1" ;;
+            *.bz2) bunzip2 "$1" ;;
+            *.rar) unrar x "$1" ;;
+            *.gz) gunzip "$1" ;;
+            *.tar) tar xvf "$1" ;;
+            *.tbz2) tar xvjf "$1" ;;
+            *.tgz) tar xvzf "$1" ;;
+            *.zip) unzip "$1" ;;
+            *.Z) uncompress "$1" ;;
+            *.7z) 7z x "$1" ;;
+            *) echo "don't know how to extract '$1'..." ;;
         esac
     else
         echo "'$1' is not a valid file!"

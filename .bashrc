@@ -21,7 +21,7 @@ comman -v lesspipe &>/dev/null && eval "$(SHELL=/bin/sh lesspipe)"
 [ -z "${chroot_ps1:-}" ] && [ -r /etc/chroot_ps1 ] && chroot_ps1=$(cat /etc/chroot_ps1)
 
 case "$TERM" in
-xterm-color | *-256color) color_prompt=yes ;;
+    xterm-color | *-256color) color_prompt=yes ;;
 esac
 
 force_color_prompt=yes
