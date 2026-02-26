@@ -46,7 +46,12 @@ export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-[ -f "$HOME/.local/bin/mise" ] && eval "$($HOME/.local/bin/mise activate bash)"
+# this is to avoid testing for every file
+sud_source() {
+    [ -s "$1" ] && . "$1"
+}
+
+[ -f "$HOME/.local/bin/mise" ] && eval "$("$HOME/.local/bin/mise" activate bash)"
 
 . "$HOME/.profile"
 
@@ -68,11 +73,9 @@ command -v perl &>/dev/null && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I
 
 command -v fzf &>/dev/null && eval "$(fzf --bash)"
 
-[ -s "$HOME/.bashrc.d/aliases" ] && . "$HOME/.bashrc.d/aliases"
-
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
-[ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
-[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && . "$HOME/.sdkman/bin/sdkman-init.sh"
-[ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"
-[ -s "/usr/share/doc/pkgfile/command-not-found.bash" ] && . /usr/share/doc/pkgfile/command-not-found.bash
+sud_source "$NVM_DIR/nvm.sh"
+sud_source "$NVM_DIR/bash_completion"
+sud_source "$HOME/.cargo/env"
+sud_source "$HOME/.sdkman/bin/sdkman-init.sh"
+sud_source "$HOME/.ghcup/env"
+sud_source "/usr/share/doc/pkgfile/command-not-found.bash"
