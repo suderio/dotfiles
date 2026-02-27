@@ -93,6 +93,9 @@
        '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
          (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
 
+;; word wrap without double indent
+(setq! word-wrap-extra-indent nil)
+
 (setq! org-directory "~/org/")
 (setq! org-agenda-files '("inbox.org" "work/2025.org"))
 

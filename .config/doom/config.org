@@ -154,6 +154,14 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
        '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
          (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
 #+end_src
+
+*** Editing
+#+begin_src emacs-lisp
+;; word wrap without double indent
+(setq! word-wrap-extra-indent nil)
+
+
+#+end_src
 ** Org
 *** TODO Roamify everything? (https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam-hacks/)
 
