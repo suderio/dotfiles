@@ -47,6 +47,7 @@ export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # this is to avoid testing for every file
+# shellcheck disable=1090
 sud_source() {
     [ -s "$1" ] && . "$1"
 }
@@ -55,9 +56,11 @@ sud_source() {
 
 sud_source "$HOME/.profile"
 
-[ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do source "$f"; done
+[ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do sud_source "$f"; done
 
-[ -n "$SSH_AUTH_SOCK" ] || echo "ssh-agent is not running or not accessible. Starting a new one..." && eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
+[ -n "$SSH_AUTH_SOCK" ] ||
+echo "ssh-agent is not running or not accessible. Starting a new one..." &&
+eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
 
 command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-init)"
 
