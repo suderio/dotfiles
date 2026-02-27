@@ -7,13 +7,9 @@ HISTCONTROL=ignoreboth
 export HISTIGNORE="&:ls:[bf]g:exit"
 export HISTFILESIZE=20000
 export HISTSIZE=10000
-# Combine multiline commands into one in history
 shopt -s cmdhist
-# append to the history file, don't overwrite it
 shopt -s histappend
-
 shopt -s checkwinsize
-
 shopt -q globstar 2>/dev/null && shopt -s globstar
 
 command -v lesspipe &>/dev/null && eval "$(SHELL=/bin/sh lesspipe)"
@@ -25,9 +21,6 @@ case "$TERM" in
 esac
 
 force_color_prompt=yes
-# We have color support; assume it's compliant with Ecma-48
-# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-# a case would tend to support setf rather than setaf.)
 
 [ -n "$force_color_prompt" ] && command -v tput &>/dev/null && (tput setaf || tput AF) &>/dev/null && color_prompt=yes || color_prompt=
 [ "$color_prompt" = yes ] &&
@@ -63,12 +56,8 @@ echo "ssh-agent is not running or not accessible. Starting a new one..." &&
 eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
 
 command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-init)"
-
-# TODO Corrigir essa configuração do ruby!
-[ -x "$HOME/.rbenv/bin/rbenv" ] && eval "$(~/.rbenv/bin/rbenv init - --no-rehash bash)"
-
+command -v rbenv && eval "$(rbenv init - --no-rehash bash)"
 command -v perl &>/dev/null && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)" &>/dev/null
-
 command -v fzf &>/dev/null && eval "$(fzf --bash)"
 
 sud_source "$NVM_DIR/nvm.sh"
@@ -77,3 +66,16 @@ sud_source "$HOME/.cargo/env"
 sud_source "$HOME/.sdkman/bin/sdkman-init.sh"
 sud_source "$HOME/.ghcup/env"
 sud_source "/usr/share/doc/pkgfile/command-not-found.bash"
+
+# Autocomplete for ssh
+_ssh() {
+    local cur opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    opts=$(grep '^Host' ~/.ssh/config ~/.ssh/config.d/* 2>/dev/null \
+        | grep -v '[?*]' | cut -d ' ' -f 2-)
+
+    mapfile -t COMPREPLY < <(compgen -W "$opts" -- "$cur")
+    return 0
+}
+[ -s "$HOME/.ssh/config" ] && complete -F _ssh ssh
