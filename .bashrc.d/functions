@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+sud_rd() {
+    java -jar "$HOME/.local/bin/rundeck-cli-2.0.9-all.jar"
+}
+
 sud_change_cert() {
 
     # Parâmetros

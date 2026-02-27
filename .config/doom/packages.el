@@ -51,7 +51,7 @@
 (package! latex-preview-pane)
 (package! ox-epub)
 (package! cue-mode)
-;; doom/packages.el
 ;; typst: https://codeberg.org/meow_king/typst-ts-mode/wiki/Installation.md
 ;; (package! typst-ts-mode :recipe (:host codeberg :repo "meow_king/typst-ts-mode"))
-;; (package! ox-typst)
+(package! ox-typst)
+;; doom/packages.el
