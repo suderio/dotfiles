@@ -16,7 +16,7 @@ shopt -s checkwinsize
 
 shopt -q globstar 2>/dev/null && shopt -s globstar
 
-comman -v lesspipe &>/dev/null && eval "$(SHELL=/bin/sh lesspipe)"
+command -v lesspipe &>/dev/null && eval "$(SHELL=/bin/sh lesspipe)"
 
 [ -z "${chroot_ps1:-}" ] && [ -r /etc/chroot_ps1 ] && chroot_ps1=$(cat /etc/chroot_ps1)
 
@@ -53,16 +53,11 @@ sud_source() {
 
 [ -f "$HOME/.local/bin/mise" ] && eval "$("$HOME/.local/bin/mise" activate bash)"
 
-. "$HOME/.profile"
+sud_source "$HOME/.profile"
 
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do source "$f"; done
 
-if [ -n "$SSH_AUTH_SOCK" ]; then
-    echo "ssh-agent is already running and accessible."
-else
-    echo "ssh-agent is not running or not accessible. Starting a new one..."
-    eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
-fi
+[ -n "$SSH_AUTH_SOCK" ] || echo "ssh-agent is not running or not accessible. Starting a new one..." && eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
 
 command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-init)"
 

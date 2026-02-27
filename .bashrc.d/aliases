@@ -111,6 +111,6 @@ alias jctl="journalctl -p 3 -xb"
 
 alias tb='nc termbin.com 9999'
 
-alias emm='emacs -mm &'
-alias emax='emacsclient -r -a "" &'
+alias emac='emacsclient -r -nw -a ""'
+alias emax='emacsclient -r -mm -a "" &'
 alias min='NVIM_APPNAME=min nvim'
