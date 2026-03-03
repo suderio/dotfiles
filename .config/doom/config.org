@@ -25,7 +25,7 @@
     - [[#ui-tweaks][UI Tweaks]]
     - [[#org-level-headers][Org Level Headers]]
     - [[#journal][Journal]]
-    - [[#doing-capture][DOING Capture]]
+    - [[#capture][Capture]]
     - [[#workflow][Workflow]]
     - [[#agenda][Agenda]]
     - [[#doing-export][DOING Export]]
@@ -277,7 +277,7 @@ see (https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam-hacks/)
    org-icalendar-combined-agenda-file "~/org/org-journal.ics" ;; export with (org-icalendar-combine-agenda-files)
    ))
 #+end_src
-*** DOING Capture
+*** Capture
 #+begin_src emacs-lisp
 (after! org
   (setq! org-capture-templates
