@@ -7,12 +7,11 @@
       t nil))
 
 ;; Create interactive commands from every executable in directory
-;; An idea taken from sachachua
+;; An idea taken from [[https://pages.sachachua.com/.emacs.d/#scan-bin-and-turn-the-scripts-into-interactive-commands][sachachua]]"
+
 (after! dash
   (defmacro sud/convert-shell-scripts-to-interactive-commands (directory)
     "Make the shell scripts in DIRECTORY available as interactive commands."
-
-    "An idea taken from [[https://pages.sachachua.com/.emacs.d/#scan-bin-and-turn-the-scripts-into-interactive-commands][sachachua]]"
     (cons 'progn
           (-map
            (lambda (filename)
@@ -20,10 +19,10 @@
                `(defun ,function-name (&rest args)
                   (interactive)
                   (cond
-                   ((not (called-interactively-p 'any))
-                    (shell-command-to-string (mapconcat 'shell-quote-argument (cons ,filename args) " ")))
-                   ((region-active-p)
-                    (apply 'call-process-region (point) (mark) ,filename nil (if current-prefix-arg t nil) t args))
+                   ((not (called-interactively-p 'any)
+                         (shell-command-to-string (mapconcat 'shell-quote-argument (cons ,filename args) " "))))
+                   ((region-active-p
+                     (apply 'call-process-region (point) (mark) ,filename nil (if current-prefix-arg t nil) t args)))
                    (t
                     (apply 'call-process ,filename nil (if current-prefix-arg t nil) nil args))))))
            (-filter (-not #'file-directory-p)
@@ -268,16 +267,16 @@ estejam definidas:
   (setq org-agenda-files (sud/org-roam-list-notes-by-tag "Project")))
 
 (defun sud/toggle-view-mode ()
-    "Toggle between `markdown-mode' and `markdown-view-mode'."
-    (interactive)
-    (case major-mode
+  "Toggle between `markdown-mode' and `markdown-view-mode'."
+  (interactive)
+  (case major-mode
         ('markdown-view-mode
-            (markdown-mode))
+         (markdown-mode))
         ('markdown-mode
-            (markdown-view-mode))
+         (markdown-view-mode))
         ;; TODO add more cases here (ex. latex, org, etc)
         (t
-            ())))
+         ())))
 
 (defun sud/calculate-time-difference (start-date-str end-date-str)
   "Calculate the time difference between two date strings (DD/MM/YYYY HH:MM:SS).
@@ -318,11 +317,11 @@ Returns a list (HOURS MINUTES SECONDS)."
 (defun sud/dashboard-logo ()
 
   (let* ((banner
-             '("================================="
-               "  ___  ____ ___  ____ ___________"
-               " / _ \\/ __ `__ \\/ __ `/ ___/ ___/"
-               "/  __/ / / / / / /_/ / /__(__ )"
-               "\\___/_/ /_/ /_/\\__,_/\\___/____/"))
+          '("================================="
+            "  ___  ____ ___  ____ ___________"
+            " / _ \\/ __ `__ \\/ __ `/ ___/ ___/"
+            "/  __/ / / / / / /_/ / /__(__ )"
+            "\\___/_/ /_/ /_/\\__,_/\\___/____/"))
 
          (longest-line (apply #'max (mapcar #'length banner))))
     (put-text-property
@@ -337,5 +336,5 @@ Returns a list (HOURS MINUTES SECONDS)."
      'face 'doom-dashboard-banner)))
 
 (defun sud/indent-org-block-automatically ()
-    (when (and (derived-mode-p 'org-mode) (org-in-src-block-p))
-        (org-indent-block)))
+  (when (and (derived-mode-p 'org-mode) (org-in-src-block-p))
+    (org-indent-block)))
