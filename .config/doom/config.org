@@ -2,19 +2,49 @@
 #+AUTHOR: Paulo Suderio
 #+DESCRIPTION: My personal Emacs config.
 #+STARTUP: showeverything
-#+OPTIONS: toc:4
 #+PROPERTY: header-args    :tangle yes
 
 
-* Emacs config :TOC:
+* Emacs config :TOC_3:
   - [[#functions][Functions]]
   - [[#basic][Basic]]
+    - [[#keybindings][Keybindings]]
+    - [[#dired][Dired]]
+    - [[#spell][Spell]]
+    - [[#other][Other]]
   - [[#ui][UI]]
+    - [[#theme][Theme]]
+    - [[#bell][Bell]]
+    - [[#dashboard][Dashboard]]
+    - [[#fonts][Fonts]]
+    - [[#frame][Frame]]
+    - [[#editing][Editing]]
   - [[#org][Org]]
+    - [[#roamify-everything][Roamify everything?]]
+    - [[#org-directories-must-be-set-before-org-loads][Org directories must be set before org loads!]]
+    - [[#ui-tweaks][UI Tweaks]]
+    - [[#org-level-headers][Org Level Headers]]
+    - [[#journal][Journal]]
+    - [[#doing-capture][DOING Capture]]
+    - [[#workflow][Workflow]]
+    - [[#agenda][Agenda]]
+    - [[#doing-export][DOING Export]]
+    - [[#org-tempo][Org-tempo]]
+    - [[#babel][Babel]]
   - [[#magit][Magit]]
   - [[#languages][Languages]]
+    - [[#shell][Shell]]
+    - [[#java][Java]]
+    - [[#julia][Julia]]
+    - [[#lua][Lua]]
+    - [[#lisp][Lisp]]
+    - [[#just][Just]]
+    - [[#typst][Typst]]
+    - [[#install-treesitter-grammars][Install treesitter grammars]]
+    - [[#lsp][LSP]]
   - [[#biblio][Biblio]]
   - [[#latex][Latex]]
+    - [[#abnt2][ABNT2]]
   - [[#tramp][Tramp]]
   - [[#remember][Remember]]
 
@@ -50,7 +80,6 @@ This shows if we are inside WSL
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
 (map! :leader :desc "Fast Note" "n ." #'sud/org-roam-node-insert-immediate)
 (map! :leader :desc "Inbox Note" "n i" #'sud/org-roam-capture-inbox)
-                                        ;(map! :leader :desc "Eval" "e" nil)
 (map! :leader :desc "Eval Last Expression" "e l" #'eval-last-sexp)
 (map! :leader :desc "Comment Line" "#" #'comment-line)
 (map! :leader :desc "Switch to last buffer" ">" #'evil-switch-to-windows-last-buffer)
@@ -125,22 +154,23 @@ Doom exposes five (optional) variables for controlling fonts in Doom:
 See 'C-h v doom-font' for documentation and more examples of what they accept.
 #+begin_src emacs-lisp
 (if (sud/font-installed? "FiraCode Nerd Font Mono")
-    (setq! doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 11 :weight 'semi-light)))
+    (setq! doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 9 :weight 'semi-light)))
 
 (if (sud/font-installed? "FiraCode Nerd Font Propo")
-    (setq! doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 11)))
+    (setq! doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 9)))
 
 (if (sud/font-installed? "FiraCode Nerd Font Mono")
     (setq! doom-big-font (font-spec :family "FiraCode Nerd Font Mono" :size 16 :weight 'bold)))
 
 (if (sud/font-installed? "NotoSerif Nerd Font")
-    (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 12)))
+    (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 10)))
+(if (sud/font-installed? "Noto Color Emoji")
+    (setq! doom-emoji-font (font-spec :family "Noto Color Emoji")))
 
 ;;(if (sud/font-installed? "Symbols Nerd Font Mono")
 ;;(setq! doom-symbol-font (font-spec :family "Symbols Nerd Font Mono")
 ;;       doom-unicode-font (font-spec :family "Symbols Nerd Font Mono")))
-(if (sud/font-installed? "Noto Color Emoji")
-    (setq! doom-emoji-font (font-spec :family "Noto Color Emoji")))
+
 ;; Write good faces can be less annoying
 (after! writegood-mode
   (set-face-attribute 'writegood-weasels-face nil :foreground "gold" :inherit nil)
@@ -163,7 +193,9 @@ See 'C-h v doom-font' for documentation and more examples of what they accept.
 
 #+end_src
 ** Org
-*** TODO Roamify everything? (https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam-hacks/)
+*** TODO Roamify everything?
+
+see (https://systemcrafters.net/build-a-second-brain-in-emacs/5-org-roam-hacks/)
 
 *** Org directories must be set before org loads!
 #+begin_src emacs-lisp
@@ -349,7 +381,6 @@ Obs.: diff-refine-hunk may be slow
 #+end_src
 *** Java
 #+begin_src emacs-lisp
-;(setq! lsp-java-server-install-dir "~/.local/etc/eclipse.jdt.ls")
 #+end_src
 *** Julia
 #+begin_src emacs-lisp
@@ -358,7 +389,6 @@ Obs.: diff-refine-hunk may be slow
 #+end_src
 *** Lua
 #+begin_src emacs-lisp
-;(setq! lsp-clients-lua-language-server-bin "~/.local/bin")
 
 #+end_src
 *** Lisp
@@ -368,7 +398,6 @@ Obs.: diff-refine-hunk may be slow
 *** Just
 #+begin_src emacs-lisp
 (after! just-ts-mode
-  ;;(require 'just-ts-mode)
   ;;Installs just grammar if not available
   (unless (treesit-language-available-p 'just)
     (just-ts-mode-install-grammar)))
@@ -394,12 +423,12 @@ See https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 ;;(use-package! lsp-ui
 ;;  :hook (lsp-mode . lsp-ui-mode))
 
-(setq! lsp-warn-no-matched-clients nil)
+;;(setq! lsp-warn-no-matched-clients nil)
 #+end_src
 **** Formatting
 #+begin_src emacs-lisp
 ;; Disable format-on-save behavior in Emacs Lisp buffers
-                                        ;(setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
+;; (setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
 
 ;; To permenantly disable a formatter:
 (after! csharp-mode

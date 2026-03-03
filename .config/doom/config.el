@@ -17,7 +17,6 @@
 (map! :leader :desc "Open Journal" "n j o" #'org-journal-open-current-journal-file)
 (map! :leader :desc "Fast Note" "n ." #'sud/org-roam-node-insert-immediate)
 (map! :leader :desc "Inbox Note" "n i" #'sud/org-roam-capture-inbox)
-                                        ;(map! :leader :desc "Eval" "e" nil)
 (map! :leader :desc "Eval Last Expression" "e l" #'eval-last-sexp)
 (map! :leader :desc "Comment Line" "#" #'comment-line)
 (map! :leader :desc "Switch to last buffer" ">" #'evil-switch-to-windows-last-buffer)
@@ -67,22 +66,23 @@
              )
 
 (if (sud/font-installed? "FiraCode Nerd Font Mono")
-    (setq! doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 11 :weight 'semi-light)))
+    (setq! doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 9 :weight 'semi-light)))
 
 (if (sud/font-installed? "FiraCode Nerd Font Propo")
-    (setq! doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 11)))
+    (setq! doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 9)))
 
 (if (sud/font-installed? "FiraCode Nerd Font Mono")
     (setq! doom-big-font (font-spec :family "FiraCode Nerd Font Mono" :size 16 :weight 'bold)))
 
 (if (sud/font-installed? "NotoSerif Nerd Font")
-    (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 12)))
+    (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 10)))
+(if (sud/font-installed? "Noto Color Emoji")
+    (setq! doom-emoji-font (font-spec :family "Noto Color Emoji")))
 
 ;;(if (sud/font-installed? "Symbols Nerd Font Mono")
 ;;(setq! doom-symbol-font (font-spec :family "Symbols Nerd Font Mono")
 ;;       doom-unicode-font (font-spec :family "Symbols Nerd Font Mono")))
-(if (sud/font-installed? "Noto Color Emoji")
-    (setq! doom-emoji-font (font-spec :family "Noto Color Emoji")))
+
 ;; Write good faces can be less annoying
 (after! writegood-mode
   (set-face-attribute 'writegood-weasels-face nil :foreground "gold" :inherit nil)
@@ -236,17 +236,16 @@
 
 
 
-;(setq! lsp-java-server-install-dir "~/.local/etc/eclipse.jdt.ls")
+
 
 (after! eglot-jl
   (setq eglot-jl-language-server-project "~/.julia/environments/v1.12"))
 
-;(setq! lsp-clients-lua-language-server-bin "~/.local/bin")
+
 
 
 
 (after! just-ts-mode
-  ;;(require 'just-ts-mode)
   ;;Installs just grammar if not available
   (unless (treesit-language-available-p 'just)
     (just-ts-mode-install-grammar)))
@@ -264,10 +263,10 @@
 ;;(use-package! lsp-ui
 ;;  :hook (lsp-mode . lsp-ui-mode))
 
-(setq! lsp-warn-no-matched-clients nil)
+;;(setq! lsp-warn-no-matched-clients nil)
 
 ;; Disable format-on-save behavior in Emacs Lisp buffers
-                                        ;(setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
+;; (setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
 
 ;; To permenantly disable a formatter:
 (after! csharp-mode
