@@ -97,7 +97,7 @@
 (setq! word-wrap-extra-indent nil)
 
 (setq! org-directory "~/org/")
-(setq! org-agenda-files '("inbox.org" "work/2025.org"))
+(setq! org-agenda-files '("inbox.org" "work/2026.org"))
 
 ;; Default tags
 (setq! org-tag-alist '(
@@ -177,13 +177,13 @@
             "* %?\n%U\n%i\n%a")
            ;; Define a section
            ("w" "Work")
-           ("wr" "Reuniões" entry (file+headline "work/2025.org" "Reuniões")
+           ("wr" "Reuniões" entry (file+headline "work/2026.org" "Reuniões")
             "** %?\n%U\n%i\n%a" :clock-in t)
-           ("wt" "Tarefas" entry (file+headline "work/2025.org" "Tarefas")
+           ("wt" "Tarefas" entry (file+headline "work/2026.org" "Tarefas")
             "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
-           ("wi" "Incidentes" entry (file+headline "work/2025.org" "Incidentes")
+           ("wi" "Incidentes" entry (file+headline "work/2026.org" "Incidentes")
             "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
-           ("wa" "Ad Hoc" entry (file+headline "work/2025.org" "Ad hoc")
+           ("wa" "Ad Hoc" entry (file+headline "work/2026.org" "Ad hoc")
             "** TODO %?\n%U\n%i\n%a")
            )))
 
@@ -212,7 +212,7 @@
           ((agenda)
            (todo)))
          ("w" "Work" agenda ""
-          ((org-agenda-files '("work/2025.org"))))))
+          ((org-agenda-files '("work/2026.org"))))))
 
 ;; Make exporting quotes better
 (setq! org-export-with-smart-quotes t
