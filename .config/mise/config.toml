@@ -79,6 +79,7 @@ zls = "latest"
 "go:golang.org/x/tools/gopls" = "latest"
 "go:github.com/x-motemen/gore/cmd/gore" = "latest"
 "go:github.com/jessfraz/dockfmt" = "latest"
+"go:github.com/go-delve/delve/cmd/dlv" = "latest"
 
 ## python devtools
 "pipx:isort" = "latest"
@@ -100,11 +101,10 @@ zls = "latest"
 "npm:bash-language-server" = "latest"
 "npm:dockerfile-language-server-nodejs" = "latest"
 "npm:yaml-language-server" = "latest"
+"npm:@mermaid-js/mermaid-cli" = "latest"
 
 # neovim dependencies
 prettier = "latest"
-## npm devtools
-"npm:@mermaid-js/mermaid-cli" = "latest"
 
 # cargo devtools
 "cargo:cargo-upgrade-command" = "latest"
@@ -124,9 +124,7 @@ imagemagick = "latest"
 grpcurl = "latest"
 websocat = "latest"
 php = "8.5.0"
-"go:github.com/go-delve/delve/cmd/dlv" = "latest"
 gitleaks = "latest"
-usql = "latest"
 "go:github.com/pranshuparmar/witr/cmd/witr" = "latest"
 tinymist = "latest"
 "cargo:emacs-lsp-booster" = "latest"
