@@ -135,6 +135,8 @@ jwt = "latest"
 typstyle = "latest"
 "pipx:pylatexenc" = "latest"
 neovim = "nightly"
+maven = "latest"
+lazyssh = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
