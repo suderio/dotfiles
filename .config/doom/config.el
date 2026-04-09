@@ -1,9 +1,9 @@
 (load! "functions")
 
-(setq! user-full-name "Paulo Suderio"
+(setopt user-full-name "Paulo Suderio"
        user-mail-address "paulo.suderio@gmail.com")
 
-(setq! display-line-numbers-type 'relative
+(setopt display-line-numbers-type 'relative
        evil-respect-visual-line-mode t
        which-key-idle-delay 0.8
        which-key-max-description-length 255
@@ -21,42 +21,42 @@
 (map! :leader :desc "Comment Line" "#" #'comment-line)
 (map! :leader :desc "Switch to last buffer" ">" #'evil-switch-to-windows-last-buffer)
 
-(setq! global-auto-revert-mode-text "󰀘"
+(setopt global-auto-revert-mode-text "󰀘"
        global-auto-revert-non-file-buffers t)
 
 (setenv "LANG" "pt_BR,en_US")
 (setq-default ispell-program-name "hunspell")
 (with-eval-after-load "ispell"
-  (setq! ispell-really-hunspell t)
-  (setq! ispell-program-name "hunspell")
-  (setq! ispell-dictionary "pt_BR,en_US")
+  (setopt ispell-really-hunspell t)
+  (setopt ispell-program-name "hunspell")
+  (setopt ispell-dictionary "pt_BR,en_US")
   ;; ispell-set-spellchecker-params has to be called
   ;; before ispell-hunspell-add-multi-dic will work
   (ispell-set-spellchecker-params)
   (ispell-hunspell-add-multi-dic "pt_BR,en_US"))
 
-(setq! browse-url-browser-function 'eww-browse-url)
+(setopt browse-url-browser-function 'eww-browse-url)
 (setq projectile-files-cache-expire 30) ;; Cache expires after 10 seconds
 
-(setq! doom-theme 'modus-vivendi-tinted)
+(setopt doom-theme 'modus-vivendi-tinted)
 (add-to-list 'default-frame-alist '(alpha-background . 70)) ; For all new frames henceforth
-(setq! modus-themes-bold-constructs t)
-(setq! modus-themes-italic-constructs t)
-(setq! modus-themes-prompts '(bold))
+(setopt modus-themes-bold-constructs t)
+(setopt modus-themes-italic-constructs t)
+(setopt modus-themes-prompts '(bold))
 ;; Important!
-(setq! modus-themes-scale-headings t)
-(setq! modus-themes-variable-pitch-ui t)
+(setopt modus-themes-scale-headings t)
+(setopt modus-themes-variable-pitch-ui t)
 
-(setq! lsp-modeline-code-action-fallback-icon "\N{HIGH VOLTAGE SIGN}")
+(setopt lsp-modeline-code-action-fallback-icon "\N{HIGH VOLTAGE SIGN}")
 
-(setq! visible-bell nil)
-(setq! ring-bell-function 'ignore)
+(setopt visible-bell nil)
+(setopt ring-bell-function 'ignore)
 
-(setq! fancy-splash-image (file-name-concat doom-user-dir "emacs-logo.png"))
+(setopt fancy-splash-image (file-name-concat doom-user-dir "emacs-logo.png"))
 
 (setq +doom-dashboard-ascii-banner-fn #'sud/dashboard-logo)
 
-(add-to-list '+doom-dashboard-menu-sections
+(add-to-list '+dashboard-menu-sections
              '("Open Journal"
                :icon (nerd-icons-octicon "nf-oct-note" :face 'doom-dashboard-menu-title)
                :key "SPC n j o"
@@ -66,21 +66,21 @@
              )
 
 (if (sud/font-installed? "FiraCode Nerd Font Mono")
-    (setq! doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 9 :weight 'semi-light)))
+    (setopt doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 9 :weight 'semi-light)))
 
 (if (sud/font-installed? "FiraCode Nerd Font Propo")
-    (setq! doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 9)))
+    (setopt doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Propo" :size 9)))
 
 (if (sud/font-installed? "FiraCode Nerd Font Mono")
-    (setq! doom-big-font (font-spec :family "FiraCode Nerd Font Mono" :size 16 :weight 'bold)))
+    (setopt doom-big-font (font-spec :family "FiraCode Nerd Font Mono" :size 16 :weight 'bold)))
 
 (if (sud/font-installed? "NotoSerif Nerd Font")
-    (setq! doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 10)))
+    (setopt doom-serif-font (font-spec :family "Noto Serif Nerd Font" :size 10)))
 (if (sud/font-installed? "Noto Color Emoji")
-    (setq! doom-emoji-font (font-spec :family "Noto Color Emoji")))
+    (setopt doom-emoji-font (font-spec :family "Noto Color Emoji")))
 
 ;;(if (sud/font-installed? "Symbols Nerd Font Mono")
-;;(setq! doom-symbol-font (font-spec :family "Symbols Nerd Font Mono")
+;;(setopt doom-symbol-font (font-spec :family "Symbols Nerd Font Mono")
 ;;       doom-unicode-font (font-spec :family "Symbols Nerd Font Mono")))
 
 ;; Write good faces can be less annoying
@@ -89,18 +89,18 @@
   (set-face-attribute 'writegood-passive-voice-face nil :foreground "yellow" :inherit nil)
   (set-face-attribute 'writegood-duplicates-face nil :foreground "orange" :inherit nil))
 
-(setq! frame-title-format
+(setopt frame-title-format
        '((:eval (if (buffer-file-name) (abbreviate-file-name (buffer-file-name)) "%b"))
          (:eval (if (buffer-modified-p) "!")) " (" user-login-name "@" system-name ")"))
 
 ;; word wrap without double indent
-(setq! word-wrap-extra-indent nil)
+(setopt word-wrap-extra-indent nil)
 
-(setq! org-directory "~/org/")
-(setq! org-agenda-files '("inbox.org" "work/2026.org"))
+(setopt org-directory "~/org/")
+(setopt org-agenda-files '("inbox.org" "work/2026.org"))
 
 ;; Default tags
-(setq! org-tag-alist '(
+(setopt org-tag-alist '(
                        ;; locale
                        (:startgroup)
                        ("personal" . ?h)
@@ -113,18 +113,18 @@
                        ("reading")))
 
 ;; Org-refile: where should org-refile look?
-;;(setq! org-refile-targets 'FIXME)
+;;(setopt org-refile-targets 'FIXME)
 
 ;; Org-roam variables
-(setq! org-roam-directory "~/org/roam/")
-(setq! org-roam-index-file "~/org/roam/index.org")
-(setq! org-roam-dailies-directory "journal/")
+(setopt org-roam-directory "~/org/roam/")
+(setopt org-roam-index-file "~/org/roam/index.org")
+(setopt org-roam-dailies-directory "journal/")
 ;;; Optional variables
 
 ;; Advanced: Custom link types
 ;; This example is for linking a person's 7-character ID to their page on the
 ;; free genealogy website Family Search.
-(setq! org-link-abbrev-alist
+(setopt org-link-abbrev-alist
        '(("family_search" . "https://www.familysearch.org/tree/person/details/%s")
          ("tarefa" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=TMS%3ATask&server=itsm.bndes.net&eid=%s")
          ("incidente" . "http://itsmweb.bndes.net/servlet/ViewFormServlet?form=HPD%3AHelp+Desk&server=itsm.bndes.net&eid=%s")
@@ -156,7 +156,7 @@
   (custom-set-faces!
     '(org-document-title :height 1.5 :bold t :underline nil)))
 
-(setq! org-journal-dir "~/org/journal/"
+(setopt org-journal-dir "~/org/journal/"
        org-journal-file-format "%Y%m.org")
 (after! org-journal
   (setq
@@ -169,58 +169,58 @@
    ))
 
 (after! org
-  (setq! org-capture-templates
-         '(("c" "Default Capture" entry (file "inbox.org")
-            "* %?\n%U\n%i")
-           ;; Capture and keep an org-link to the thing we're currently working with
-           ("r" "Capture with Reference" entry (file "inbox.org")
-            "* %?\n%U\n%i\n%a")
-           ;; Define a section
-           ("w" "Work")
-           ("wr" "Reuniões" entry (file+headline "work/2026.org" "Reuniões")
-            "** %?\n%U\n%i\n%a" :clock-in t)
-           ("wt" "Tarefas" entry (file+headline "work/2026.org" "Tarefas")
-            "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
-           ("wi" "Incidentes" entry (file+headline "work/2026.org" "Incidentes")
-            "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
-           ("wa" "Ad Hoc" entry (file+headline "work/2026.org" "Ad hoc")
-            "** TODO %?\n%U\n%i\n%a")
-           )))
+  (setopt org-capture-templates
+          '(("c" "Default Capture" entry (file "inbox.org")
+             "* %?\n%U\n%i")
+            ;; Capture and keep an org-link to the thing we're currently working with
+            ("r" "Capture with Reference" entry (file "inbox.org")
+             "* %?\n%U\n%i\n%a")
+            ;; Define a section
+            ("w" "Work")
+            ("wr" "Reuniões" entry (file+headline "work/2026.org" "Reuniões")
+             "** %?\n%U\n%i\n%a" :clock-in t)
+            ("wt" "Tarefas" entry (file+headline "work/2026.org" "Tarefas")
+             "** TODO %c\n%U\n[[tarefa:%c][remedy]]\n%?")
+            ("wi" "Incidentes" entry (file+headline "work/2026.org" "Incidentes")
+             "** TODO %c\n%U\n[[incidente:%c][remedy]]\n%?")
+            ("wa" "Ad Hoc" entry (file+headline "work/2026.org" "Ad hoc")
+             "** TODO %?\n%U\n%i\n%a")
+            )))
 
 (after! org-roam
-  (setq! org-roam-capture-templates
-         '(("d" "default" plain "%?"
-            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
+  (setopt org-roam-capture-templates
+          '(("d" "default" plain "%?"
+             :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)
 
-           ("i" "ideas" plain "%?"
-            :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
-           ))
-  (setq! org-roam-dailies-capture-templates
-         '(("d" "default" entry "* %<%I:%M %p>: %?"
-            :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
+            ("i" "ideas" plain "%?"
+             :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n"))
+            ))
+  (setopt org-roam-dailies-capture-templates
+          '(("d" "default" entry "* %<%I:%M %p>: %?"
+             :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
   )
 
 (after! org
-  (setq! org-log-done 'time
+  (setopt org-log-done 'time
          org-todo-keywords '((sequence "TODO" "WAITING" "DOING" "|" "DONE(!)" "CANCELLED(!)"))
          ;; Refile configuration
          org-outline-path-complete-in-steps nil
          org-refile-use-outline-path 'file))
 
-(setq! org-agenda-custom-commands
-       '(("n" "Agenda and All Todos"
-          ((agenda)
-           (todo)))
-         ("w" "Work" agenda ""
-          ((org-agenda-files '("work/2026.org"))))))
+;;(setopt org-agenda-custom-commands
+;;        '(("n" "Agenda and All Todos"
+;;           ((agenda)
+;;            (todo)))
+;;          ("w" "Work" agenda ""
+;;           ((org-agenda-files '("work/2026.org"))))))
 
 ;; Make exporting quotes better
-(setq! org-export-with-smart-quotes t
-       org-export-with-drawers nil
-       org-export-with-todo-keywords nil
-       org-export-with-broken-links t
-       org-export-with-toc nil
-       org-export-date-timestamp-format "%d %B %Y")
+(setopt org-export-with-smart-quotes t
+        org-export-with-drawers nil
+        org-export-with-todo-keywords nil
+        org-export-with-broken-links t
+        org-export-with-toc nil
+        org-export-date-timestamp-format "%d %B %Y")
 ;; Export ODT to MS-Word
 ;;(setq-default org-odt-preferred-output-format "docx")
 ;; Export ODT to PDF
@@ -231,7 +231,7 @@
 (run-at-time 1 10 'sud/indent-org-block-automatically)
 
 (after! magit
-  (setq! magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")
+  (setopt magit-revision-show-gravatars '("^Author:     " . "^Commit:     ")
          magit-diff-refine-hunk 'all))
 
 
@@ -263,7 +263,7 @@
 ;;(use-package! lsp-ui
 ;;  :hook (lsp-mode . lsp-ui-mode))
 
-;;(setq! lsp-warn-no-matched-clients nil)
+;;(setopt lsp-warn-no-matched-clients nil)
 
 ;; Disable format-on-save behavior in Emacs Lisp buffers
 ;; (setq-hook! 'emacs-lisp-mode-hook +format-inhibit t)
@@ -282,18 +282,18 @@
   (set-formatter! 'shfmt '("shfmt" "-ci"
                            (unless indent-tabs-mode
                              (list "-i" (number-to-string tab-width))))))
-(setq! +format-on-save-disabled-modes
+(setopt +format-on-save-disabled-modes
        '(emacs-lisp-mode  ; elisp's mechanisms are good enough
          sql-mode         ; sqlformat is currently broken
          tex-mode         ; latexindent is broken
          latex-mode
          sh-mode))
 
-(setq! org-cite-csl-styles-dir "~/org/biblio")
+(setopt org-cite-csl-styles-dir "~/org/biblio")
 
-(setq! citar-bibliography '("~/org/biblio/global.bib"))
+(setopt citar-bibliography '("~/org/biblio/global.bib"))
 
-;;(setq! reftex-default-bibliography "/your/bib/file.bib")
+;;(setopt reftex-default-bibliography "/your/bib/file.bib")
 (after! ox-latex
   :ensure nil
   :demand t
@@ -341,7 +341,7 @@
                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
                  )))
 
-(setq! org-latex-hyperref-template
+(setopt org-latex-hyperref-template
        "\\hypersetup{
  pdftitle={%t},
  pdfauthor={%a},
@@ -362,5 +362,5 @@
   ;; Backup (file~) disabled and auto-save (#file#) locally to prevent delays in editing remote files
   (add-to-list 'backup-directory-alist
                (cons tramp-file-name-regexp nil))
-  (setq! tramp-auto-save-directory temporary-file-directory)
-  (setq! tramp-verbose 10))
+  (setopt tramp-auto-save-directory temporary-file-directory)
+  (setopt tramp-verbose 10))
