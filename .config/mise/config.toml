@@ -15,8 +15,6 @@ gpg_verify = true
 compile = false
 
 [tools]
-# languages
-"asdf:ouest/asdf-perl" = "latest"
 cabal = "latest"
 clang = "22.1.3"
 clojure = "latest"
@@ -27,7 +25,6 @@ kotlin = "latest"
 lua = "5.1.5"
 python = "latest"
 ruby = "latest"
-#rust = "latest"
 sbcl = "latest"
 zig = "latest"
 
@@ -56,7 +53,6 @@ leiningen = "latest"
 lua-language-server = "latest"
 markdownlint-cli2 = "latest"
 ninja = "latest"
-ripsecrets = "latest"
 rust-analyzer = "latest"
 stylua = "latest"
 tinytex = "latest"
@@ -65,9 +61,6 @@ yamlfmt = "latest"
 yamllint = "latest"
 yj = "latest"
 yq = "latest"
-
-# emacs dependencies
-"asdf:luizm/asdf-shfmt" = "latest"
 black = "latest"
 clang-format = "22.1.3"
 ktlint = "latest"
@@ -137,6 +130,9 @@ typstyle = "latest"
 neovim = "latest"
 maven = "latest"
 lazyssh = "latest"
+rust = "latest"
+perl = "latest"
+shfmt = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
