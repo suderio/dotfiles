@@ -1,5 +1,9 @@
 {
   "plugins": {
+    "autolang.nvim": {
+      "rev": "47fe453ed552f5852128dbb9f667247a17959b42",
+      "src": "https://github.com/suderio/autolang.nvim.git"
+    },
     "conform.nvim": {
       "rev": "dca1a190aa85f9065979ef35802fb77131911106",
       "src": "https://github.com/stevearc/conform.nvim"

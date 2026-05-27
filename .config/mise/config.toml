@@ -133,6 +133,8 @@ lazyssh = "latest"
 rust = "latest"
 perl = "latest"
 shfmt = "latest"
+usql = "latest"
+btop = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
@@ -151,10 +153,7 @@ run = [
 ]
 [tasks.clean]
 description = 'Deletes tmp dir'
-run = [
-  'rm -rf "$TMP_DIR"/*',
-  'rm -rf "$TMP_DIR"/.[!.]*'
-]
+run = ['rm -rf "$TMP_DIR"/*', 'rm -rf "$TMP_DIR"/.[!.]*']
 
 
 [tasks.julia]
@@ -213,11 +212,7 @@ run = '''
     echo "cljfmt, tidy, paru cannot be automatically updated"
 '''
 [tasks.ansi]
-run = [
-    'curl -OL git.io/ansi',
-    'chmod 755 ansi',
-    'mv ansi "$LOCAL_DIR/bin/"'
-]
+run = ['curl -OL git.io/ansi', 'chmod 755 ansi', 'mv ansi "$LOCAL_DIR/bin/"']
 
 # TODO
 #NPM_PACKAGES := "markdownlint @mermaid-js/mermaid-cli"

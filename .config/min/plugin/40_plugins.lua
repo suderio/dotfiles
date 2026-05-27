@@ -183,3 +183,8 @@ end)
 --   -- Enable only one
 --   vim.cmd('color everforest')
 -- end)
+--
+
+
+
+add({ "https://github.com/suderio/autolang.nvim.git" })
