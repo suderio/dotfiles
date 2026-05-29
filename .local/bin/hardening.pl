@@ -4,6 +4,678 @@ use warnings;
 
 # Reference: https://cisofy.com/lynis/controls/<CODE-NNNN>/
 
+# =====================================================================
+# FUNÇÕES DE VERIFICAÇÃO (CHECKS)
+# Retornam 1 (True) se a vulnerabilidade existe (hardening necessário)
+# Retornam 0 (False) se o sistema está seguro (hardening já aplicado)
+# =====================================================================
+
+sub check_boot_5264 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK BOOT-5264] Verificando nível de segurança dos serviços systemd...\n" if $verbose;
+
+    my @services = `systemctl list-units --type=service --state=running --no-legend 2>/dev/null`;
+    chomp @services;
+    my $vulneravel = 0;
+
+    foreach my $line (@services) {
+        my ($service) = split /\s+/, $line;
+        next unless defined $service && $service =~ /\.service$/;
+
+        my $output = `systemd-analyze security $service 2>/dev/null`;
+        if ($output =~ /UNSAFE/i) {
+            print "  -> 🔴 Serviço $service classificado como UNSAFE.\n" if $verbose;
+            $vulneravel = 1;
+        }
+    }
+    print "  -> 🟢 Nenhum serviço crítico/UNSAFE encontrado.\n" if $verbose && !$vulneravel;
+    return $vulneravel;
+}
+
+sub check_krnl_5820 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK KRNL-5820] Verificando se core dumps estão desativados...\n" if $verbose;
+
+    my $file = '/etc/security/limits.conf';
+    if (!-f $file) {
+        print "  -> 🔴 Arquivo $file não encontrado.\n" if $verbose;
+        return 1;
+    }
+
+    open my $in, '<', $file or return 1;
+    my @lines = <$in>;
+    close $in;
+
+    my $line1 = '* hard    core            0';
+    my $line2 = 'root            hard    core            0';
+
+    if (grep { /\Q$line1\E/ } @lines && grep { /\Q$line2\E/ } @lines) {
+        print "  -> 🟢 Core dumps já desativados.\n" if $verbose;
+        return 0;
+    }
+
+    print "  -> 🔴 Core dumps NÃO estão desativados corretamente.\n" if $verbose;
+    return 1;
+}
+
+sub check_auth_9262 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK AUTH-9262] Verificando uso de pam_passwdqc para força de senha...\n" if $verbose;
+
+    my $pam_file = '/etc/pam.d/passwd';
+    if (!-f $pam_file) {
+        print "  -> 🔴 Arquivo $pam_file não encontrado.\n" if $verbose;
+        return 1;
+    }
+
+    open my $in, '<', $pam_file or return 1;
+    my @lines = <$in>;
+    close $in;
+
+    if (grep { /pam_passwdqc\.so/ } @lines) {
+        print "  -> 🟢 Módulo de senha configurado corretamente.\n" if $verbose;
+        return 0;
+    }
+
+    print "  -> 🔴 pam_passwdqc.so não encontrado no pam.d.\n" if $verbose;
+    return 1;
+}
+
+sub check_auth_9282 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK AUTH-9282] Verificando contas sem expiração de senha...\n" if $verbose;
+
+    open my $pw, '-|', 'getent shadow 2>/dev/null' or return 1;
+    my $vulneravel = 0;
+    while (<$pw>) {
+        my ($user, $pass, undef, undef, $expire) = split /:/;
+        next if $pass =~ /^[*!]/;
+
+        if (!defined $expire || $expire eq '' || $expire == 99999) {
+            print "  -> 🔴 Usuário '$user' não possui expiração de senha.\n" if $verbose;
+            $vulneravel = 1;
+        }
+    }
+    close $pw;
+
+    print "  -> 🟢 Todas as contas válidas possuem expiração de senha.\n" if $verbose && !$vulneravel;
+    return $vulneravel;
+}
+
+sub check_auth_9286 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK AUTH-9286] Verificando min/max days de senha em /etc/login.defs...\n" if $verbose;
+
+    my $file = '/etc/login.defs';
+    return 1 unless -f $file;
+
+    open my $in, '<', $file or return 1;
+    my @lines = <$in>;
+    close $in;
+
+    my $min_ok = grep { /^\s*PASS_MIN_DAYS\s+1\b/ } @lines;
+    my $max_ok = grep { /^\s*PASS_MAX_DAYS\s+90\b/ } @lines;
+
+    if ($min_ok && $max_ok) {
+        print "  -> 🟢 PASS_MIN_DAYS (1) e PASS_MAX_DAYS (90) configurados.\n" if $verbose;
+        return 0;
+    }
+
+    print "  -> 🔴 Idade de senha não está com as métricas ideais (1 e 90).\n" if $verbose;
+    return 1;
+}
+
+sub check_auth_9230 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK AUTH-9230] Verificando rounds de hash em /etc/login.defs...\n" if $verbose;
+
+    my $file = '/etc/login.defs';
+    return 1 unless -f $file;
+
+    open my $in, '<', $file or return 1;
+    my @lines = <$in>;
+    close $in;
+
+    if (grep { /^\s*SHA_CRYPT_ROUNDS\s+65536/ } @lines) {
+        print "  -> 🟢 SHA_CRYPT_ROUNDS configurado para 65536.\n" if $verbose;
+        return 0;
+    }
+
+    print "  -> 🔴 SHA_CRYPT_ROUNDS ausente ou com valor inseguro.\n" if $verbose;
+    return 1;
+}
+
+sub check_auth_9328 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK AUTH-9328] Verificando umask padrão em /etc/login.defs...\n" if $verbose;
+
+    my $file = '/etc/login.defs';
+    return 1 unless -f $file;
+
+    open my $in, '<', $file or return 1;
+    my @lines = <$in>;
+    close $in;
+
+    if (grep { /^\s*UMASK\s+027/ } @lines) {
+        print "  -> 🟢 UMASK configurado como 027.\n" if $verbose;
+        return 0;
+    }
+
+    print "  -> 🔴 UMASK padrão não é 027.\n" if $verbose;
+    return 1;
+}
+
+sub check_file_6354 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK FILE-6354] Verificando arquivos antigos (>90 dias) em /tmp...\n" if $verbose;
+
+    my @old_files = `find /tmp -type f -mtime +90 2>/dev/null`;
+    if (@old_files) {
+        print "  -> 🔴 Encontrados " . scalar(@old_files) . " arquivos antigos no /tmp.\n" if $verbose;
+        return 1;
+    }
+
+    print "  -> 🟢 Nenhum arquivo antigo no /tmp.\n" if $verbose;
+    return 0;
+}
+
+sub check_usb_1000 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK USB-1000] Verificando se usb-storage está na blacklist...\n" if $verbose;
+
+    my $conf_file = '/etc/modprobe.d/usb-storage.conf';
+    if (-f $conf_file) {
+        open my $in, '<', $conf_file or return 1;
+        while (<$in>) {
+            if (/^\s*blacklist\s+usb-storage\b/) {
+                print "  -> 🟢 Módulo usb-storage está na blacklist.\n" if $verbose;
+                return 0;
+            }
+        }
+        close $in;
+    }
+
+    print "  -> 🔴 Módulo usb-storage NÃO está bloqueado.\n" if $verbose;
+    return 1;
+}
+
+sub check_strg_1846 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK STRG-1846] Verificando blacklist de FireWire...\n" if $verbose;
+
+    my $conf_file = '/etc/modprobe.d/firewire.conf';
+    my @modules = qw(firewire-core firewire-ohci firewire-sbp2);
+    my %found;
+
+    if (-f $conf_file) {
+        open my $in, '<', $conf_file or return 1;
+        while (<$in>) {
+            foreach my $mod (@modules) {
+                $found{$mod} = 1 if /^\s*blacklist\s+\Q$mod\E\b/;
+            }
+        }
+        close $in;
+    }
+
+    foreach my $mod (@modules) {
+        if (!$found{$mod}) {
+            print "  -> 🔴 Módulo $mod NÃO está bloqueado.\n" if $verbose;
+            return 1;
+        }
+    }
+
+    print "  -> 🟢 Todos os módulos FireWire estão bloqueados.\n" if $verbose;
+    return 0;
+}
+
+sub check_name_4028 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK NAME-4028] Verificando configuração de FQDN...\n" if $verbose;
+
+    my $hostname = `hostname`; chomp $hostname;
+    my $fqdn = `hostname --fqdn 2>/dev/null`; chomp $fqdn;
+    my $domain = `dnsdomainname 2>/dev/null`; chomp $domain;
+
+    if (!$fqdn || $fqdn eq $hostname || $fqdn !~ /\./ || $domain eq '(none)' || $domain eq '') {
+        print "  -> 🔴 FQDN ausente ou incorreto.\n" if $verbose;
+        return 1;
+    }
+
+    print "  -> 🟢 FQDN e domínio configurados corretamente ($fqdn).\n" if $verbose;
+    return 0;
+}
+
+sub check_pkgs_7312 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK PKGS-7312] Verificando pacotes desatualizados...\n" if $verbose;
+
+    my @updates = `checkupdates 2>/dev/null`;
+    if (@updates) {
+        print "  -> 🔴 Existem " . scalar(@updates) . " pacotes pendentes de atualização.\n" if $verbose;
+        return 1;
+    }
+
+    print "  -> 🟢 Sistema atualizado.\n" if $verbose;
+    return 0;
+}
+
+sub check_pkgs_7320 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK PKGS-7320] Verificando arch-audit e pacotes vulneráveis...\n" if $verbose;
+
+    if (system("command -v arch-audit > /dev/null 2>&1") != 0) {
+        print "  -> 🔴 arch-audit não está instalado.\n" if $verbose;
+        return 1;
+    }
+
+    my $vuln_output = `arch-audit 2>&1`;
+    if ($? != 0 || $vuln_output =~ /CVE/i) {
+        print "  -> 🔴 Vulnerabilidades em pacotes detectadas pelo arch-audit.\n" if $verbose;
+        return 1;
+    }
+
+    print "  -> 🟢 Nenhum pacote vulnerável encontrado.\n" if $verbose;
+    return 0;
+}
+
+sub check_netw_3200 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK NETW-3200] Verificando protocolos de rede desnecessários...\n" if $verbose;
+
+    my @protocols = qw(dccp sctp rds tipc);
+    my $config = `modprobe --showconfig 2>/dev/null`;
+    my $vulneravel = 0;
+
+    foreach my $proto (@protocols) {
+        if ($config !~ /^install\s+$proto\s+\/bin\/true/m) {
+            print "  -> 🔴 Protocolo $proto não está bloqueado.\n" if $verbose;
+            $vulneravel = 1;
+        }
+    }
+
+    print "  -> 🟢 Todos os protocolos desnecessários estão bloqueados.\n" if $verbose && !$vulneravel;
+    return $vulneravel;
+}
+
+sub check_php_2372 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK PHP-2372] Verificando expose_php...\n" if $verbose;
+
+    # Se PHP não existe, não há vulnerabilidade de PHP
+    return 0 if system("command -v php >/dev/null 2>&1") != 0;
+
+    my $ini_path = `php --ini 2>/dev/null | grep "Loaded Configuration File"`;
+    $ini_path =~ s/.*?:\s+//; chomp $ini_path;
+
+    return 1 unless -f $ini_path;
+
+    open my $in, '<', $ini_path or return 1;
+    while (<$in>) {
+        if (/^\s*expose_php\s*=\s*Off/i) {
+            print "  -> 🟢 expose_php está Off.\n" if $verbose;
+            return 0;
+        }
+    }
+    close $in;
+
+    print "  -> 🔴 expose_php não está explicitamente configurado como Off.\n" if $verbose;
+    return 1;
+}
+
+sub check_php_2376 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK PHP-2376] Verificando allow_url_fopen...\n" if $verbose;
+
+    return 0 if system("command -v php >/dev/null 2>&1") != 0;
+
+    my $ini_path = `php --ini 2>/dev/null | grep "Loaded Configuration File"`;
+    $ini_path =~ s/.*?:\s+//; chomp $ini_path;
+
+    return 1 unless -f $ini_path;
+
+    open my $in, '<', $ini_path or return 1;
+    while (<$in>) {
+        if (/^\s*allow_url_fopen\s*=\s*Off/i) {
+            print "  -> 🟢 allow_url_fopen está Off.\n" if $verbose;
+            return 0;
+        }
+    }
+    close $in;
+
+    print "  -> 🔴 allow_url_fopen não está explicitamente configurado como Off.\n" if $verbose;
+    return 1;
+}
+
+sub check_logg_2146 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK LOGG-2146] Verificando arquivos de log não rotacionados...\n" if $verbose;
+
+    my @logfiles = grep { -f $_ } glob("/var/log/**/*.log");
+    my @rotated;
+
+    foreach my $conf (</etc/logrotate.d/*>, "/etc/logrotate.conf") {
+        open my $fh, '<', $conf or next;
+        while (<$fh>) {
+            push @rotated, $1 if m{^(/var/log/[^ ]+)};
+        }
+        close $fh;
+    }
+
+    my %rotated_map = map { $_ => 1 } @rotated;
+    my @unmanaged = grep { !$rotated_map{$_} } @logfiles;
+
+    if (@unmanaged) {
+        print "  -> 🔴 Encontrados " . scalar(@unmanaged) . " logs sem configuração de logrotate.\n" if $verbose;
+        return 1;
+    }
+
+    print "  -> 🟢 Todos os logs .log estão gerenciados.\n" if $verbose;
+    return 0;
+}
+
+sub check_bann_7126 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK BANN-7126] Verificando banner legal...\n" if $verbose;
+
+    my @targets = ('/etc/issue', '/etc/issue.net');
+
+    foreach my $file (@targets) {
+        if (!-f $file) {
+            print "  -> 🔴 Arquivo $file não existe.\n" if $verbose;
+            return 1;
+        }
+        open my $in, '<', $file or return 1;
+        my @lines = <$in>;
+        close $in;
+
+        unless (grep { /ACESSO RESTRITO|Todas as atividades/ } @lines) {
+            print "  -> 🔴 Banner legal ausente em $file.\n" if $verbose;
+            return 1;
+        }
+    }
+
+    print "  -> 🟢 Banners legais presentes em ambos os arquivos.\n" if $verbose;
+    return 0;
+}
+
+sub check_acct_9622 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK ACCT-9622] Verificando process accounting (acct)...\n" if $verbose;
+
+    my $installed = system("pacman -Q acct > /dev/null 2>&1") == 0;
+    if (!$installed) {
+        print "  -> 🔴 Pacote acct não instalado.\n" if $verbose;
+        return 1;
+    }
+
+    if (`accton 2>/dev/null` !~ /is on/) {
+        print "  -> 🔴 Process accounting está desligado.\n" if $verbose;
+        return 1;
+    }
+
+    print "  -> 🟢 Process accounting instalado e ativo.\n" if $verbose;
+    return 0;
+}
+
+sub check_acct_9626 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK ACCT-9626] Verificando coleta de sysstat...\n" if $verbose;
+
+    my $installed = system("pacman -Q sysstat > /dev/null 2>&1") == 0;
+    if (!$installed) {
+        print "  -> 🔴 Pacote sysstat não instalado.\n" if $verbose;
+        return 1;
+    }
+
+    my $status = `systemctl is-active sysstat.service 2>/dev/null`;
+    chomp $status;
+    if ($status ne "active") {
+        print "  -> 🔴 Serviço sysstat.service não está ativo.\n" if $verbose;
+        return 1;
+    }
+
+    print "  -> 🟢 sysstat instalado e rodando.\n" if $verbose;
+    return 0;
+}
+
+sub check_acct_9628 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK ACCT-9628] Verificando auditd...\n" if $verbose;
+
+    my $installed = system("pacman -Q audit > /dev/null 2>&1") == 0;
+    if (!$installed) {
+        print "  -> 🔴 Pacote audit não instalado.\n" if $verbose;
+        return 1;
+    }
+
+    my $status = `systemctl is-active auditd.service 2>/dev/null`;
+    chomp $status;
+    if ($status ne "active") {
+        print "  -> 🔴 Serviço auditd não está ativo.\n" if $verbose;
+        return 1;
+    }
+
+    print "  -> 🟢 auditd instalado e ativo.\n" if $verbose;
+    return 0;
+}
+
+sub check_time_3104 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK TIME-3104] Verificando sincronização NTP...\n" if $verbose;
+
+    my $status = `timedatectl status 2>/dev/null`;
+    my $active = ($status =~ /NTP service: active/i);
+    my $enabled = ($status =~ /System clock synchronized: yes/i);
+
+    if ($active && $enabled) {
+        print "  -> 🟢 NTP ativo e sincronizado.\n" if $verbose;
+        return 0;
+    }
+
+    print "  -> 🔴 NTP desativado ou não sincronizado.\n" if $verbose;
+    return 1;
+}
+
+sub check_cryp_7902 {
+    use POSIX qw(strftime);
+    use Time::Piece;
+    use File::Find;
+
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK CRYP-7902] Verificando validade de certificados locais...\n" if $verbose;
+
+    my @paths = ("/etc/ssl", "/etc/pki", "/usr/local/share/ca-certificates", "/etc/letsencrypt/live");
+    my @cert_files;
+    foreach my $base (@paths) {
+        next unless -d $base;
+        find(sub {
+            return unless -f $_ && /\.(crt|pem|cer)$/i;
+            push @cert_files, $File::Find::name;
+        }, $base);
+    }
+
+    my $now = localtime;
+    my $warn_ts = $now + (60 * 60 * 24 * 30);
+    my $vulneravel = 0;
+
+    foreach my $cert (@cert_files) {
+        my $output = `openssl x509 -enddate -noout -in "$cert" 2>/dev/null`;
+        next unless $output =~ /notAfter=(.*)/;
+
+        my $exp_str = $1;
+        my $exp_date = Time::Piece->strptime($exp_str, "%b %e %T %Y %Z");
+
+        if ($exp_date < $warn_ts) {
+            print "  -> 🔴 Certificado expirado ou vencendo em breve: $cert\n" if $verbose;
+            $vulneravel = 1;
+        }
+    }
+
+    print "  -> 🟢 Todos os certificados estão válidos (> 30 dias).\n" if $verbose && !$vulneravel;
+    return $vulneravel;
+}
+
+sub check_fint_4350 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK FINT-4350] Verificando AIDE...\n" if $verbose;
+
+    my $installed = system("pacman -Q aide > /dev/null 2>&1") == 0;
+    if (!$installed) {
+        print "  -> 🔴 Pacote aide não instalado.\n" if $verbose;
+        return 1;
+    }
+
+    if (!-f '/var/lib/aide/aide.db.gz') {
+        print "  -> 🔴 Banco de dados do AIDE ausente.\n" if $verbose;
+        return 1;
+    }
+
+    print "  -> 🟢 AIDE instalado e inicializado.\n" if $verbose;
+    return 0;
+}
+
+sub check_tool_5002 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK TOOL-5002] Verificando ferramentas de automação...\n" if $verbose;
+
+    my @tools = qw(ansible puppet salt chef cf-agent);
+    foreach my $bin (@tools) {
+        if (system("command -v $bin >/dev/null 2>&1") == 0) {
+            print "  -> 🟢 Automação detectada ($bin).\n" if $verbose;
+            return 0;
+        }
+    }
+
+    print "  -> 🔴 Nenhuma ferramenta de automação detectada.\n" if $verbose;
+    return 1;
+}
+
+sub check_file_7524 {
+    use File::Find;
+
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK FILE-7524] Buscando permissões inseguras de arquivos (0777, 0666)...\n" if $verbose;
+
+    my $vulneravel = 0;
+    find(sub {
+        return unless -f $_;
+        my $mode = (stat($_))[2] & 07777;
+        if ($mode == 0777 || $mode == 0666) {
+            print "  -> 🔴 Permissão perigosa em: $File::Find::name\n" if $verbose;
+            $vulneravel = 1;
+        }
+    }, '/etc', '/var', '/opt');
+
+    print "  -> 🟢 Nenhuma permissão global (777/666) encontrada em diretórios críticos.\n" if $verbose && !$vulneravel;
+    return $vulneravel;
+}
+
+sub check_krnl_6000 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK KRNL-6000] Verificando parâmetros sysctl...\n" if $verbose;
+
+    my %sysctl_recommended = (
+        'kernel.kptr_restrict'         => 2,
+        'fs.suid_dumpable'             => 0,
+        'kernel.randomize_va_space'    => 2,
+        'net.ipv4.tcp_syncookies'      => 1,
+        'net.ipv4.tcp_timestamps'      => 0,
+    );
+
+    my $vulneravel = 0;
+    foreach my $key (keys %sysctl_recommended) {
+        my $current = `sysctl -n $key 2>/dev/null`;
+        chomp $current;
+        next if $current eq '';
+
+        my $expected = $sysctl_recommended{$key};
+        if ($current ne "$expected") {
+            print "  -> 🔴 sysctl divergiu: $key ($current != $expected)\n" if $verbose;
+            $vulneravel = 1;
+        }
+    }
+
+    print "  -> 🟢 Parâmetros sysctl estão endurecidos de acordo com a recomendação.\n" if $verbose && !$vulneravel;
+    return $vulneravel;
+}
+
+sub check_hrdn_7222 {
+    use File::Find;
+    use File::Basename;
+    use File::stat;
+
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK HRDN-7222] Verificando permissões de compiladores...\n" if $verbose;
+
+    my @compilers = qw(gcc g++ clang rustc go javac);
+    my $vulneravel = 0;
+
+    foreach my $c (@compilers) {
+        my $path = `command -v $c 2>/dev/null`;
+        chomp $path;
+        if ($path && -x $path) {
+            my $st = stat($path) or next;
+            my $mode = sprintf "%04o", $st->mode & 07777;
+            my $owner = getpwuid($st->uid);
+
+            my $perms_ok = ($owner eq 'root' && $mode =~ /^7[0-5]0$/) || ($path =~ m{^/home/([^/]+)} && $owner eq $1);
+            if (!$perms_ok) {
+                print "  -> 🔴 Permissão perigosa em compilador: $path (Modo: $mode)\n" if $verbose;
+                $vulneravel = 1;
+            }
+        }
+    }
+
+    print "  -> 🟢 Permissões de compiladores seguras.\n" if $verbose && !$vulneravel;
+    return $vulneravel;
+}
+
+sub check_hrdn_7222_prune {
+    use File::Find;
+    use File::Basename;
+    use File::stat;
+
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK HRDN-7222_PRUNE] Verificando compiladores órfãos/não listados...\n" if $verbose;
+
+    my @whitelist = qw(gcc g++ rustc clang go javac julia);
+    my %allowed = map { $_ => 1 } @whitelist;
+    my $vulneravel = 0;
+
+    my @search_dirs = qw(/usr/local /opt);
+    find(sub {
+        return unless -f $_ && -x _;
+        my $name = basename($_);
+        return unless $name =~ /(gcc|g\+\+|cc|clang|c\+\+|go|rustc|javac|julia|zig|v|fpc|ghc|swiftc|nim|as|nasm|kotlinc|native-image)/;
+
+        if (!$allowed{$name}) {
+            print "  -> 🔴 Compilador não autorizado encontrado em: $File::Find::name\n" if $verbose;
+            $vulneravel = 1;
+        }
+    }, @search_dirs);
+
+    print "  -> 🟢 Nenhum compilador não autorizado nos diretórios críticos.\n" if $verbose && !$vulneravel;
+    return $vulneravel;
+}
+
+sub check_hrdn_7230 {
+    my $verbose = grep { $_ eq '--verbose' } @_;
+    print "[CHECK HRDN-7230] Verificando scanner de malware (rkhunter/chkrootkit)...\n" if $verbose;
+
+    my $has_rk = system("command -v rkhunter >/dev/null 2>&1") == 0;
+    my $has_chk = system("command -v chkrootkit >/dev/null 2>&1") == 0;
+
+    if ($has_rk || $has_chk) {
+        print "  -> 🟢 Scanner de malware instalado.\n" if $verbose;
+        return 0;
+    }
+
+    print "  -> 🔴 Nenhum scanner (rkhunter ou chkrootkit) encontrado.\n" if $verbose;
+    return 1;
+}
+
+
+
 # BOOT-5264: Consider hardening system services
 # Run '/usr/bin/systemd-analyze security SERVICE' for each service
 
@@ -2040,8 +2712,63 @@ sub unblock_usb_storage {
     }
 }
 
+# =====================================================================
+# AUDITORIA COMPLETA
+# =====================================================================
+
+sub check_all {
+    my ($actions_ref, @args) = @_;
+    my $verbose = grep { $_ eq '--verbose' } @args;
+
+    print "[CHECK ALL] Iniciando auditoria completa do sistema...\n\n";
+
+    my $total = 0;
+    my $vulneraveis = 0;
+    my $seguros = 0;
+
+    # Itera dinamicamente sobre todas as chaves do hash de ações que começam com "check_"
+    foreach my $chk (sort keys %$actions_ref) {
+        next unless $chk =~ /^check_/;
+        next if $chk eq 'check_all';
+
+        $total++;
+        print "--------------------------------------------------\n" if $verbose;
+
+        # Executa a função passando os argumentos (como --verbose)
+        my $resultado = $actions_ref->{$chk}->(@args);
+
+        if ($resultado) {
+            $vulneraveis++;
+            # Exibe o sumário caso não esteja no modo verbose (que já é bem verboso)
+            print "❌ FALHA: $chk exige atenção.\n" unless $verbose;
+        } else {
+            $seguros++;
+            print "✅ OK: $chk está seguro.\n" unless $verbose;
+        }
+    }
+
+    print "\n==================================================\n";
+    print "📊 RESUMO DA AUDITORIA\n";
+    print "==================================================\n";
+    print "Total de verificações: $total\n";
+    print "Seguros (OK):          $seguros\n";
+    print "Vulneráveis (FALHA):   $vulneraveis\n";
+    print "==================================================\n";
+
+    if ($vulneraveis > 0) {
+        print "⚠️  Recomenda-se rodar as respectivas ações de hardening para os itens que falharam.\n";
+    } else {
+        print "🏆 Excelente! O sistema está aderente a todas as políticas verificadas.\n";
+    }
+}
+
+# =====================================================================
+# MAIN
+# =====================================================================
+
 sub main {
     my %actions = (
+        # Ações de Hardening e Utilitários
         'boot_5264'         => \&boot_5264,
         'krnl_5820'         => \&krnl_5820,
         'auth_9230'         => \&auth_9230,
@@ -2079,6 +2806,39 @@ sub main {
         'hrdn_7222'         => \&hrdn_7222,
         'hrdn_7222_prune'   => \&hrdn_7222_prune,
         'hrdn_7230'         => \&hrdn_7230,
+
+        # Ações de Verificação (Checks)
+        'check_all'         => \&check_all,
+        'check_boot_5264'   => \&check_boot_5264,
+        'check_krnl_5820'   => \&check_krnl_5820,
+        'check_auth_9262'   => \&check_auth_9262,
+        'check_auth_9282'   => \&check_auth_9282,
+        'check_auth_9286'   => \&check_auth_9286,
+        'check_auth_9230'   => \&check_auth_9230,
+        'check_auth_9328'   => \&check_auth_9328,
+        'check_file_6354'   => \&check_file_6354,
+        'check_usb_1000'    => \&check_usb_1000,
+        'check_strg_1846'   => \&check_strg_1846,
+        'check_name_4028'   => \&check_name_4028,
+        'check_pkgs_7312'   => \&check_pkgs_7312,
+        'check_pkgs_7320'   => \&check_pkgs_7320,
+        'check_netw_3200'   => \&check_netw_3200,
+        'check_php_2372'    => \&check_php_2372,
+        'check_php_2376'    => \&check_php_2376,
+        'check_logg_2146'   => \&check_logg_2146,
+        'check_bann_7126'   => \&check_bann_7126,
+        'check_acct_9622'   => \&check_acct_9622,
+        'check_acct_9626'   => \&check_acct_9626,
+        'check_acct_9628'   => \&check_acct_9628,
+        'check_time_3104'   => \&check_time_3104,
+        'check_cryp_7902'   => \&check_cryp_7902,
+        'check_fint_4350'   => \&check_fint_4350,
+        'check_tool_5002'   => \&check_tool_5002,
+        'check_file_7524'   => \&check_file_7524,
+        'check_krnl_6000'   => \&check_krnl_6000,
+        'check_hrdn_7222'   => \&check_hrdn_7222,
+        'check_hrdn_7222_prune' => \&check_hrdn_7222_prune,
+        'check_hrdn_7230'   => \&check_hrdn_7230,
     );
 
     my %descriptions = (
@@ -2119,27 +2879,78 @@ sub main {
         'hrdn_7222'         => 'Restringe uso de compiladores por usuários',
         'hrdn_7222_prune'   => 'Remove compiladores não autorizados',
         'hrdn_7230'         => 'Instala e agenda scanner com rkhunter',
+
+        # Descrições dos Checks
+        'check_all'         => 'Executa todas as verificações disponíveis e gera relatório',
+        'check_boot_5264'   => 'Verifica serviços vulneráveis no systemd',
+        'check_krnl_5820'   => 'Verifica se core dumps estão desativados',
+        'check_auth_9262'   => 'Verifica existência do pam_passwdqc',
+        'check_auth_9282'   => 'Verifica usuários sem expiração de senha',
+        'check_auth_9286'   => 'Verifica idade de senhas (min/max)',
+        'check_auth_9230'   => 'Verifica criptografia e rounds (SHA_CRYPT_ROUNDS)',
+        'check_auth_9328'   => 'Verifica umask padrão para criação de arquivos',
+        'check_file_6354'   => 'Verifica arquivos órfãos em /tmp',
+        'check_usb_1000'    => 'Verifica bloqueio do usb-storage',
+        'check_strg_1846'   => 'Verifica bloqueio de interfaces FireWire',
+        'check_name_4028'   => 'Verifica conformidade do FQDN',
+        'check_pkgs_7312'   => 'Verifica atualizações pendentes (pacman)',
+        'check_pkgs_7320'   => 'Verifica vulnerabilidades locais com arch-audit',
+        'check_netw_3200'   => 'Verifica bloqueio de protocolos obscuros de rede',
+        'check_php_2372'    => 'Verifica se expose_php está desativado',
+        'check_php_2376'    => 'Verifica restrições de allow_url_fopen',
+        'check_logg_2146'   => 'Verifica arquivos de log sem logrotate',
+        'check_bann_7126'   => 'Verifica existência de banners legais /etc/issue',
+        'check_acct_9622'   => 'Verifica status de process accounting',
+        'check_acct_9626'   => 'Verifica se o daemon sysstat está ativo',
+        'check_acct_9628'   => 'Verifica ativação do auditd',
+        'check_time_3104'   => 'Verifica se daemon de tempo systemd-timesyncd opera',
+        'check_cryp_7902'   => 'Verifica expiração de certificados instalados',
+        'check_fint_4350'   => 'Verifica se AIDE está inicializado e configurado',
+        'check_tool_5002'   => 'Verifica se alguma tool de IaC/Automação existe',
+        'check_file_7524'   => 'Varre permissões 0777 ou 0666 em diretórios chaves',
+        'check_krnl_6000'   => 'Verifica chaves de sysctl vitais',
+        'check_hrdn_7222'   => 'Verifica permissões de compiladores',
+        'check_hrdn_7222_prune' => 'Verifica presença de compiladores não permitidos',
+        'check_hrdn_7230'   => 'Verifica se existe anti-malware presente',
     );
 
     my $action = shift @ARGV // '';
+
+    # Processa o menu de ajuda agrupando os resultados
     if ($action eq '--help' or $action eq '-h' or $action eq '') {
         print "\n🔐 Arch Linux Hardening Script (Lynis-based)\n";
-        print "Uso: perl $0 <ação> [--dry-run] [--auto]\n\n";
-        print "Ações disponíveis:\n";
-        foreach my $cmd (sort keys %actions) {
+        print "Uso: perl $0 <ação> [--dry-run] [--auto] [--verbose]\n\n";
+
+        print "--- VERIFICAÇÃO E AUDITORIA ---\n";
+        foreach my $cmd (sort grep { /^check_/ } keys %actions) {
             my $desc = $descriptions{$cmd} // '';
             printf "  %-22s  %s\n", $cmd, $desc;
         }
-        print "\nUse --dry-run para simular e --auto para execução sem perguntas.\n";
+
+        print "\n--- APLICAÇÃO E HARDENING ---\n";
+        foreach my $cmd (sort grep { !/^check_/ } keys %actions) {
+            my $desc = $descriptions{$cmd} // '';
+            printf "  %-22s  %s\n", $cmd, $desc;
+        }
+
+        print "\nParâmetros opcionais:\n";
+        print "  --dry-run   Simula alterações no disco\n";
+        print "  --auto      Executa ações de hardening sem solicitar confirmações\n";
+        print "  --verbose   Exibe detalhes das verificações ao rodar os checks\n";
         exit 0;
     }
 
-    if (exists $actions{$action}) {
-        $actions{$action}->();
+    if ($action eq 'check_all') {
+        # Passa a referência da tabela de despacho para a função processar tudo dinamicamente
+        $actions{'check_all'}->(\%actions, @ARGV);
+    } elsif (exists $actions{$action}) {
+        # O @ARGV agora contém as flags restantes (--verbose, --dry-run, etc)
+        $actions{$action}->(@ARGV);
     } else {
         die "❌ Ação desconhecida: $action\nUse --help para listar as ações disponíveis.\n";
     }
 }
+
 
 main() unless caller;
 
