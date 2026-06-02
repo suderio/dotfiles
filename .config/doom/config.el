@@ -250,6 +250,11 @@
   (unless (treesit-language-available-p 'just)
     (just-ts-mode-install-grammar)))
 
+(after! eglot
+  (add-to-list 'eglot-server-programs
+               '((rust-ts-mode rust-mode) .
+                 ("rust-analyzer" :initializationOptions (:check (:command "clippy"))))))
+
 (with-eval-after-load 'eglot
   (with-eval-after-load 'typst-ts-mode
     (add-to-list 'eglot-server-programs

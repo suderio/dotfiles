@@ -39,6 +39,7 @@
     - [[#lua][Lua]]
     - [[#lisp][Lisp]]
     - [[#just][Just]]
+    - [[#rust][Rust]]
     - [[#typst][Typst]]
     - [[#install-treesitter-grammars][Install treesitter grammars]]
     - [[#lsp][LSP]]
@@ -401,6 +402,13 @@ Obs.: diff-refine-hunk may be slow
   ;;Installs just grammar if not available
   (unless (treesit-language-available-p 'just)
     (just-ts-mode-install-grammar)))
+#+end_src
+*** Rust
+#+begin_src emacs-lisp
+(after! eglot
+  (add-to-list 'eglot-server-programs
+               '((rust-ts-mode rust-mode) .
+                 ("rust-analyzer" :initializationOptions (:check (:command "clippy"))))))
 #+end_src
 *** Typst
 #+begin_src emacs-lisp

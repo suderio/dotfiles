@@ -135,6 +135,7 @@ perl = "latest"
 shfmt = "latest"
 usql = "latest"
 btop = "latest"
+nfpm = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'
