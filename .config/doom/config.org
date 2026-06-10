@@ -47,6 +47,7 @@
   - [[#latex][Latex]]
     - [[#abnt2][ABNT2]]
   - [[#tramp][Tramp]]
+  - [[#gptel][GPTel]]
   - [[#remember][Remember]]
 
 ** Functions
@@ -548,6 +549,20 @@ https://github.com/james-stoup/emacs-org-mode-tutorial
                (cons tramp-file-name-regexp nil))
   (setopt tramp-auto-save-directory temporary-file-directory)
   (setopt tramp-verbose 10))
+#+end_src
+** GPTel
+#+begin_src emacs-lisp
+(after! gptel
+  :config
+  ;; Configurando o Gemini como backend
+  (setq-default gptel-backend
+                (gptel-make-gemini "Gemini"
+                  :key (getenv "GEMINI_API_KEY")
+                  :stream t))
+
+  ;; Definindo o modelo padrão para o seu nível de assinatura
+  (setq-default gptel-model 'gemini-pro-latest))
+
 #+end_src
 ** Remember
 Whenever you reconfigure a package, make sure to wrap your config in an

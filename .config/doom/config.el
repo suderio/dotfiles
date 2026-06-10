@@ -367,5 +367,17 @@
   ;; Backup (file~) disabled and auto-save (#file#) locally to prevent delays in editing remote files
   (add-to-list 'backup-directory-alist
                (cons tramp-file-name-regexp nil))
-  (setopt tramp-auto-save-directory temporary-file-directory)
-  (setopt tramp-verbose 10))
+  (setq! tramp-auto-save-directory temporary-file-directory)
+  (setq! tramp-verbose 10))
+
+(after! gptel
+  :config
+  ;; Configurando o Gemini como backend
+  (setq-default gptel-backend
+                (gptel-make-gemini "Gemini"
+                  :key (getenv "GEMINI_API_KEY")
+                  :stream t))
+
+  ;; Definindo o modelo padrão para o seu nível de assinatura
+  (setq-default gptel-model 'gemini-pro-latest))
+>>>>>>> 0657059 (Update dotfiles via script)
