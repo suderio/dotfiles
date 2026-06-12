@@ -400,6 +400,9 @@ Obs.: diff-refine-hunk may be slow
 *** Just
 #+begin_src emacs-lisp
 (after! just-ts-mode
+
+
+
   ;;Installs just grammar if not available
   (unless (treesit-language-available-p 'just)
     (just-ts-mode-install-grammar)))

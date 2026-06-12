@@ -246,6 +246,9 @@
 
 
 (after! just-ts-mode
+
+
+
   ;;Installs just grammar if not available
   (unless (treesit-language-available-p 'just)
     (just-ts-mode-install-grammar)))
@@ -367,8 +370,8 @@
   ;; Backup (file~) disabled and auto-save (#file#) locally to prevent delays in editing remote files
   (add-to-list 'backup-directory-alist
                (cons tramp-file-name-regexp nil))
-  (setq! tramp-auto-save-directory temporary-file-directory)
-  (setq! tramp-verbose 10))
+  (setopt tramp-auto-save-directory temporary-file-directory)
+  (setopt tramp-verbose 10))
 
 (after! gptel
   :config
@@ -380,4 +383,3 @@
 
   ;; Definindo o modelo padrão para o seu nível de assinatura
   (setq-default gptel-model 'gemini-pro-latest))
->>>>>>> 0657059 (Update dotfiles via script)
