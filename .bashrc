@@ -45,8 +45,6 @@ sud_source() {
     [ -s "$1" ] && . "$1"
 }
 
-[ -f "$HOME/.local/bin/mise" ] && eval "$("$HOME/.local/bin/mise" activate bash)"
-
 sud_source "$HOME/.profile"
 
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do sud_source "$f"; done
@@ -67,6 +65,7 @@ sud_source "$HOME/.sdkman/bin/sdkman-init.sh"
 sud_source "$HOME/.ghcup/env"
 sud_source "/usr/share/doc/pkgfile/command-not-found.bash"
 
+[ -f "$HOME/.local/bin/mise" ] && eval "$("$HOME/.local/bin/mise" activate bash)"
 # Autocomplete for ssh
 _ssh() {
     local cur opts

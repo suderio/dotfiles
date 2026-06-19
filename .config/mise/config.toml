@@ -3,6 +3,9 @@ experimental = true
 dotfiles.root = "~/.local/.dotfiles"
 dotfiles.default_mode = "symlink"
 
+[env]
+default_version="system"
+
 [settings.cargo]
 binstall = true
 
@@ -17,10 +20,12 @@ gpg_verify = true
 compile = false
 
 [bootstrap.packages]
-"pacman:base-devel" = "latest"
 "apt:curl" = "latest"
+
+"pacman:base-devel" = "latest"
 "pacman:curl" = "latest"
 
+"pacman:neovim" = "latest"
 "pacman:openssl" = "latest"
 
 [dotfiles]
@@ -39,6 +44,9 @@ compile = false
 "~/.profile" = {}
 "~/.Xresources" = {}
 
+[plugins]
+emacs = "https://github.com/suderio/misemacs"
+
 [tools]
 cabal = "latest"
 clang = "22.1.3"
@@ -50,206 +58,207 @@ kotlin = "latest"
 lua = "5.1.5"
 python = "latest"
 ruby = "latest"
-sbcl = "latest"
+#sbcl = "latest"
 zig = "latest"
 nodejs = "latest"
 rust = "latest"
+
+
 # basic
 bat = "latest"
 bat-extras = "latest"
-coreutils = "latest"
+#coreutils = "latest"
 eza = "latest"
 fd = "latest"
 fzf = "latest"
-just = "latest"
-#node = "latest"
+#just = "latest"
 ripgrep = "latest"
 ripgrep-all = "latest"
 starship = "latest"
-uv = "latest"
-
-# devtools
-ast-grep = "latest"
-cmake = "latest"
-github-cli = "latest"
-jj = "latest"
-jq = "latest"
-lazygit = "latest"
-leiningen = "latest"
-lua-language-server = "latest"
-markdownlint-cli2 = "latest"
-ninja = "latest"
-rust-analyzer = "latest"
-stylua = "latest"
-tinytex = "latest"
-tree-sitter = "latest"
-yamlfmt = "latest"
-yamllint = "latest"
-yj = "latest"
-yq = "latest"
-black = "latest"
-clang-format = "22.1.3"
-ktlint = "latest"
-shellcheck = "latest"
-zls = "latest"
-## go devtools
-"go:github.com/fatih/gomodifytags" = "latest"
-"go:github.com/cweill/gotests/gotests" = "latest"
-"go:golang.org/x/tools/gopls" = "latest"
-"go:github.com/x-motemen/gore/cmd/gore" = "latest"
-"go:github.com/jessfraz/dockfmt" = "latest"
-"go:github.com/go-delve/delve/cmd/dlv" = "latest"
-
-## python devtools
-"pipx:isort" = "latest"
-"pipx:pipenv" = "latest"
-"pipx:nose" = "latest"
-"pipx:nose2" = "latest"
-"pipx:pytest" = "latest"
-"pipx:pyflakes" = "latest"
-"pipx:citation-langserver" = "latest"
-"pipx:pyright" = "latest"
-"pipx:sqlfluff" = "latest"
-
-## npm devtools
-"npm:stylelint" = "latest"
-"npm:js-beautify" = "latest"
-"npm:vscode-json-languageserver" = "latest"
-"npm:typescript" = "latest"
-"npm:typescript-language-server" = "latest"
-"npm:bash-language-server" = "latest"
-"npm:dockerfile-language-server-nodejs" = "latest"
-"npm:yaml-language-server" = "latest"
-"npm:@mermaid-js/mermaid-cli" = "latest"
-
-# neovim dependencies
-prettier = "latest"
-
-# cargo devtools
-"cargo:cargo-upgrade-command" = "latest"
-"cargo:https://github.com/latex-lsp/texlab" = "tag:v5.22.1"
-
-# other
-bitwarden = "latest"
-ctop = "latest"
 delta = "latest"
-dust = "latest"
-ffmpeg = "latest"
-pandoc = "latest"
-typst = "latest"
-zellij = "latest"
-"cargo:procs" = "latest"
-imagemagick = "latest"
-grpcurl = "latest"
-websocat = "latest"
-php = "8.5.0"
-gitleaks = "latest"
-"go:github.com/pranshuparmar/witr/cmd/witr" = "latest"
-tinymist = "latest"
-"cargo:emacs-lsp-booster" = "latest"
-babashka = "latest"
-youtube-dl = "latest"
-"go:github.com/chrishrb/go-grip" = "latest"
-jwt = "latest"
-typstyle = "latest"
-"pipx:pylatexenc" = "latest"
-neovim = "latest"
-maven = "latest"
-lazyssh = "latest"
-#rust = "latest"
-perl = "latest"
-shfmt = "latest"
-usql = "latest"
-btop = "latest"
-nfpm = "latest"
-emacs = "latest"
+#uv = "latest"
 
-[env]
-LOCAL_DIR = '{{env.HOME}}/.local'
-BIN_DIR = '{{env.LOCAL_DIR}}/bin'
-CONFIG_DIR = '{{env.HOME}}/.config'
-TMP_DIR = "{{env.HOME}}/tmp"
-
-[tasks.default]
-quiet = true
-dir = '{{env.TMP_DIR}}'
-run = [
-  'echo $LOCAL_DIR is the local directory',
-  'echo $BIN_DIR is the bin directory',
-  'echo $CONFIG_DIR is the config directory',
-  'echo $TMP_DIR is the tmp directory',
-]
-[tasks.clean]
-description = 'Deletes tmp dir'
-run = ['rm -rf "$TMP_DIR"/*', 'rm -rf "$TMP_DIR"/.[!.]*']
-
-
-[tasks.julia]
-run = 'julia -- "$CONFIG_DIR/julia/emacs.jl"'
-
-[tasks.php]
-depends = ['clean']
-dir = '{{env.TMP_DIR}}'
-run = '''
-    curl -fsSLo phpactor.phar --output-dir "$BIN_DIR" https://github.com/phpactor/phpactor/releases/latest/download/phpactor.phar
-    chmod u+x "$BIN_DIR/phpactor.phar"
-'''
-
-[tasks.ruby]
-run = 'gem install ruby-lsp'
-
-[tasks.java]
-depends = ['clean']
-dir = '{{env.TMP_DIR}}'
-run = '''
-    curl -fsSLo jdtls.tar.gz https://download.eclipse.org/jdtls/milestones/1.46.1/jdt-language-server-1.46.1-202504011455.tar.gz
-    mkdir -p "$LOCAL_DIR/etc/eclipse.jdt.ls"
-    tar -xvf jdtls.tar.gz -C "$LOCAL_DIR/etc/eclipse.jdt.ls/"
-'''
-
-# Devido a um bug no gradle é preciso alterar a versão do java manualmente:
-#  mise use java@temurin-11
-#  ao final da execução voltar para a versão anterior:
-#  mise use java@25
-[tasks.kotlin]
-depends = ['clean']
-dir = '{{env.TMP_DIR}}'
-tools.java = "temurin-11"
-run = '''
-  git clone https://github.com/fwcd/kotlin-language-server.git
-  cd kotlin-language-server
-  ./gradlew :server:installDist
-  cp server/build/install/server/bin/kotlin-language-server "$BIN_DIR"
-'''
-
-[tasks.perl]
-run = '''
-    cpanm local::lib
-    perl -I ~/perl5/lib/perl5 -Mlocal::lib
-    cpanm --notest --local-lib="$HOME/perl5" Perl::LanguageServer
-'''
-[tasks.update]
-run = '''
-    git --git-dir="$LOCAL_DIR/dotfiles/" --work-tree=$HOME pull
-    mise self-update
-    mise upgrade
-    cargo upgrade
-    uv tool upgrade --all
-    npm update --global
-    doom upgrade
-    echo "cljfmt, tidy, paru cannot be automatically updated"
-'''
-[tasks.ansi]
-run = ['curl -OL git.io/ansi', 'chmod 755 ansi', 'mv ansi "$LOCAL_DIR/bin/"']
-
-# TODO
-#NPM_PACKAGES := "markdownlint @mermaid-js/mermaid-cli"
-# https://github.com/fwcd/kotlin-language-server
-# ver .config/emacs/.local/etc/lsp/kotlin-language-server*
-
-# json, python, just treesitter
-# ver .config/emacs/.local/etc/tree-sitter/libtree-sitter-just.so
-
-
-# see https://langserver.org/
-# see https://microsoft.github.io/language-server-protocol/implementors/servers/
+## devtools
+ast-grep = "latest"
+#neovim = "{{ env.NEOVIM_VERSION | default(env.default_version) }}"
+#cmake = "latest"
+#github-cli = "latest"
+#jj = "latest"
+#jq = "latest"
+#lazygit = "latest"
+#leiningen = "latest"
+#lua-language-server = "latest"
+#markdownlint-cli2 = "latest"
+#ninja = "latest"
+#rust-analyzer = "latest"
+#stylua = "latest"
+#tinytex = "latest"
+#tree-sitter = "latest"
+#yamlfmt = "latest"
+#yamllint = "latest"
+#yj = "latest"
+#yq = "latest"
+#black = "latest"
+#clang-format = "22.1.3"
+#ktlint = "latest"
+#shellcheck = "latest"
+#zls = "latest"
+### go devtools
+#"go:github.com/fatih/gomodifytags" = "latest"
+#"go:github.com/cweill/gotests/gotests" = "latest"
+#"go:golang.org/x/tools/gopls" = "latest"
+#"go:github.com/x-motemen/gore/cmd/gore" = "latest"
+#"go:github.com/jessfraz/dockfmt" = "latest"
+#"go:github.com/go-delve/delve/cmd/dlv" = "latest"
+#
+### python devtools
+#"pipx:isort" = "latest"
+#"pipx:pipenv" = "latest"
+#"pipx:nose" = "latest"
+#"pipx:nose2" = "latest"
+#"pipx:pytest" = "latest"
+#"pipx:pyflakes" = "latest"
+#"pipx:citation-langserver" = "latest"
+#"pipx:pyright" = "latest"
+#"pipx:sqlfluff" = "latest"
+#
+### npm devtools
+#"npm:stylelint" = "latest"
+#"npm:js-beautify" = "latest"
+#"npm:vscode-json-languageserver" = "latest"
+#"npm:typescript" = "latest"
+#"npm:typescript-language-server" = "latest"
+#"npm:bash-language-server" = "latest"
+#"npm:dockerfile-language-server-nodejs" = "latest"
+#"npm:yaml-language-server" = "latest"
+#"npm:@mermaid-js/mermaid-cli" = "latest"
+#
+## neovim dependencies
+#prettier = "latest"
+#
+## cargo devtools
+#"cargo:cargo-upgrade-command" = "latest"
+#"cargo:https://github.com/latex-lsp/texlab" = "tag:v5.22.1"
+#
+## other
+#bitwarden = "latest"
+#ctop = "latest"
+#delta = "latest"
+#dust = "latest"
+#ffmpeg = "latest"
+#pandoc = "latest"
+#typst = "latest"
+#zellij = "latest"
+#"cargo:procs" = "latest"
+#imagemagick = "latest"
+#grpcurl = "latest"
+#websocat = "latest"
+#php = "8.5.0"
+#gitleaks = "latest"
+#"go:github.com/pranshuparmar/witr/cmd/witr" = "latest"
+#tinymist = "latest"
+#"cargo:emacs-lsp-booster" = "latest"
+#babashka = "latest"
+#youtube-dl = "latest"
+#"go:github.com/chrishrb/go-grip" = "latest"
+#jwt = "latest"
+#typstyle = "latest"
+#"pipx:pylatexenc" = "latest"
+#maven = "latest"
+#lazyssh = "latest"
+##rust = "latest"
+#perl = "latest"
+#shfmt = "latest"
+#usql = "latest"
+#btop = "latest"
+#nfpm = "latest"
+#
+#[env]
+#LOCAL_DIR = '{{env.HOME}}/.local'
+#BIN_DIR = '{{env.LOCAL_DIR}}/bin'
+#CONFIG_DIR = '{{env.HOME}}/.config'
+#TMP_DIR = "{{env.HOME}}/tmp"
+#
+#[tasks.default]
+#quiet = true
+#dir = '{{env.TMP_DIR}}'
+#run = [
+#  'echo $LOCAL_DIR is the local directory',
+#  'echo $BIN_DIR is the bin directory',
+#  'echo $CONFIG_DIR is the config directory',
+#  'echo $TMP_DIR is the tmp directory',
+#]
+#[tasks.clean]
+#description = 'Deletes tmp dir'
+#run = ['rm -rf "$TMP_DIR"/*', 'rm -rf "$TMP_DIR"/.[!.]*']
+#
+#
+#[tasks.julia]
+#run = 'julia -- "$CONFIG_DIR/julia/emacs.jl"'
+#
+#[tasks.php]
+#depends = ['clean']
+#dir = '{{env.TMP_DIR}}'
+#run = '''
+#    curl -fsSLo phpactor.phar --output-dir "$BIN_DIR" https://github.com/phpactor/phpactor/releases/latest/download/phpactor.phar
+#    chmod u+x "$BIN_DIR/phpactor.phar"
+#'''
+#
+#[tasks.ruby]
+#run = 'gem install ruby-lsp'
+#
+#[tasks.java]
+#depends = ['clean']
+#dir = '{{env.TMP_DIR}}'
+#run = '''
+#    curl -fsSLo jdtls.tar.gz https://download.eclipse.org/jdtls/milestones/1.46.1/jdt-language-server-1.46.1-202504011455.tar.gz
+#    mkdir -p "$LOCAL_DIR/etc/eclipse.jdt.ls"
+#    tar -xvf jdtls.tar.gz -C "$LOCAL_DIR/etc/eclipse.jdt.ls/"
+#'''
+#
+## Devido a um bug no gradle é preciso alterar a versão do java manualmente:
+##  mise use java@temurin-11
+##  ao final da execução voltar para a versão anterior:
+##  mise use java@25
+#[tasks.kotlin]
+#depends = ['clean']
+#dir = '{{env.TMP_DIR}}'
+#tools.java = "temurin-11"
+#run = '''
+#  git clone https://github.com/fwcd/kotlin-language-server.git
+#  cd kotlin-language-server
+#  ./gradlew :server:installDist
+#  cp server/build/install/server/bin/kotlin-language-server "$BIN_DIR"
+#'''
+#
+#[tasks.perl]
+#run = '''
+#    cpanm local::lib
+#    perl -I ~/perl5/lib/perl5 -Mlocal::lib
+#    cpanm --notest --local-lib="$HOME/perl5" Perl::LanguageServer
+#'''
+#[tasks.update]
+#run = '''
+#    git --git-dir="$LOCAL_DIR/dotfiles/" --work-tree=$HOME pull
+#    mise self-update
+#    mise upgrade
+#    cargo upgrade
+#    uv tool upgrade --all
+#    npm update --global
+#    doom upgrade
+#    echo "cljfmt, tidy, paru cannot be automatically updated"
+#'''
+#[tasks.ansi]
+#run = ['curl -OL git.io/ansi', 'chmod 755 ansi', 'mv ansi "$LOCAL_DIR/bin/"']
+#
+## TODO
+##NPM_PACKAGES := "markdownlint @mermaid-js/mermaid-cli"
+## https://github.com/fwcd/kotlin-language-server
+## ver .config/emacs/.local/etc/lsp/kotlin-language-server*
+#
+## json, python, just treesitter
+## ver .config/emacs/.local/etc/tree-sitter/libtree-sitter-just.so
+#
+#
+## see https://langserver.org/
+## see https://microsoft.github.io/language-server-protocol/implementors/servers/
