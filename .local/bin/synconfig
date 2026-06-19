@@ -20,7 +20,7 @@
 (defn git-cmd [opts & args]
   (let [base-cmd ["git"]
         base-cmd (if (:git-dir opts)
-                   (concat base-cmd ["--git-dir" (:git-dir opts)])
+                   (concat base-cmd ["-C" (:git-dir opts)])
                    base-cmd)
         base-cmd (if (:work-tree opts)
                    (concat base-cmd ["--work-tree" (:work-tree opts)])
@@ -112,8 +112,7 @@
 (defn task-dotfiles []
   (println "\n🛠️  Sincronizando Dotfiles...")
 
-  (let [opts {:git-dir (str home "/.local/dotfiles/")
-              :work-tree home}]
+  (let [opts {:git-dir (str home "/.local/.dotfiles/")}]
 
     (println "⬇️ Tentando atualizar (git pull)...")
     (let [pull-res (git :pull (assoc opts :continue true))]
@@ -140,8 +139,7 @@
   "Retorna o status de todas as tarefas."
   []
   (log "Verificando Dotfiles...")
-  (let [opts {:git-dir (str home "/.local/dotfiles/")
-              :work-tree home}]
+  (let [opts {:git-dir (str home "/.local/.dotfiles/")}]
     (git :status-porcelain opts))
 
   (log "Verificando Mise...")

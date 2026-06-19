@@ -1,5 +1,7 @@
 [settings]
 experimental = true
+dotfiles.root = "~/.local/.dotfiles"
+dotfiles.default_mode = "symlink"
 
 [settings.cargo]
 binstall = true
@@ -21,6 +23,21 @@ compile = false
 
 "pacman:openssl" = "latest"
 
+[dotfiles]
+"~/.bashrc.d" = { mode = "symlink-each" }
+"~/.config" = { mode = "symlink-each" }
+"~/.local" = { mode = "symlink-each" }
+"~/.m2" = { mode = "symlink-each" }
+"~/.ssh" = { mode = "symlink-each" }
+"~/.bash_logout" = {}
+"~/.bash_profile" = {}
+"~/.bashrc" = {}
+"~/.editorconfig" = {}
+"~/.gitconfig" = {}
+"~/.gitignore" = {}
+"~/.inputrc" = {}
+"~/.profile" = {}
+"~/.Xresources" = {}
 
 [tools]
 cabal = "latest"
