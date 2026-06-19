@@ -14,6 +14,14 @@ gpg_verify = true
 [settings.python]
 compile = false
 
+[bootstrap.packages]
+"pacman:base-devel" = "latest"
+"apt:curl" = "latest"
+"pacman:curl" = "latest"
+
+"pacman:openssl" = "latest"
+
+
 [tools]
 cabal = "latest"
 clang = "22.1.3"
@@ -27,7 +35,8 @@ python = "latest"
 ruby = "latest"
 sbcl = "latest"
 zig = "latest"
-
+nodejs = "latest"
+rust = "latest"
 # basic
 bat = "latest"
 bat-extras = "latest"
@@ -36,7 +45,7 @@ eza = "latest"
 fd = "latest"
 fzf = "latest"
 just = "latest"
-node = "latest"
+#node = "latest"
 ripgrep = "latest"
 ripgrep-all = "latest"
 starship = "latest"
@@ -130,12 +139,13 @@ typstyle = "latest"
 neovim = "latest"
 maven = "latest"
 lazyssh = "latest"
-rust = "latest"
+#rust = "latest"
 perl = "latest"
 shfmt = "latest"
 usql = "latest"
 btop = "latest"
 nfpm = "latest"
+emacs = "latest"
 
 [env]
 LOCAL_DIR = '{{env.HOME}}/.local'

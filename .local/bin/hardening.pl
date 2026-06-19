@@ -136,12 +136,12 @@ sub check_auth_9230 {
     my @lines = <$in>;
     close $in;
 
-    if (grep { /^\s*SHA_CRYPT_ROUNDS\s+65536/ } @lines) {
-        print "  -> 🟢 SHA_CRYPT_ROUNDS configurado para 65536.\n" if $verbose;
+    if (grep { /^\s*SHA_CRYPT_MIN_ROUNDS\s+65536/ } @lines) {
+        print "  -> 🟢 SHA_CRYPT_MIN_ROUNDS configurado para 65536.\n" if $verbose;
         return 0;
     }
 
-    print "  -> 🔴 SHA_CRYPT_ROUNDS ausente ou com valor inseguro.\n" if $verbose;
+    print "  -> 🔴 SHA_CRYPT_MIN_ROUNDS ausente ou com valor inseguro.\n" if $verbose;
     return 1;
 }
 
@@ -842,7 +842,7 @@ sub auth_9286 {
 sub auth_9230 {
     my $file = '/etc/login.defs';
     my $marker = '# Added by auth_9230 hardening script';
-    my $rounds_line = 'SHA_CRYPT_ROUNDS 65536';
+    my $rounds_line = 'SHA_CRYPT_MIN_ROUNDS 65536';
 
     print "[AUTH-9230] Verificando/ajustando rounds de hash de senha em $file...\n";
 
@@ -854,7 +854,7 @@ sub auth_9230 {
     my $found = 0;
 
     for (@lines) {
-        if (/^\s*SHA_CRYPT_ROUNDS\s+/) {
+        if (/^\s*SHA_CRYPT_MIN_ROUNDS\s+/) {
             $_ = "$rounds_line\n";
             $found = 1;
             $modified = 1;
@@ -870,9 +870,9 @@ sub auth_9230 {
         open my $out, '>', $file or die "Erro ao escrever em $file: $!";
         print $out @lines;
         close $out;
-        print "✅ SHA_CRYPT_ROUNDS ajustado para 65536.\n";
+        print "✅ SHA_CRYPT_MIN_ROUNDS ajustado para 65536.\n";
     } else {
-        print "✔️  SHA_CRYPT_ROUNDS já está configurado corretamente.\n";
+        print "✔️  SHA_CRYPT_MIN_ROUNDS já está configurado corretamente.\n";
     }
 }
 
@@ -2887,7 +2887,7 @@ sub main {
         'check_auth_9262'   => 'Verifica existência do pam_passwdqc',
         'check_auth_9282'   => 'Verifica usuários sem expiração de senha',
         'check_auth_9286'   => 'Verifica idade de senhas (min/max)',
-        'check_auth_9230'   => 'Verifica criptografia e rounds (SHA_CRYPT_ROUNDS)',
+        'check_auth_9230'   => 'Verifica criptografia e rounds (SHA_CRYPT_MIN_ROUNDS)',
         'check_auth_9328'   => 'Verifica umask padrão para criação de arquivos',
         'check_file_6354'   => 'Verifica arquivos órfãos em /tmp',
         'check_usb_1000'    => 'Verifica bloqueio do usb-storage',
