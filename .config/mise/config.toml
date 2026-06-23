@@ -19,15 +19,6 @@ gpg_verify = true
 [settings.python]
 compile = false
 
-[bootstrap.packages]
-"apt:curl" = "latest"
-
-"pacman:base-devel" = "latest"
-"pacman:curl" = "latest"
-
-"pacman:neovim" = "latest"
-"pacman:openssl" = "latest"
-
 [dotfiles]
 "~/.bashrc.d" = { mode = "symlink-each" }
 "~/.config" = { mode = "symlink-each" }
@@ -48,50 +39,20 @@ compile = false
 emacs = "https://github.com/suderio/misemacs"
 
 [tools]
-# languages
-cabal = "latest"
-clang = "22.1.3"
-clojure = "latest"
-go = "latest"
-java = "latest"
-julia = "latest"
-kotlin = "latest"
-lua = "5.1.5"
-nodejs = "latest"
-#perl = "latest"
-#php = "8.5.0"
-python = "latest"
-ruby = "latest"
-rust = "latest"
-zig = "latest"
-
-# basic tools
-ast-grep = "latest"
-bat = "latest"
-bat-extras = "latest"
-delta = "latest"
-eza = "latest"
-fd = "latest"
-fzf = "latest"
-ripgrep = "latest"
-ripgrep-all = "latest"
-starship = "latest"
 emacs = "latest"
-#zellij = "latest"
+neovim = "latest"
+
+
 
 ## devtools
 #coreutils = "latest"
-#uv = "latest"
 #just = "latest"
-#neovim = "{{ env.NEOVIM_VERSION | default(env.default_version) }}"
-#cmake = "latest"
 #github-cli = "latest"
 #jj = "latest"
 #jq = "latest"
 #lazygit = "latest"
 #leiningen = "latest"
 #lua-language-server = "latest"
-#markdownlint-cli2 = "latest"
 #ninja = "latest"
 #rust-analyzer = "latest"
 #stylua = "latest"
@@ -101,17 +62,7 @@ emacs = "latest"
 #yamllint = "latest"
 #yj = "latest"
 #yq = "latest"
-#black = "latest"
-#clang-format = "22.1.3"
-#ktlint = "latest"
-#shellcheck = "latest"
-#zls = "latest"
 ### go devtools
-#"go:github.com/fatih/gomodifytags" = "latest"
-#"go:github.com/cweill/gotests/gotests" = "latest"
-#"go:golang.org/x/tools/gopls" = "latest"
-#"go:github.com/x-motemen/gore/cmd/gore" = "latest"
-#"go:github.com/jessfraz/dockfmt" = "latest"
 #"go:github.com/go-delve/delve/cmd/dlv" = "latest"
 #
 ### python devtools
@@ -126,8 +77,6 @@ emacs = "latest"
 #"pipx:sqlfluff" = "latest"
 #
 ### npm devtools
-#"npm:stylelint" = "latest"
-#"npm:js-beautify" = "latest"
 #"npm:vscode-json-languageserver" = "latest"
 #"npm:typescript" = "latest"
 #"npm:typescript-language-server" = "latest"
@@ -157,17 +106,14 @@ emacs = "latest"
 #gitleaks = "latest"
 #"go:github.com/pranshuparmar/witr/cmd/witr" = "latest"
 #tinymist = "latest"
-#"cargo:emacs-lsp-booster" = "latest"
 #babashka = "latest"
 #youtube-dl = "latest"
-#"go:github.com/chrishrb/go-grip" = "latest"
 #jwt = "latest"
 #typstyle = "latest"
 #"pipx:pylatexenc" = "latest"
 #maven = "latest"
 #lazyssh = "latest"
 ##rust = "latest"
-#shfmt = "latest"
 #usql = "latest"
 #btop = "latest"
 #nfpm = "latest"
