@@ -41,28 +41,22 @@ export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
 
 # this is to avoid testing for every file
 # shellcheck disable=1090
-sud_source() {
+safe_source() {
     [ -s "$1" ] && . "$1"
 }
 
-sud_source "$HOME/.profile"
-
-[ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do sud_source "$f"; done
+safe_source "$HOME/.profile"
 
 [ -n "$SSH_AUTH_SOCK" ] ||
     echo "ssh-agent is not running or not accessible. Starting a new one..." &&
     eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
 
-command -v rbenv && eval "$(rbenv init - --no-rehash bash)"
-command -v perl &>/dev/null && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)" &>/dev/null
-command -v fzf &>/dev/null && eval "$(fzf --bash)"
-
-sud_source "$NVM_DIR/nvm.sh"
-sud_source "$NVM_DIR/bash_completion"
-sud_source "$HOME/.cargo/env"
-sud_source "$HOME/.sdkman/bin/sdkman-init.sh"
-sud_source "$HOME/.ghcup/env"
-sud_source "/usr/share/doc/pkgfile/command-not-found.bash"
+safe_source "$NVM_DIR/nvm.sh"
+safe_source "$NVM_DIR/bash_completion"
+safe_source "$HOME/.cargo/env"
+safe_source "$HOME/.sdkman/bin/sdkman-init.sh"
+safe_source "$HOME/.ghcup/env"
+safe_source "/usr/share/doc/pkgfile/command-not-found.bash"
 
 # Autocomplete for ssh
 _ssh() {
@@ -91,4 +85,8 @@ else
     export MISE_ENV=
 fi
 command -v mise &>/dev/null && eval -- "$(mise activate bash)"
+[ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do safe_source "$f"; done
+command -v rbenv &>/dev/null && eval "$(rbenv init - --no-rehash bash)"
+command -v perl &>/dev/null && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)" &>/dev/null
+command -v fzf &>/dev/null && eval "$(fzf --bash)"
 command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-init)"
