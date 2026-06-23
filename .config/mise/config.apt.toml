@@ -1,6 +1,6 @@
 [bootstrap.packages]
 "apt:curl" = "latest"
-"apt:composer" = "latest" # emacs deps w. no mise plugin
+"apt:composer" = "latest" # emacs deps mise plugin not working
 "apt:sbcl" = "latest" # emacs deps w. no mise plugin
 
 [tools]
@@ -52,4 +52,9 @@ shellcheck = "latest"
 shfmt = "latest"
 uv = "latest"
 zls = "latest"
+
+# neovim deps
+lazygit = "latest"
+"npm:@mermaid-js/mermaid-cli" = "latest"
+tree-sitter = "latest"
 

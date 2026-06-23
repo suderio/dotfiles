@@ -42,6 +42,21 @@ emacs = "https://github.com/suderio/misemacs"
 emacs = "latest"
 neovim = "latest"
 
+[tasks.neovim]
+run = '''
+    echo "Installing pynvim package"
+    uv venv --clear "$XDG_DATA_HOME/nvim/venv"
+    uv pip install pynvim -p "$XDG_DATA_HOME/nvim/venv"
+
+    echo "Installing npm neovim package"
+    npm install --global neovim
+
+    echo "Installing ruby neovim gem"
+    gem install neovim
+
+    echo "Installing cpan neovim package"
+    cpanm -n Neovim::Ext
+'''
 
 
 ## devtools
@@ -50,14 +65,12 @@ neovim = "latest"
 #github-cli = "latest"
 #jj = "latest"
 #jq = "latest"
-#lazygit = "latest"
 #leiningen = "latest"
 #lua-language-server = "latest"
 #ninja = "latest"
 #rust-analyzer = "latest"
 #stylua = "latest"
 #tinytex = "latest"
-#tree-sitter = "latest"
 #yamlfmt = "latest"
 #yamllint = "latest"
 #yj = "latest"
@@ -83,7 +96,6 @@ neovim = "latest"
 #"npm:bash-language-server" = "latest"
 #"npm:dockerfile-language-server-nodejs" = "latest"
 #"npm:yaml-language-server" = "latest"
-#"npm:@mermaid-js/mermaid-cli" = "latest"
 #
 ## neovim dependencies
 #prettier = "latest"
@@ -152,6 +164,10 @@ neovim = "latest"
 #[tasks.ruby]
 #run = 'gem install ruby-lsp'
 #
+
+
+
+
 #[tasks.java]
 #depends = ['clean']
 #dir = '{{env.TMP_DIR}}'
