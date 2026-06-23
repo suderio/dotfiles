@@ -3,9 +3,6 @@ experimental = true
 dotfiles.root = "~/.local/.dotfiles"
 dotfiles.default_mode = "symlink"
 
-[env]
-default_version = "system"
-
 [settings.cargo]
 binstall = true
 

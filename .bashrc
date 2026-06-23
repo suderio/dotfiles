@@ -17,7 +17,7 @@ command -v lesspipe &>/dev/null && eval "$(SHELL=/bin/sh lesspipe)"
 [ -z "${chroot_ps1:-}" ] && [ -r /etc/chroot_ps1 ] && chroot_ps1=$(cat /etc/chroot_ps1)
 
 case "$TERM" in
-    xterm-color | *-256color) color_prompt=yes ;;
+xterm-color | *-256color) color_prompt=yes ;;
 esac
 
 force_color_prompt=yes
@@ -50,8 +50,8 @@ sud_source "$HOME/.profile"
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do sud_source "$f"; done
 
 [ -n "$SSH_AUTH_SOCK" ] ||
-echo "ssh-agent is not running or not accessible. Starting a new one..." &&
-eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
+    echo "ssh-agent is not running or not accessible. Starting a new one..." &&
+    eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
 
 command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-init)"
 command -v rbenv && eval "$(rbenv init - --no-rehash bash)"
@@ -65,14 +65,13 @@ sud_source "$HOME/.sdkman/bin/sdkman-init.sh"
 sud_source "$HOME/.ghcup/env"
 sud_source "/usr/share/doc/pkgfile/command-not-found.bash"
 
-[ -f "$HOME/.local/bin/mise" ] && eval "$("$HOME/.local/bin/mise" activate bash)"
 # Autocomplete for ssh
 _ssh() {
     local cur opts
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
-    opts=$(grep '^Host' ~/.ssh/config ~/.ssh/config.d/* 2>/dev/null \
-        | grep -v '[?*]' | cut -d ' ' -f 2-)
+    opts=$(grep '^Host' ~/.ssh/config ~/.ssh/config.d/* 2>/dev/null |
+        grep -v '[?*]' | cut -d ' ' -f 2-)
 
     mapfile -t COMPREPLY < <(compgen -W "$opts" -- "$cur")
     return 0
@@ -92,3 +91,4 @@ elif command -v brew >/dev/null 2>&1; then
 else
     export MISE_ENV=
 fi
+[ -f "$HOME/.local/bin/mise" ] && eval "$("$HOME/.local/bin/mise" activate bash)"
