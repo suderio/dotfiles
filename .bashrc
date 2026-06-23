@@ -78,3 +78,17 @@ _ssh() {
     return 0
 }
 [ -s "$HOME/.ssh/config" ] && complete -F _ssh ssh
+
+if command -v pacman >/dev/null 2>&1; then
+    export MISE_ENV=arch
+elif command -v apt >/dev/null 2>&1; then
+    export MISE_ENV=apt
+elif command -v dnf >/dev/null 2>&1; then
+    export MISE_ENV=dnf
+elif command -v zypper >/dev/null 2>&1; then
+    export MISE_ENV=zypper
+elif command -v brew >/dev/null 2>&1; then
+    export MISE_ENV=brew
+else
+    export MISE_ENV=
+fi
