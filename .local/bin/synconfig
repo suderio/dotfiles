@@ -65,18 +65,6 @@
     (:out res)))
 ;; --- Comandos Específicos ---
 
-(defn task-org []
-  (log "Iniciando sincronização do ORG mode...")
-  (let [org-dir (fs/file home "org")]
-    (if (fs/exists? org-dir)
-      (do
-        (shell {:dir org-dir} "git pull")
-        (shell {:dir org-dir} "git add --all")
-        ;; continue: true impede que o script pare se não houver nada para commitar
-        (shell {:dir org-dir :continue true} "git commit -m \"Mensagem Padrão\"")
-        (shell {:dir org-dir} "git push"))
-      (err (str "Diretório " org-dir " não encontrado!")))))
-
 (defn task-dotfiles []
   (println "\n🛠️  Sincronizando Dotfiles...")
 
@@ -108,30 +96,22 @@
   []
   (log "Verificando Dotfiles...")
   (let [opts {:git-dir (str home "/.local/.dotfiles/")}]
-    (git :status-porcelain opts))
-
-  (log "Verificando Org..."))
-  ;; (let [org-dir (fs/file home "org")]
-  ;;   (if (fs/exists? org-dir)
-  ;;     (shell {:dir org-dir} "git status --porcelain")
-  ;;     (err (str "Diretório " org-dir " não encontrado!"))))
+    (git :status-porcelain opts)))
 
 (defn task-all []
   (log "Executando TODAS as tarefas...")
   ;; Ordem solicitada: dotfiles, os, mise, doom, org
-  (task-dotfiles)
-  (task-org))
+  (task-dotfiles))
 
 (defn print-help []
   (println "Uso: synconfig [comando]")
-  (println "Comandos disponíveis: status, org, dotfiles, all"))
+  (println "Comandos disponíveis: status, dotfiles, all"))
 
 ;; --- Main ---
 
 (def command (first *command-line-args*))
 
 (case command
-  "org"      (task-org)
   "dotfiles" (task-dotfiles)
   "all"      (task-all)
   "status"   (task-status)

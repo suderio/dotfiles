@@ -1,41 +1,38 @@
-!! Colorscheme
-!
-!! special
-*.foreground: #93a1a1
-*.background: #141c21
-*.cursorColor: #afbfbf
+Xcursor.size: 21
+
+! Tokyo Night Colors
+*.foreground:   #a9b1d6
+*.background:   #1a1b26
+*.cursorColor:  #c0caf5
 
 ! black
-*.color0: #263640
-*.color8: #4a697d
+*.color0:       #15161e
+*.color8:       #414868
 
 ! red
-*.color1: #d12f2c
-*.color9: #fa3935
+*.color1:       #f7768e
+*.color9:       #f7768e
 
 ! green
-*.color2: #819400
-*.color10: #a4bd00
+*.color2:       #9ece6a
+*.color10:      #9ece6a
 
 ! yellow
-*.color3: #b08500
-*.color11: #d9a400
+*.color3:       #e0af68
+*.color11:      #e0af68
 
 ! blue
-*.color4: #2587cc
-*.color12: #2ca2f5
+*.color4:       #7aa2f7
+*.color12:      #7aa2f7
 
 ! magenta
-*.color5: #696ebf
-*.color13: #8086e8
+*.color5:       #bb9af7
+*.color13:      #bb9af7
 
 ! cyan
-*.color6: #289c93
-*.color14: #33c5ba
+*.color6:       #7dcfff
+*.color14:      #7dcfff
 
 ! white
-*.color7: #bfbaac
-*.color15: #fdf6e3
-
-Xcursor.theme: Qogir-dark
-Xcursor.size: 21
+*.color7:       #c0caf5
+*.color15:      #c0caf5
