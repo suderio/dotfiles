@@ -67,25 +67,25 @@ work_tree="./"
 
 while getopts "nsC:g:w:h" opt; do
     case $opt in
-    n)
-        sync_new_files_anyway="true"
-        ;;
-    s)
-        sync_anyway="true"
-        ;;
-    C)
-        pwd="${OPTARG}"
-        ;;
-    g)
-        git_dir="${OPTARG}"
-        ;;
-    w)
-        work_tree="${OPTARG}"
-        ;;
-    *)
-        print_usage
-        exit 0
-        ;;
+        n)
+            sync_new_files_anyway="true"
+            ;;
+        s)
+            sync_anyway="true"
+            ;;
+        C)
+            pwd="${OPTARG}"
+            ;;
+        g)
+            git_dir="${OPTARG}"
+            ;;
+        w)
+            work_tree="${OPTARG}"
+            ;;
+        *)
+            print_usage
+            exit 0
+            ;;
     esac
 done
 shift $((OPTIND - 1))
@@ -192,26 +192,26 @@ sync_state() {
     count="$($GIT_CMD rev-list --count --left-right "$remote_name/$branch_name"...HEAD)"
 
     case "$count" in
-    "") # no upstream
-        echo "noUpstream"
-        false
-        ;;
-    "0	0")
-        echo "equal"
-        true
-        ;;
-    "0	"*)
-        echo "ahead"
-        true
-        ;;
-    *"	0")
-        echo "behind"
-        true
-        ;;
-    *)
-        echo "diverged"
-        true
-        ;;
+        "") # no upstream
+            echo "noUpstream"
+            false
+            ;;
+        "0	0")
+            echo "equal"
+            true
+            ;;
+        "0	"*)
+            echo "ahead"
+            true
+            ;;
+        *"	0")
+            echo "behind"
+            true
+            ;;
+        *)
+            echo "diverged"
+            true
+            ;;
     esac
 }
 
@@ -361,44 +361,44 @@ if [ $? != 0 ]; then
 fi
 
 case "$(sync_state)" in
-"noUpstream")
-    __log_msg "Strange state, you're on your own. Good luck."
-    exit 2
-    ;;
-"equal")
-    exit_assuming_sync
-    ;;
-"ahead")
-    __log_msg "Pushing changes..."
-    $GIT_CMD push "$remote_name" "$branch_name:$branch_name"
-    if [ $? == 0 ]; then
-        exit_assuming_sync
-    else
-        __log_msg "git push returned non-zero. Likely a connection failure."
-        exit 3
-    fi
-    ;;
-"behind")
-    __log_msg "We are behind, fast-forwarding..."
-    $GIT_CMD merge --ff --ff-only "$remote_name/$branch_name"
-    if [ $? == 0 ]; then
-        exit_assuming_sync
-    else
-        __log_msg "git merge --ff --ff-only returned non-zero ($?). Exiting."
+    "noUpstream")
+        __log_msg "Strange state, you're on your own. Good luck."
         exit 2
-    fi
-    ;;
-"diverged")
-    __log_msg "We have diverged. Trying to rebase..."
-    $GIT_CMD rebase "$remote_name/$branch_name"
-    if [[ $? == 0 && -z "$(git_repo_state)" && "ahead" == "$(sync_state)" ]]; then
-        __log_msg "Rebasing went fine, pushing..."
-        $GIT_CMD push "$remote_name" "$branch_name:$branch_name"
+        ;;
+    "equal")
         exit_assuming_sync
-    else
-        __log_msg "Rebasing failed, likely there are conflicting changes. Resolve them and finish the rebase before repeating git-sync."
-        exit 1
-    fi
-    # TODO: save master, if rebasing fails, make a branch of old master
-    ;;
+        ;;
+    "ahead")
+        __log_msg "Pushing changes..."
+        $GIT_CMD push "$remote_name" "$branch_name:$branch_name"
+        if [ $? == 0 ]; then
+            exit_assuming_sync
+        else
+            __log_msg "git push returned non-zero. Likely a connection failure."
+            exit 3
+        fi
+        ;;
+    "behind")
+        __log_msg "We are behind, fast-forwarding..."
+        $GIT_CMD merge --ff --ff-only "$remote_name/$branch_name"
+        if [ $? == 0 ]; then
+            exit_assuming_sync
+        else
+            __log_msg "git merge --ff --ff-only returned non-zero ($?). Exiting."
+            exit 2
+        fi
+        ;;
+    "diverged")
+        __log_msg "We have diverged. Trying to rebase..."
+        $GIT_CMD rebase "$remote_name/$branch_name"
+        if [[ $? == 0 && -z "$(git_repo_state)" && "ahead" == "$(sync_state)" ]]; then
+            __log_msg "Rebasing went fine, pushing..."
+            $GIT_CMD push "$remote_name" "$branch_name:$branch_name"
+            exit_assuming_sync
+        else
+            __log_msg "Rebasing failed, likely there are conflicting changes. Resolve them and finish the rebase before repeating git-sync."
+            exit 1
+        fi
+        # TODO: save master, if rebasing fails, make a branch of old master
+        ;;
 esac
