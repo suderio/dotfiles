@@ -58,3 +58,5 @@ lazygit = "latest"
 "npm:@mermaid-js/mermaid-cli" = "latest"
 tree-sitter = "latest"
 
+# shell
+babashka = "latest"

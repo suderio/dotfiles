@@ -59,7 +59,6 @@
 #gitleaks = "latest"
 #"go:github.com/pranshuparmar/witr/cmd/witr" = "latest"
 #tinymist = "latest"
-#babashka = "latest"
 #youtube-dl = "latest"
 #jwt = "latest"
 #typstyle = "latest"

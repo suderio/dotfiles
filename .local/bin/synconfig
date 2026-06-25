@@ -1,9 +1,8 @@
 #!/usr/bin/env bb
 
-(require '[babashka.process :refer [shell process]]
+(require '[babashka.process :refer [shell]]
          '[babashka.fs :as fs]
-         '[clojure.string :as str]
-         '[clojure.java.io :as io])
+         '[clojure.string :as str])
 
 ;; --- Helpers ---
 
@@ -78,37 +77,6 @@
         (shell {:dir org-dir} "git push"))
       (err (str "Diretório " org-dir " não encontrado!")))))
 
-(defn task-mise []
-  (log "Atualizando Mise...")
-  (shell "mise upgrade"))
-
-(defn task-doom []
-  (log "Atualizando Doom Emacs...")
-  ;; Assume que o binário doom está no PATH. Se não estiver, use o caminho absoluto.
-  (shell "doom sync -u --gc --aot"))
-
-(defn get-distro
-  "Tenta detectar se é Arch ou Debian based lendo /etc/os-release"
-  []
-  (if (fs/exists? "/etc/os-release")
-    (let [content (slurp "/etc/os-release")]
-      (cond
-        (or (str/includes? content "ID=arch")
-            (str/includes? content "ID_LIKE=arch")) :arch
-        (or (str/includes? content "ID=debian")
-            (str/includes? content "ID_LIKE=debian")
-            (str/includes? content "ID=ubuntu")) :debian
-        :else :unknown))
-    :unknown))
-
-(defn task-os []
-  (log "Atualizando o Sistema Operacional...")
-  (case (get-distro)
-    :arch   (shell "sudo pacman -Syu")
-    :debian (do (shell "sudo apt update")
-                (shell "sudo apt upgrade -y"))
-    :unknown (err "Não foi possível identificar se é Arch ou Debian. Atualização manual necessária.")))
-
 (defn task-dotfiles []
   (println "\n🛠️  Sincronizando Dotfiles...")
 
@@ -142,27 +110,21 @@
   (let [opts {:git-dir (str home "/.local/.dotfiles/")}]
     (git :status-porcelain opts))
 
-  (log "Verificando Mise...")
-  (shell "mise upgrade -n")
-
-  (log "Verificando Org...")
-  (let [org-dir (fs/file home "org")]
-    (if (fs/exists? org-dir)
-      (shell {:dir org-dir} "git status --porcelain")
-      (err (str "Diretório " org-dir " não encontrado!")))))
+  (log "Verificando Org..."))
+  ;; (let [org-dir (fs/file home "org")]
+  ;;   (if (fs/exists? org-dir)
+  ;;     (shell {:dir org-dir} "git status --porcelain")
+  ;;     (err (str "Diretório " org-dir " não encontrado!"))))
 
 (defn task-all []
   (log "Executando TODAS as tarefas...")
   ;; Ordem solicitada: dotfiles, os, mise, doom, org
   (task-dotfiles)
-  (task-os)
-  (task-mise)
-  (task-doom)
   (task-org))
 
 (defn print-help []
   (println "Uso: synconfig [comando]")
-  (println "Comandos disponíveis: org, mise, doom, os, dotfiles, all"))
+  (println "Comandos disponíveis: status, org, dotfiles, all"))
 
 ;; --- Main ---
 
@@ -170,9 +132,6 @@
 
 (case command
   "org"      (task-org)
-  "mise"     (task-mise)
-  "doom"     (task-doom)
-  "os"       (task-os)
   "dotfiles" (task-dotfiles)
   "all"      (task-all)
   "status"   (task-status)
