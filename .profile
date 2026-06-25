@@ -53,3 +53,30 @@ export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 # pacman -S mesa vulkan-dzn
 export GALLIUM_DRIVER=d3d12
 export LIBVA_DRIVER_NAME=d3d12
+
+if command -v pacman >/dev/null 2>&1; then
+    export MISE_ENV=arch
+elif command -v apt >/dev/null 2>&1; then
+    export MISE_ENV=apt
+elif command -v dnf >/dev/null 2>&1; then
+    export MISE_ENV=dnf
+elif command -v zypper >/dev/null 2>&1; then
+    export MISE_ENV=zypper
+elif command -v brew >/dev/null 2>&1; then
+    export MISE_ENV=brew
+else
+    export MISE_ENV=
+fi
+
+# Autocomplete for ssh
+_ssh() {
+    local cur opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    opts=$(grep '^Host' ~/.ssh/config ~/.ssh/config.d/* 2>/dev/null |
+        grep -v '[?*]' | cut -d ' ' -f 2-)
+
+    mapfile -t COMPREPLY < <(compgen -W "$opts" -- "$cur")
+    return 0
+}
+[ -s "$HOME/.ssh/config" ] && complete -F _ssh ssh

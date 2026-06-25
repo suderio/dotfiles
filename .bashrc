@@ -45,8 +45,6 @@ safe_source() {
     [ -s "$1" ] && . "$1"
 }
 
-safe_source "$HOME/.profile"
-
 [ -n "$SSH_AUTH_SOCK" ] ||
     echo "ssh-agent is not running or not accessible. Starting a new one..." &&
     eval "$(ssh-agent -s)" &>/dev/null && ssh-add "$HOME/.ssh/id_ed25519" &>/dev/null
@@ -58,32 +56,6 @@ safe_source "$HOME/.sdkman/bin/sdkman-init.sh"
 safe_source "$HOME/.ghcup/env"
 safe_source "/usr/share/doc/pkgfile/command-not-found.bash"
 
-# Autocomplete for ssh
-_ssh() {
-    local cur opts
-    COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    opts=$(grep '^Host' ~/.ssh/config ~/.ssh/config.d/* 2>/dev/null |
-        grep -v '[?*]' | cut -d ' ' -f 2-)
-
-    mapfile -t COMPREPLY < <(compgen -W "$opts" -- "$cur")
-    return 0
-}
-[ -s "$HOME/.ssh/config" ] && complete -F _ssh ssh
-
-if command -v pacman >/dev/null 2>&1; then
-    export MISE_ENV=arch
-elif command -v apt >/dev/null 2>&1; then
-    export MISE_ENV=apt
-elif command -v dnf >/dev/null 2>&1; then
-    export MISE_ENV=dnf
-elif command -v zypper >/dev/null 2>&1; then
-    export MISE_ENV=zypper
-elif command -v brew >/dev/null 2>&1; then
-    export MISE_ENV=brew
-else
-    export MISE_ENV=
-fi
 command -v mise &>/dev/null && eval -- "$(mise activate bash)"
 [ -d "$HOME"/.bashrc.d ] && for f in "$HOME"/.bashrc.d/*; do safe_source "$f"; done
 command -v rbenv &>/dev/null && eval "$(rbenv init - --no-rehash bash)"
