@@ -35,7 +35,6 @@ alias mirrors="sudo reflector --latest 50 --number 20 --sort score --save /etc/p
 alias mirrora="sudo reflector --latest 50 --number 20 --sort age --save /etc/pacman.d/mirrorlist"
 # This is too hard to remember
 alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree -r "$in"; done'
-! exists yay && exists paru && alias yay='paru'
 
 if exists eza; then
     # Replace ls with exa
@@ -111,4 +110,3 @@ alias tb='nc termbin.com 9999'
 alias emac='emacsclient -r -nw -a ""'
 alias emax='emacsclient -r -a "" &'
 alias min='NVIM_APPNAME=min nvim'
-#alias config='git -C "$HOME/.local/.dotfiles/"'
