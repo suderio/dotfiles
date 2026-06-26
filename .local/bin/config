@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Variáveis e Configurações
+readonly BARE_DIR="$HOME/.local/dotfiles"
+readonly SYMLINK_DIR="$HOME/.local/.dotfiles"
+
+# Códigos de cor para o output no terminal
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m' # No Color
+
+# Funções de log em inglês conforme solicitado
+log_info()  { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+
+# Detecção de Modo
+# Utilizamos um array para armazenar o comando base do git. Isso evita problemas
+# de "word splitting" com espaços em variáveis no bash.
+
+declare -a GIT_CMD
+MODE=""
+
+if [[ -d "$BARE_DIR" && -f "$BARE_DIR/HEAD" ]]; then
+    MODE="BARE"
+    GIT_CMD=(git --git-dir="$BARE_DIR/" --work-tree="$HOME")
+elif [[ -d "$SYMLINK_DIR/.git" ]]; then
+    MODE="SYMLINK"
+    GIT_CMD=(git -C "$SYMLINK_DIR/")
+else
+    log_error "No dotfiles repository found."
+    log_error "Expected bare repo at: $BARE_DIR"
+    log_error "OR symlink repo at: $SYMLINK_DIR"
+    exit 1
+fi
+
+# Lógica Principal
+if [[ $# -eq 0 ]]; then
+    log_error "No command provided."
+    echo "Usage: config <git command options> | sync"
+    exit 1
+fi
+
+COMMAND="$1"
+shift # Remove o comando principal ($1) e mantém apenas os argumentos ($@)
+
+case "$COMMAND" in
+    sync)
+        log_info "Starting sync process in $MODE mode..."
+
+        # 1. Pull
+        log_info "Pulling latest changes from remote..."
+        "${GIT_CMD[@]}" pull
+
+        # 2. Add
+        log_info "Staging changes..."
+        if [[ "$MODE" == "BARE" ]]; then
+            # '-u' (update) faz o stage apenas de arquivos rastreados
+            # (modificados ou deletados), ignorando untracked files no $HOME.
+            "${GIT_CMD[@]}" add -u
+        else
+            # '--all' faz o stage de tudo no diretório do repositório
+            "${GIT_CMD[@]}" add --all
+        fi
+
+        # Intermediário: Commit (Necessário antes do Push)
+        # diff --staged --quiet retorna 0 (sucesso) se não houver diferenças
+        if "${GIT_CMD[@]}" diff --staged --quiet; then
+            log_warn "No changes to commit."
+        else
+            log_info "Committing changes..."
+            "${GIT_CMD[@]}" commit -m "Auto-sync update: $(date +'%Y-%m-%d %H:%M:%S')"
+        fi
+
+        # 3. Push
+        log_info "Pushing to remote..."
+        "${GIT_CMD[@]}" push
+
+        log_success "Sync complete!"
+        ;;
+
+    *)
+        # Executa como um wrapper transparente do Git para qualquer outro comando
+        "${GIT_CMD[@]}" "$COMMAND" "$@"
+        ;;
+esac

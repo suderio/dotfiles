@@ -55,6 +55,10 @@
     (println (str "➕ Adicionando: " (str/join ", " files)))
     (apply git-cmd opts "add" files)))
 
+(defmethod git :addAll [_ opts]
+  (println "➕ Adicionando: "
+           (apply git-cmd opts "add" "--all")))
+
 (defmethod git :commit [_ opts msg]
   (println "💾 Git Commit...")
   ;; :continue true pois o commit falha se nada mudou
@@ -79,12 +83,11 @@
           files-to-add (->> (str/split-lines status-out)
                             (map str/trim)
                             (filter #(re-find #"^[AMD]" %)) ;; Added, Modified ou Deleted
-                            (map #(second (str/split % #"\s+" 2)))
-                            (map #(str home "/"  %)))]
+                            (map #(second (str/split % #"\s+" 2))))]
 
       (if (seq files-to-add)
         (do
-          (git :add opts files-to-add)
+          (git :addAll opts)
           (git :commit opts "Update dotfiles via script")
           (git :push opts))
         (println "✨ Nada para commitar nos dotfiles.")))
@@ -98,14 +101,9 @@
   (let [opts {:git-dir (str home "/.local/.dotfiles/")}]
     (git :status-porcelain opts)))
 
-(defn task-all []
-  (log "Executando TODAS as tarefas...")
-  ;; Ordem solicitada: dotfiles, os, mise, doom, org
-  (task-dotfiles))
-
 (defn print-help []
   (println "Uso: synconfig [comando]")
-  (println "Comandos disponíveis: status, dotfiles, all"))
+  (println "Comandos disponíveis: status, dotfiles"))
 
 ;; --- Main ---
 
