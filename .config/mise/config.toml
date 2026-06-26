@@ -28,6 +28,7 @@ compile = false
 "~/.editorconfig" = {}
 "~/.gitconfig" = {}
 "~/.gitignore" = {}
+"~/.hushlogin" = {}
 "~/.inputrc" = {}
 "~/.profile" = {}
 "~/.Xresources" = {}
