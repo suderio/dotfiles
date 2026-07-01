@@ -110,3 +110,5 @@ alias tb='nc termbin.com 9999'
 alias emac='emacsclient -r -nw -a ""'
 alias emax='emacsclient -r -a "" &'
 alias min='NVIM_APPNAME=min nvim'
+
+alias wsl-part="sudo systemd-nspawn -D /mnt/arch_physical --bind=/tmp/.X11-unix --bind-ro=\$XDG_RUNTIME_DIR/wayland-0 --setenv=DISPLAY=\$DISPLAY --setenv=WAYLAND_DISPLAY=\$WAYLAND_DISPLAY /bin/bash"

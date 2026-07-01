@@ -1,0 +1,2 @@
+/dev/sdc1 /mnt/arch_physical btrfs defaults,subvol=@,nofail 0 0
+
