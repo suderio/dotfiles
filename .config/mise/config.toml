@@ -16,6 +16,9 @@ gpg_verify = true
 [settings.python]
 compile = false
 
+[bootstrap.repos]
+"~/.local/.dotfiles" = { url = "https://github.com/suderio/dotfiles", ref = "main" }
+
 [dotfiles]
 "~/.bashrc.d" = { mode = "symlink-each" }
 "~/.config" = { mode = "symlink-each" }
@@ -32,6 +35,18 @@ compile = false
 "~/.inputrc" = {}
 "~/.profile" = {}
 "~/.Xresources" = {}
+"/etc/wsl.conf" = { block = '''
+[boot]
+systemd=true
+
+[network]
+generateHosts=false
+generateResolvConf=false
+
+[interop]
+enabled = false
+appendWindowsPath = false
+''' }
 
 [plugins]
 emacs = "https://github.com/suderio/misemacs"
