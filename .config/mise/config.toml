@@ -35,18 +35,18 @@ compile = false
 "~/.inputrc" = {}
 "~/.profile" = {}
 "~/.Xresources" = {}
-"/etc/wsl.conf" = { block = '''
-[boot]
-systemd=true
-
-[network]
-generateHosts=false
-generateResolvConf=false
-
-[interop]
-enabled = false
-appendWindowsPath = false
-''' }
+#"/etc/wsl.conf" = { block = '''
+#[boot]
+#systemd=true
+#
+#[network]
+#generateHosts=false
+#generateResolvConf=false
+#
+#[interop]
+#enabled = false
+#appendWindowsPath = false
+#''' }
 
 [plugins]
 emacs = "https://github.com/suderio/misemacs"
