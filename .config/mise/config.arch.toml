@@ -10,7 +10,7 @@
 #"pacman:kotlin" = "latest"
 #"pacman:lua" = "5.1.5"
 #"pacman:nodejs" = "latest"
-#"pacman:openssl" = "latest"
+"pacman:openssl" = "latest"
 #"pacman:perl" = "latest"
 #"pacman:php" = "8.5.0"
 #"pacman:python" = "latest"
