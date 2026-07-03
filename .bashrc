@@ -1,8 +1,8 @@
 #!/bin/bash
 [[ $- != *i* ]] && return
 
-PS1='[\u@\h \W]\$ '
-
+#PS1='[\u@\h \W]\$ '
+PS1='\u@\h:\w \$ '
 HISTCONTROL=ignoreboth
 export HISTIGNORE="&:ls:[bf]g:exit"
 export HISTFILESIZE=20000
@@ -61,4 +61,7 @@ command -v mise &>/dev/null && eval -- "$(mise activate bash)"
 command -v rbenv &>/dev/null && eval "$(rbenv init - --no-rehash bash)"
 command -v perl &>/dev/null && [ -d "$HOME/perl5/lib/perl5" ] && eval "$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)" &>/dev/null
 command -v fzf &>/dev/null && eval "$(fzf --bash)"
-command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-init)"
+command -v starship &>/dev/null && eval -- "$(starship init bash --print-full-init)" ||
+if [[ "$PROMPT_COMMAND" != *"_update_fallback_prompt"* ]]; then
+    PROMPT_COMMAND="_update_fallback_prompt${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+fi

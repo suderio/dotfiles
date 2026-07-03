@@ -1,5 +1,49 @@
 #!/usr/bin/env bash
 
+_update_fallback_prompt() {
+    # 1. Preserva o código de saída do último comando para não quebrar o $? do usuário
+    local last_status=$?
+
+    # 2. Lógica do Path (Expansão de Parâmetros Nativa - Zero Subshells)
+    local short_path="${PWD/#$HOME/\~}"
+
+    if [[ "$short_path" == \~/*/* ]]; then
+        # Ex: ~/dir1/dir2 -> ~/.../dir2
+        short_path="~/.../${short_path##*/}"
+    elif [[ "$short_path" != \~* && "$short_path" == /*/*/* ]]; then
+        # Ex: /dir1/dir2/dir3 -> /dir1/.../dir3
+        local first="${short_path#/}"       # Remove a primeira barra
+        first="${first%%/*}"                # Pega apenas o primeiro diretório
+        short_path="/${first}/.../${short_path##*/}"
+    fi
+
+    # 3. Lógica do Git Branch
+    local git_branch=""
+    # 'command -v' é um builtin do bash, verificação muito rápida
+    if command -v git >/dev/null 2>&1; then
+        local b
+        # --show-current extrai apenas o nome e é silencioso fora de repositórios
+        b=$(git branch --show-current 2>/dev/null)
+        if [[ -n "$b" ]]; then
+            git_branch=" ($b)"
+        fi
+    fi
+
+    # 4. Construção do Prompt Final
+    # Adicionando cores básicas (Verde, Azul, Amarelo) com os escapes \[ e \]
+    # corretos para que o Bash calcule a quebra de linha com precisão.
+    local c_user="\[\033[01;32m\]"  # Verde
+    local c_path="\[\033[01;34m\]"  # Azul
+    local c_git="\[\033[01;33m\]"   # Amarelo
+    local c_reset="\[\033[00m\]"
+
+    PS1="${c_user}\u@\h${c_reset}:${c_path}${short_path}${c_reset}${c_git}${git_branch}${c_reset} \$ "
+
+    # Restaura o código de saída original
+    return "$last_status"
+}
+
+
 sud_rd() {
     java -jar "$HOME/.local/bin/rundeck-cli-2.0.9-all.jar"
 }
