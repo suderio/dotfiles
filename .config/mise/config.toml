@@ -70,3 +70,9 @@ run = '''
     echo "Installing cpan neovim package"
     cpanm -n Neovim::Ext
 '''
+
+[tasks.doom]
+run = '''
+    git clone --depth 1 https://github.com/doomemacs/doomemacs "$XDG_CONFIG_HOME/emacs"
+    "$XDG_CONFIG_HOME/emacs/bin/doom" install --no-config --env --install --force
+'''
