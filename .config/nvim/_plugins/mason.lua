@@ -1,0 +1,1 @@
+/home/psude/.local/.dotfiles/.config/nvimold/lua/plugins/mason.lua
