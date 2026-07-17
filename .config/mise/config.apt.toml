@@ -61,3 +61,4 @@ tree-sitter = "latest"
 # shell
 babashka = "latest"
 jq = "latest"
+yq = "latest"
