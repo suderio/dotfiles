@@ -38,11 +38,11 @@ alias show-dependencies='pacman -Qe | cut -d" " -f 1 | while read in; do pactree
 
 if exists eza; then
     # Replace ls with exa
-    alias l='eza -Al --color=always --group-directories-first --icons'      # preferred listing
-    alias la='eza -A --color=always --group-directories-first --icons'      # all files and dirs
-    alias ll='eza -l --color=always --group-directories-first --icons'      # long format
-    alias lt='eza -aT --color=always --group-directories-first --icons'     # tree listing
-    alias l.='eza -ald --color=always --group-directories-first --icons .*' # show only dotfiles
+    alias l='eza -Al --color=always --group-directories-first --icons=always'      # preferred listing
+    alias la='eza -A --color=always --group-directories-first --icons=always'      # all files and dirs
+    alias ll='eza -l --color=always --group-directories-first --icons=always'      # long format
+    alias lt='eza -aT --color=always --group-directories-first --icons=always'     # tree listing
+    alias l.='eza -ald --color=always --group-directories-first --icons=always .*' # show only dotfiles
 else
     alias ll='ls -l'
     alias la='ls -A'
