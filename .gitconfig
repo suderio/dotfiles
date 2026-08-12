@@ -77,8 +77,6 @@
 	hotfix = hotfix-
 	support = support-
 	versiontag = v
-[credential]
-	helper = cache
 [alias]
      tree = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset%n' --abbrev-commit --date=relative --branches
      # List commits in short form, with colors and branch/tag annotations                                           
