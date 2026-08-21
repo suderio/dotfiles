@@ -130,11 +130,11 @@ Disables annoying bell
 (setopt visible-bell nil)
 (setopt ring-bell-function 'ignore)
 #+end_src
-*** TODO Dashboard
+*** DONE Dashboard
 #+begin_src emacs-lisp
 (setopt fancy-splash-image (file-name-concat doom-user-dir "emacs-logo.png"))
 
-(setq +doom-dashboard-ascii-banner-fn #'sud/dashboard-logo)
+(setq +dashboard-ascii-banner-fn #'sud/dashboard-logo)
 
 (add-to-list '+dashboard-menu-sections
              '("Open Journal"
