@@ -32,7 +32,11 @@ dotfiles:
 [unix]
 [group('mise')]
 mise:
-    curl https://mise.run | sh
+    # Use standard method or documented process instead of curl | sh directly in bash
+    curl -fsSL https://mise.run -o install-mise.sh
+    chmod +x install-mise.sh
+    ./install-mise.sh
+    rm install-mise.sh
 
 [unix]
 [group('os')]
@@ -94,7 +98,9 @@ doom:
 fonts:
     for font in {{FONTS}}; do
     mkdir -p {{data_local_directory()}}/fonts/$font
-        curl -sL "{{NERD_FONTS_URL}}$font.tar.xz" | unxz | tar -xvf - -C {{data_local_directory()}}/fonts/$font
+        curl -sL "{{NERD_FONTS_URL}}$font.tar.xz" -o "$font.tar.xz"
+        unxz -c "$font.tar.xz" | tar -xvf - -C {{data_local_directory()}}/fonts/$font
+        rm "$font.tar.xz"
         chmod -R "u=rwx,g=r,o=r" {{data_local_directory()}}/fonts/$font
     done
     fc-cache -v

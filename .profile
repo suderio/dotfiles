@@ -55,19 +55,10 @@ export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 export GALLIUM_DRIVER=d3d12
 export LIBVA_DRIVER_NAME=d3d12
 
-if command -v pacman >/dev/null 2>&1; then
-    export MISE_ENV=arch
-elif command -v apt >/dev/null 2>&1; then
-    export MISE_ENV=apt
-elif command -v dnf >/dev/null 2>&1; then
-    export MISE_ENV=dnf
-elif command -v zypper >/dev/null 2>&1; then
-    export MISE_ENV=zypper
-elif command -v brew >/dev/null 2>&1; then
-    export MISE_ENV=brew
-else
-    export MISE_ENV=
-fi
+# Note: MISE_ENV is not auto-detected here anymore.
+# It should be explicitly defined in ~/.bashrc.d/00-mise-env which is gitignored,
+# or through your local shell environment per machine.
+# e.g., export MISE_ENV=apt
 
 # Autocomplete for ssh
 _ssh() {
