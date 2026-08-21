@@ -9,7 +9,10 @@ Manage dot file with git, see https://www.atlassian.com/git/tutorials/dotfiles
 
 Bootstraping can be done by the brave of heart with:
 #+begin_src shell :tangle no
-curl -fsS https://raw.githubusercontent.com/suderio/dotfiles/refs/heads/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/suderio/dotfiles/refs/heads/main/install.sh -o dotfiles-install.sh
+chmod +x dotfiles-install.sh
+./dotfiles-install.sh
+rm dotfiles-install.sh
 #+end_src
 The ~install.sh~ script is /literately/ made of the following code blocks in this page.
 ** Config in a new machine
@@ -21,7 +24,10 @@ git --git-dir="$HOME"/.local/dotfiles/ --work-tree="$HOME" checkout
 #+end_src
 *** Install mise and setup (this will take a long time)
 #+begin_src shell :tangle install.sh
-curl https://mise.run | sh
+curl -fsSL https://mise.run -o install-mise.sh
+chmod +x install-mise.sh
+./install-mise.sh
+rm install-mise.sh
 mise up
 #+end_src
 *** Tasks
