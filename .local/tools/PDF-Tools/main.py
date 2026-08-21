@@ -1,18 +1,18 @@
 import os
-from PyPDF2 import PdfFileReader, PdfFileWriter
+from PyPDF2 import PdfReader, PdfWriter
 
 
 def merge_pdfs():
     ''' Merge multiple PDF's into one combined PDF '''
     input_paths = input(r"Enter comma separated list of paths to the PDFs ")
     paths = input_paths.split(',')
-    pdf_file_writer = PdfFileWriter()
+    pdf_file_writer = PdfWriter()
 
     # Pick each pdf one by one and combined to one single pdf
     for path in paths:
-        pdf_file_reader = PdfFileReader(path)
-        for page in range(pdf_file_reader.getNumPages()):
-            pdf_file_writer.addPage(pdf_file_reader.getPage(page))
+        pdf_file_reader = PdfReader(path)
+        for page in range(len(pdf_file_reader.pages)):
+            pdf_file_writer.add_page(pdf_file_reader.pages[page])
 
     # Output the merged pdf
     with open('merged.pdf', 'wb') as out:
@@ -22,10 +22,10 @@ def merge_pdfs():
 def split_pdfs():
     '''Split PDF to multiple PDF's of 1 Page each'''
     input_pdf = input(r"Enter I/P PDF path ")
-    pdf = PdfFileReader(input_pdf)
-    for page in range(pdf.getNumPages()):
-        pdf_file_writer = PdfFileWriter()
-        pdf_file_writer.addPage(pdf.getPage(page))
+    pdf = PdfReader(input_pdf)
+    for page in range(len(pdf.pages)):
+        pdf_file_writer = PdfWriter()
+        pdf_file_writer.add_page(pdf.pages[page])
 
         # Append page num to each new pdf
         output = 'split{page}.pdf'.format(page=page)
@@ -38,17 +38,17 @@ def add_watermark():
     Note: The watermark PDF should be a image with transparent background '''
     input_pdf = input(r"Enter I/P PDF path ")
     watermark = input(r"Enter watermark PDF path ")
-    watermark_obj = PdfFileReader(watermark)
-    watermark_page = watermark_obj.getPage(0)
+    watermark_obj = PdfReader(watermark)
+    watermark_page = watermark_obj.pages[0]
 
-    pdf_file_reader = PdfFileReader(input_pdf)
-    pdf_file_writer = PdfFileWriter()
+    pdf_file_reader = PdfReader(input_pdf)
+    pdf_file_writer = PdfWriter()
 
     # Watermark all the pages
-    for page_num in range(pdf_file_reader.getNumPages()):
-        page = pdf_file_reader.getPage(page_num)
-        page.mergePage(watermark_page)
-        pdf_file_writer.addPage(page)
+    for page_num in range(len(pdf_file_reader.pages)):
+        page = pdf_file_reader.pages[page_num]
+        page.merge_page(watermark_page)
+        pdf_file_writer.add_page(page)
 
     with open('watermarked-pdf.pdf', 'wb') as out:
         pdf_file_writer.write(out)
@@ -58,13 +58,13 @@ def add_encryption():
     ''' Encrypts the given PDF with the provided password '''
     input_pdf = input(r"Enter I/P PDF path ")
     password = input(r"Enter password ")
-    pdf_file_writer = PdfFileWriter()
-    pdf_file_reader = PdfFileReader(input_pdf)
+    pdf_file_writer = PdfWriter()
+    pdf_file_reader = PdfReader(input_pdf)
 
-    for page_num in range(pdf_file_reader.getNumPages()):
-        pdf_file_writer.addPage(pdf_file_reader.getPage(page_num))
+    for page_num in range(len(pdf_file_reader.pages)):
+        pdf_file_writer.add_page(pdf_file_reader.pages[page_num])
     # Encrypt using the password
-    pdf_file_writer.encrypt(user_pwd=password, owner_pwd=None, use_128bit=True)
+    pdf_file_writer.encrypt(user_password=password, owner_password=None, use_128bit=True)
 
     with open('encrypted.pdf', 'wb') as fh:
         pdf_file_writer.write(fh)
@@ -73,20 +73,21 @@ def add_encryption():
 def rotate_pages():
     '''Rotate the given PDF left or right by 90 degrees.'''
     input_pdf = input(r"Enter I/P PDF path ")
-    pdf_file_writer = PdfFileWriter()
-    pdf_file_reader = PdfFileReader(input_pdf)
+    pdf_file_writer = PdfWriter()
+    pdf_file_reader = PdfReader(input_pdf)
     orient = input("Specify orientation: clockwise or counterclockwise ")
 
     # Rotate each page one by one accordingly
     if (orient == "clockwise"):
-        for page_num in range(pdf_file_reader.getNumPages()):
-            rot_page = pdf_file_reader.getPage(page_num).rotateClockwise(90)
-            pdf_file_writer.addPage(rot_page)
+        for page_num in range(len(pdf_file_reader.pages)):
+            rot_page = pdf_file_reader.pages[page_num]
+            rot_page.rotate(90)
+            pdf_file_writer.add_page(rot_page)
     elif (orient == "counterclockwise"):
-        for page_num in range(pdf_file_reader.getNumPages()):
-            rot_page = pdf_file_reader.getPage(
-                page_num).rotateCounterClockwise(90)
-            pdf_file_writer.addPage(rot_page)
+        for page_num in range(len(pdf_file_reader.pages)):
+            rot_page = pdf_file_reader.pages[page_num]
+            rot_page.rotate(-90)
+            pdf_file_writer.add_page(rot_page)
 
     with open('rotated.pdf', 'wb') as fh:
         pdf_file_writer.write(fh)
@@ -105,11 +106,11 @@ def ifPageExists(total_pages, page_no):
 def reorder_pages():
     input_pdf = input(r"Enter I/P PDF path ")
 
-    pdf_writer = PdfFileWriter()
-    pdf_reader = PdfFileReader(input_pdf)
+    pdf_writer = PdfWriter()
+    pdf_reader = PdfReader(input_pdf)
 
     # get total no.of pages ie length of PDF
-    total_pages = pdf_reader.getNumPages()
+    total_pages = len(pdf_reader.pages)
     # creates a list of of total pages in ascending order
     ordered_pages = [i + 1 for i in range(total_pages)]
 
@@ -151,7 +152,7 @@ def reorder_pages():
     print("\nPDF being prepared !")
     for page in ordered_pages:
         # adding pages in write function page by page
-        pdf_writer.addPage(pdf_reader.getPage(page - 1))
+        pdf_writer.add_page(pdf_reader.pages[page - 1])
 
     # Saving the PDF with the specified name
     output_file = input(
