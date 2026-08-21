@@ -91,11 +91,6 @@ done
 shift $((OPTIND - 1))
 
 GIT_CMD="git -C $pwd --git-dir=$git_dir --work-tree=$work_tree"
-# command used to auto-commit file modifications
-DEFAULT_AUTOCOMMIT_CMD="$GIT_CMD add -u ; $GIT_CMD commit -m \"%message\";"
-
-# command used to auto-commit all changes
-ALL_AUTOCOMMIT_CMD="$GIT_CMD add -A ; $GIT_CMD commit -m \"%message\";"
 
 # default commit message substituted into autocommit commands
 DEFAULT_AUTOCOMMIT_MSG="changes from $(uname -mrs) on $(date)"
@@ -321,26 +316,29 @@ fi
 
 # check if we have to commit local changes, if yes, do so
 if [ ! -z "$(local_changes)" ]; then
-    autocommit_cmd=""
     config_autocommit_cmd="$($GIT_CMD config --get "branch.$branch_name.autocommitscript")"
-
-    # discern the three ways to auto-commit
-    if [ ! -z "$config_autocommit_cmd" ]; then
-        autocommit_cmd="$config_autocommit_cmd"
-    elif [[ "true" == "$($GIT_CMD config --get --bool "branch.$branch_name.syncNewFiles")" || "true" == "$sync_new_files_anyway" ]]; then
-        autocommit_cmd=${ALL_AUTOCOMMIT_CMD}
-    else
-        autocommit_cmd=${DEFAULT_AUTOCOMMIT_CMD}
-    fi
 
     commit_msg="$($GIT_CMD config --get "branch.$branch_name.syncCommitMsg")"
     if [ "" == "$commit_msg" ]; then
         commit_msg=${DEFAULT_AUTOCOMMIT_MSG}
     fi
-    autocommit_cmd=$(echo "$autocommit_cmd" | sed "s/%message/$commit_msg/")
 
-    __log_msg "Committing local changes using ${autocommit_cmd}"
-    eval "$autocommit_cmd"
+    # discern the three ways to auto-commit
+    if [ ! -z "$config_autocommit_cmd" ]; then
+        export GIT_SYNC_COMMIT_MSG="$commit_msg"
+        autocommit_cmd=$(echo "$config_autocommit_cmd" | sed 's/%message/$GIT_SYNC_COMMIT_MSG/g')
+        __log_msg "Committing local changes using custom autocommitscript"
+        eval "$autocommit_cmd"
+    else
+        if [[ "true" == "$($GIT_CMD config --get --bool "branch.$branch_name.syncNewFiles")" || "true" == "$sync_new_files_anyway" ]]; then
+            __log_msg "Committing local changes (all files)"
+            $GIT_CMD add -A
+        else
+            __log_msg "Committing local changes (modified files only)"
+            $GIT_CMD add -u
+        fi
+        $GIT_CMD commit -m "$commit_msg"
+    fi
 
     # after autocommit, we should be clean
     rstate="$(git_repo_state)"

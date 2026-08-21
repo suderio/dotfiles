@@ -1,5 +1,5 @@
 
-from cv2 import cv2
+import cv2
 import math
 import argparse
 
@@ -53,7 +53,6 @@ def decode(path_image):
     data = []
     stop = False
     for index_i, i in enumerate(img):
-        i.tolist()
         for index_j, j in enumerate(i):
             if ((index_j) % 3 == 2):
                 data.append(bin(j[0])[-1])
