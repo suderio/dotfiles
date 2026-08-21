@@ -36,3 +36,37 @@ Mise tasks with all the tools, bells and whistles that can't be installed with m
 #+begin_src shell :tangle install.sh
 mise tasks ls
 #+end_src
+
+* Features & Architecture
+This repository provides a unified workspace configuration aiming for high portability across various environments including:
+- CachyOS Linux (bare metal)
+- Ubuntu running via WSL2
+- Windows (bare metal)
+- RHEL 8/9 servers (unprivileged environments)
+- Cygwin (via MobaXterm)
+
+** Core Design Principles
+- *Mise-centric Tooling:* Instead of heavily relying on native package managers exclusively, =mise= (mise.run) orchestrates the environment. Where root access or package manager access is absent, mise handles the installation of tools in user-space. Where available, OS packages can be defined in =config.<env>.toml=.
+- *Theme Consistency:* The UI heavily favors the *Dracula* theme. This is standardized across terminal emulators (WezTerm, Alacritty), the multiplexer (Zellij), fuzzy finder (fzf), pagers (bat), the prompt (Starship), and editors (Neovim, Doom Emacs).
+- *CLI/Emacs Focused:* Window manager configs are intentionally omitted or minimized. The workspace is built around efficient command-line use and Emacs.
+
+** How-To / Setup
+1. Clone the bare repo:
+   #+begin_src shell
+   git clone --bare git@github.com:suderio/dotfiles "$HOME/.local/dotfiles"
+   git --git-dir="$HOME/.local/dotfiles/" --work-tree="$HOME" checkout
+   #+end_src
+2. Install =mise= securely:
+   #+begin_src shell
+   curl -fsSL https://mise.run -o install-mise.sh && chmod +x install-mise.sh && ./install-mise.sh && rm install-mise.sh
+   #+end_src
+3. Install tools:
+   #+begin_src shell
+   mise up
+   #+end_src
+4. (Optional) Run OS-specific task via Just (if available).
+
+** Gotchas & Limitations
+- *MISE_ENV:* Detection of the package manager is purposefully decoupled from the global =.profile=. You must create a =.bashrc.d/00-mise-env= file defining =export MISE_ENV=apt= (or =arch=, etc.) based on your local machine to tell mise which configuration file to parse (e.g. =config.apt.toml=).
+- *WSL2 Limits:* On WSL2 Ubuntu, certain tools (like eza) are not present in default apt repositories, so =mise= gracefully falls back to building/downloading them independently if removed from the =apt:= prefix.
+- *Security:* Refrain from executing =curl | sh=. The repository enforces explicitly downloading and inspecting scripts before execution.
