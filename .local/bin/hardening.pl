@@ -2199,7 +2199,7 @@ sub krnl_6000 {
     for my $entry (@to_apply) {
         my ($key, $val) = @$entry;
         print $out "$key = $val\n";
-        system("sysctl -w $key=$val");
+        system('sysctl', '-w', "$key=$val");
     }
     close $out;
 
@@ -2459,7 +2459,7 @@ sub krnl_6000_restore {
         if ($dry_run) {
             print "🔍 sysctl -w $key=$val (simulado)\n";
         } else {
-            my $result = system("sysctl -w $key=$val");
+            my $result = system('sysctl', '-w', "$key=$val");
             if ($result == 0) {
                 print "✅ Restaurado: $key = $val\n";
                 push @restored, [$key, $val];
