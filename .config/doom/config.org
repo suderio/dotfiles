@@ -113,7 +113,7 @@ This shows if we are inside WSL
 ** UI
 *** Theme
 #+begin_src emacs-lisp
-(setopt doom-theme 'doom-dracula)
+(setopt doom-theme 'modus-vivendi-tinted)
 (add-to-list 'default-frame-alist '(alpha-background . 70)) ; For all new frames henceforth
 (setopt modus-themes-bold-constructs t)
 (setopt modus-themes-italic-constructs t)

@@ -38,7 +38,7 @@
 (setopt browse-url-browser-function 'eww-browse-url)
 (setq projectile-files-cache-expire 30) ;; Cache expires after 10 seconds
 
-(setopt doom-theme 'doom-dracula)
+(setopt doom-theme 'modus-vivendi-tinted)
 (add-to-list 'default-frame-alist '(alpha-background . 70)) ; For all new frames henceforth
 (setopt modus-themes-bold-constructs t)
 (setopt modus-themes-italic-constructs t)
