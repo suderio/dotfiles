@@ -15,11 +15,11 @@ FILE_PATH = askopenfilename()  # open the dialog GUI
 
 with open(FILE_PATH,
           "rb") as f:  # open the file in reading (rb) mode and call it f
-    pdf = PyPDF2.PdfFileReader(f)
+    pdf = PyPDF2.PdfReader(f)
     txt_file = ' '  # str variable
     # parse every page
     for page in pdf.pages:
-        text = page.extractText()
+        text = page.extract_text()
         txt_file += text  # stores text into txt_file variable and convert it into str form as gtts library only saves text file into mp3
         ## speaking part ####
         engine = pyttsx3.init()
