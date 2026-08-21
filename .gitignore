@@ -176,3 +176,4 @@ cython_debug/
 
 ## PyPI configuration file
 .pypirc
+.bashrc.d/00-mise-env
