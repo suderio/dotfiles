@@ -54,7 +54,7 @@
 
 (setopt fancy-splash-image (file-name-concat doom-user-dir "emacs-logo.png"))
 
-(setq +doom-dashboard-ascii-banner-fn #'sud/dashboard-logo)
+(setq +dashboard-ascii-banner-fn #'sud/dashboard-logo)
 
 (add-to-list '+dashboard-menu-sections
              '("Open Journal"

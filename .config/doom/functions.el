@@ -315,25 +315,15 @@ Returns a list (HOURS MINUTES SECONDS)."
     (list hours minutes seconds)))
 
 (defun sud/dashboard-logo ()
-
-  (let* ((banner
-          '("================================="
-            "  ___  ____ ___  ____ ___________"
-            " / _ \\/ __ `__ \\/ __ `/ ___/ ___/"
-            "/  __/ / / / / / /_/ / /__(__ )"
-            "\\___/_/ /_/ /_/\\__,_/\\___/____/"))
-
-         (longest-line (apply #'max (mapcar #'length banner))))
-    (put-text-property
-     (point)
-     (dolist (line banner (point))
-       (insert (+doom-dashboard--center
-                +doom-dashboard--width
-                (concat
-                 line (make-string (max 0 (- longest-line (length line)))
-                                   32)))
-               "\n"))
-     'face 'doom-dashboard-banner)))
+  (propertize
+   (string-join
+    '("================================="
+      "  ___  ____ ___  ____ ___________"
+      " / _ \\/ __ `__ \\/ __ `/ ___/ ___/"
+      "/  __/ / / / / / /_/ / /__(__ )"
+      "\\___/_/ /_/ /_/\\__,_/\\___/____/")
+    "\n")
+   'face '+dashboard-banner))
 
 (defun sud/indent-org-block-automatically ()
   (when (and (derived-mode-p 'org-mode) (org-in-src-block-p))
