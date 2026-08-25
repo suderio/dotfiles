@@ -81,6 +81,15 @@ The Neovim environment requires various external dependencies (e.g., parsers, LS
 - Most language toolchains (Python, Node.js, Ruby, Rust, etc.) and basic tools (ripgrep, fd, lazygit) are managed by =mise= through the environment-specific configs (e.g., =config.apt.toml=).
 - *Providers Integration*: The =mise= configuration includes a =neovim= task (=mise run neovim=) to bootstrap Neovim provider packages for Python (=pynvim= via =uv=), Node (=neovim= npm package), Ruby (=neovim= gem), and Perl (=Neovim::Ext=). This ensures cross-environment consistency without depending on global OS packages.
 
+** Doom Emacs Configuration
+The Emacs setup (=.config/doom=) is managed via [[https://github.com/doomemacs/doomemacs][Doom Emacs]] and heavily relies on a *literate configuration* (=config.org=). It is designed to act as a robust IDE and personal knowledge management tool across multiple platforms.
+
+*** Features
+- *Literate Config*: All custom settings, hacks, and logic are beautifully documented in =config.org=, allowing for easy reading and self-documenting code.
+- *Org-Mode Ecosystem*: Extensive integration with =org-roam= for a Zettelkasten-like second brain, =org-journal= for daily logging, and customized Capture templates for rapid inboxing.
+- *Language Support*: Comprehensive support for almost everything including Python, Java, Rust, Go, JavaScript, Clojure, Zig, and web tools by relying on =lsp-mode= (accelerated by =emacs-lsp-booster=).
+- *TRAMP & Remote Work*: Designed for sysadmin work by allowing editing files on remote RHEL/WSL machines using TRAMP over SSH.
+- *Dracula Theme*: Consistent UI matching the terminal environment.
 ** Gotchas & Limitations
 - *MISE_ENV:* Detection of the package manager is purposefully decoupled from the global =.profile=. You must create a =.bashrc.d/00-mise-env= file defining =export MISE_ENV=apt= (or =arch=, etc.) based on your local machine to tell mise which configuration file to parse (e.g. =config.apt.toml=).
 - *WSL2 Limits:* On WSL2 Ubuntu, certain tools (like eza) are not present in default apt repositories, so =mise= gracefully falls back to building/downloading them independently if removed from the =apt:= prefix.
