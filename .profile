@@ -23,6 +23,8 @@ export MANPATH="$HOME/.local/texlive/2025/texmf-dist/doc/man:$MANPATH"
 export INFOPATH="$HOME/.local/texlive/2025/texmf-dist/doc/info:$INFOPATH"
 export DICPATH="$HOME/.local/share/hunspell"
 
+export STARSHIP_LOG=error
+
 [ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
 [ -d "$HOME/.cargo/bin" ] && PATH="$HOME/.cargo/bin:$PATH"
 [ -d "$HOME/go/bin" ] && PATH="$HOME/go/bin:$PATH"
