@@ -66,6 +66,21 @@ This repository provides a unified workspace configuration aiming for high porta
    #+end_src
 4. (Optional) Run OS-specific task via Just (if available).
 
+
+** Neovim Configuration
+The Neovim setup (=.config/nvim=) is built on top of [[https://github.com/LazyVim/LazyVim][LazyVim]], providing a robust and fast configuration for development and sysadmin work.
+
+*** Features
+- *LazyVim Core*: Pre-configured with sensible defaults, lazy-loading plugins for fast startup.
+- *Dracula Theme*: Consistent with the overall dotfiles setup, providing the Dracula colorscheme via =dracula.nvim= and integrated into LazyVim UI components.
+- *Multi-language Support*: Ready for a variety of languages including Python, Node.js, Ruby, Rust, Go, C/C++, Java, Kotlin, Julia, Zig, Clojure, PHP, SQL, Markdown, YAML, TOML, JSON, and more via LazyVim's language extras (=lazyvim.json=).
+- *Tools & Integrations*: Support for Docker, Git, Ansible, Helm, CMake, and a REST client.
+
+*** Managing Dependencies
+The Neovim environment requires various external dependencies (e.g., parsers, LSP servers, linters, runtime providers) to function fully across different languages:
+- Most language toolchains (Python, Node.js, Ruby, Rust, etc.) and basic tools (ripgrep, fd, lazygit) are managed by =mise= through the environment-specific configs (e.g., =config.apt.toml=).
+- *Providers Integration*: The =mise= configuration includes a =neovim= task (=mise run neovim=) to bootstrap Neovim provider packages for Python (=pynvim= via =uv=), Node (=neovim= npm package), Ruby (=neovim= gem), and Perl (=Neovim::Ext=). This ensures cross-environment consistency without depending on global OS packages.
+
 ** Gotchas & Limitations
 - *MISE_ENV:* Detection of the package manager is purposefully decoupled from the global =.profile=. You must create a =.bashrc.d/00-mise-env= file defining =export MISE_ENV=apt= (or =arch=, etc.) based on your local machine to tell mise which configuration file to parse (e.g. =config.apt.toml=).
 - *WSL2 Limits:* On WSL2 Ubuntu, certain tools (like eza) are not present in default apt repositories, so =mise= gracefully falls back to building/downloading them independently if removed from the =apt:= prefix.
