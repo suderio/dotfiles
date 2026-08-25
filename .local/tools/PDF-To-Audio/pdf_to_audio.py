@@ -6,6 +6,7 @@ Created on Sun Oct 11 19:50:06 2020
 """
 import PyPDF2
 import pyttsx3
+import sys
 from gtts import gTTS  # pip install gTTS
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
@@ -14,6 +15,8 @@ def process_pdf(file_path, speak=True, save_audio=True):
     with open(file_path, "rb") as f:  # open the file in reading (rb) mode and call it f
         pdf = PyPDF2.PdfReader(f)
         texts = []
+        if speak:
+            engine = pyttsx3.init()
         # parse every page
         for page in pdf.pages:
             try:
@@ -23,7 +26,6 @@ def process_pdf(file_path, speak=True, save_audio=True):
             texts.append(text)
             if speak:
                 ## speaking part ####
-                engine = pyttsx3.init()
                 engine.say(text)
                 engine.runAndWait()
         txt_file = "".join(texts)
@@ -36,7 +38,10 @@ def process_pdf(file_path, speak=True, save_audio=True):
     return txt_file
 
 if __name__ == '__main__':
-    Tk().withdraw()  # We could make our own GUI but let's use the default one
-    FILE_PATH = askopenfilename()  # open the dialog GUI
+    if len(sys.argv) > 1:
+        FILE_PATH = sys.argv[1]
+    else:
+        Tk().withdraw()  # We could make our own GUI but let's use the default one
+        FILE_PATH = askopenfilename()  # open the dialog GUI
     if FILE_PATH:
         process_pdf(FILE_PATH)
