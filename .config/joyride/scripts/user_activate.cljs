@@ -72,7 +72,7 @@
 
                     (.edit editor
                            (fn [edit-builder]
-                             (.replace edit-builder range-to-replace output-text))))))))))))
+                             (.replace edit-builder range-to-replace output-text)))))))))))))
 ;; -------------------------------------------------------------
 ;; 3. Hooks de eventos (add-hook)
 ;; -------------------------------------------------------------
