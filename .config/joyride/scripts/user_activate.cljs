@@ -21,11 +21,6 @@
       (vscode/commands.executeCommand "editor.action.copyLinesDownAction")
       (vscode/commands.executeCommand "editor.action.commentLine"))))
 
-;; Registra no VS Code para uso via Command Palette ou atalho
-(joyride/defcommand user.duplicate-and-comment
-  "Duplica a linha atual e a comenta."
-  duplicate-and-comment!)
-
 ;; -------------------------------------------------------------
 ;; 3. Hooks de eventos (add-hook)
 ;; -------------------------------------------------------------
